@@ -97,7 +97,11 @@ await api('POST', `/api/teacher/classes/${cls.id}/reveal`, null, T);
 {
   const { d, w, errors } = await page('/play', 'play.js', BASE + '/play', { 'vemak.student': studentToken });
   await click(d.querySelector('[data-tab=results]'));
-  assert.match(d.body.textContent, /Penktadienio rezultatai/); assert.match(d.body.textContent, /Pamoka:/); ok('results screen shows after reveal');
+  assert.match(d.body.textContent, /Atskleidimas prasideda/); assert.ok(d.querySelector('#reveal-skip')); ok('Friday reveal starts with countdown and skip control');
+  await click(d.querySelector('#reveal-skip'));
+  assert.match(d.body.textContent, /Kita savaitė/); ok('reveal skip moves to next-week teaser');
+  await click(d.querySelector('#reveal-next'));
+  assert.match(d.body.textContent, /Penktadienio rezultatai/); ok('reveal returns to detailed financial results');
   await click(d.querySelector('[data-tab=board]'));
   assert.match(d.body.textContent, /Lyderių lentelė/); assert.match(d.body.textContent, /Geriausia strategija/); ok('leaderboard shows strategy ranking first');
   await click(d.querySelector('[data-tab=mentor]'));

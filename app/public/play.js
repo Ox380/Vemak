@@ -11,6 +11,7 @@ let me = null;
 let tab = 'city';
 let draft = null; // { choice, sav, inv, bus, res, mix, upgrade }
 let poll = null;
+let revealStage = 0; // 0: start, 1: results, 2: leaderboard, 3: trophies, 4: XP, 5: mentor, 6: teaser/final
 
 const BUCKET_META = [
   { k: 'sav', name: 'Santaupos', color: '#3b82f6', hint: '+0,3 % per savaitę, be rizikos' },
@@ -33,7 +34,7 @@ function shell(inner, active) {
     <button class="btn alt" id="out" style="min-height:38px;padding:6px 12px">Atsijungti</button>
   </div></header>
   <main class="main"><div class="wrap" id="view">${inner}</div></main>`;
-  $$('.tab').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; render(); }));
+  $$('.tab').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; if (tab === 'results' && me.reports.length) { revealStage = 0; tab = 'reveal'; } render(); }));
   $('#out').addEventListener('click', () => { if (confirm('Atsijungti? Prisijungsi vėl tik su nauju slapyvardžiu.')) { localStorage.removeItem(TOKEN_KEY); location.reload(); } });
 }
 
@@ -181,6 +182,23 @@ function viewWeek() {
   </div></div>`;
 }
 
+function revealStep(title, body, nextLabel = 'Tęsti →') {
+  return `<div class="reveal-step card"><p class="eyebrow">PENKTADIENIO ATSKLEIDIMAS · ${revealStage + 1}/7</p><h2>${title}</h2>${body}<div class="row"><button class="btn" id="reveal-next">${nextLabel}</button><button class="btn alt" id="reveal-skip">Praleisti animaciją</button></div></div>`;
+}
+function viewReveal() {
+  const rs = me.reports, r = rs[rs.length - 1], reward = me.rewards || { xp: 0, level: 1, trophies: [], cosmetics: [] }, rk = me.rankings;
+  const mine = rk?.byStrategy.find((row) => row.nickname === me.me.nickname);
+  const trophyLabels = { 'financial-genius': 'Finansinis genijus', 'best-saver': 'Geriausias taupytojas', 'risk-master': 'Rizikos meistras', 'comeback-king': 'Sugrįžimo karalius', 'business-tycoon': 'Verslo magnatas', 'smart-investor': 'Sumanus investuotojas', 'most-improved': 'Didžiausia pažanga' };
+  const earned = (reward.trophies || []).map((key) => trophyLabels[key] || key);
+  const nextScenario = ['Kitą savaitę rinksiesi tarp atsargaus augimo ir drąsesnio verslo plėtros plano.', 'Kitą savaitę mokysiesi, kaip pasiruošti rinkos svyravimams.'][r.week % 2];
+  if (revealStage === 0) return revealStep('Atskleidimas prasideda!', '<div class="countdown" aria-live="polite">3 · 2 · 1</div><p>Visų žaidėjų sprendimai jau užrakinti. Dabar pamatysi savaitės pasekmes.</p>');
+  if (revealStage === 1) return revealStep('Tavo finansiniai rezultatai', `<div class="reveal-metrics"><div><small>Pradinis balansas</small><b>${eur(r.state?.netWorth ?? (r.netWorth - r.delta))}</b></div><div><small>Grynoji vertė</small><b>${eur(r.netWorth)}</b></div><div><small>Pelnas / nuostolis</small><b class="${r.delta >= 0 ? 'pos' : 'neg'}">${eur(r.delta, true)}</b></div><div><small>Atsparumas</small><b>${r.forced ? 'Reikėjo parduoti turtą' : 'Atspari strategija'}</b></div></div>`);
+  if (revealStage === 2) return revealStep('Lyderių lentelės atskleidimas', `<p>Tavo galutinė vieta: <strong>${mine?.rank || '–'}</strong>${mine?.progress ? ` · ${mine.progress > 0 ? '▲' : '▼'} ${Math.abs(mine.progress)} vietos nuo praėjusios savaitės` : ''}</p><div class="podium">${(rk?.byStrategy || []).slice(0, 3).map((row, i) => `<div class="podium-place p${i + 1}"><b>${['🥇', '🥈', '🥉'][i]}</b><span>${esc(row.nickname)}</span><strong>${eur(row.score)}</strong></div>`).join('')}</div>`);
+  if (revealStage === 3) return revealStep('Trofėjų ceremonija', `<div class="trophy-ceremony">${earned.length ? earned.map((name) => `<div class="ceremony-trophy">🏆<b>${esc(name)}</b><small>Sąlygos įvykdytos pagal savaitės rezultatus</small></div>`).join('') : '<p>Šią savaitę trofėjaus nelaimėjai, bet kiekvienas rezultatas padeda mokytis.</p>'}</div>`);
+  if (revealStage === 4) return revealStep('XP ir apdovanojimai', `<div class="xp-reward"><strong>+${reward.xp} XP</strong><span>${reward.level} lygis</span><div class="xp-track"><span style="width:${Math.min(100, (reward.xp % 200) / 2)}%"></span></div><p>${reward.cosmetics?.length ? `Atrakinta: ${esc(reward.cosmetics.at(-1))}` : 'Tęsk žaisti, kad atrakintum kosmetinius daiktus.'}</p></div>`);
+  if (revealStage === 5) return revealStep('Mentoriaus paaiškinimas', `<div class="mentor">${mentorCard()}</div><p class="muted">Mentoriaus patarimas paremtas taisyklėmis ir tavo sprendimo pasekmėmis.</p>`);
+  return revealStep('Kita savaitė', `<div class="next-week-teaser">🔭<h3>Kas laukia toliau?</h3><p>${nextScenario}</p><p class="muted">Tai tik mokomasis scenarijaus anonsas — sprendimą priimsi prasidėjus kitai savaitei.</p></div>`, 'Peržiūrėti pilnus rezultatus');
+}
 function viewResults() {
   const rs = me.reports;
   if (!rs.length) return `<div class="card"><h2>Rezultatų dar nėra</h2><p class="muted">Pirmos savaitės rezultatai bus atskleisti penktadienį.</p></div>`;
@@ -279,11 +297,18 @@ function viewFinish() {
 function render() {
   if (!me) return;
   if (me.cls.status === 'done' && tab === 'city' && me.reports.length) tab = 'finish';
-  const views = { city: viewCity, week: viewWeek, results: viewResults, board: viewBoard, invest: viewInvest, budget: viewBudget, mentor: viewMentor, finish: viewFinish };
+  const views = { city: viewCity, week: viewWeek, results: viewResults, reveal: viewReveal, board: viewBoard, invest: viewInvest, budget: viewBudget, mentor: viewMentor, finish: viewFinish };
   shell(views[tab](), tab === 'finish' ? 'results' : tab);
+  $$('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; if (tab === 'results' && me.reports.length) { revealStage = 0; tab = 'reveal'; } render(); }));
   $$('[data-go]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.go; render(); }));
   if (tab === 'week') bindWeek();
+  if (tab === 'reveal') bindReveal();
   window.scrollTo(0, 0);
+}
+function bindReveal() {
+  const advance = () => { if (revealStage < 6) revealStage += 1; else tab = 'results'; render(); };
+  $('#reveal-next')?.addEventListener('click', advance);
+  $('#reveal-skip')?.addEventListener('click', () => { revealStage = 6; render(); });
 }
 function refreshTotals() {
   const tot = draft.sav + draft.inv + draft.bus + draft.res;
