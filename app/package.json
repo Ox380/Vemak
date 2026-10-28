@@ -1,0 +1,11 @@
+{
+  "name": "vemak",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "VEMAK - Lithuanian financial-literacy game for school classes",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node test/engine.test.mjs && node test/api.test.mjs"
+  }
+}

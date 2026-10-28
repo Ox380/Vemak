@@ -1,0 +1,10 @@
+{
+  "name": "VEMAK – finansinio raštingumo žaidimas",
+  "short_name": "VEMAK",
+  "lang": "lt",
+  "start_url": "/play",
+  "display": "standalone",
+  "background_color": "#f2f7fb",
+  "theme_color": "#12213f",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
