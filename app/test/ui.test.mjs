@@ -29,7 +29,7 @@ let n = 0; const ok = (m) => console.log('ok  ', m, ++n && '');
   const { d, w, errors } = await page('/', 'landing.js', BASE + '/');
   assert.ok([...d.querySelectorAll('.nav a.btn')].some((a) => a.textContent.includes('Registruoti paskyrą') && a.getAttribute('href') === '/teacher?register=1')); ok('registration CTA links to signup');
   assert.ok(![...d.querySelectorAll('.hero .row a')].some((a) => a.getAttribute('href') === '#demo')); ok('duplicate hero demo button removed');
-  assert.ok(![...d.querySelectorAll('.nav a')].some((a) => a.textContent.trim() === 'Demo')); ok('duplicate demo navigation link remains removed');
+  assert.ok([...d.querySelectorAll('.nav a')].some((a) => a.textContent.trim() === 'Demo')); ok('demo navigation link remains available');
   assert.ok(d.querySelector('#heroCity svg')); ok('hero city renders');
   assert.match(d.querySelector('#demoBox').textContent, /Sveikas atvykęs į VEMAK/); ok('demo starts with introduction');
   await click(d.querySelector('#start-demo'));
