@@ -33,6 +33,13 @@ export const ASSETS = {
 export const ASSET_KEYS = Object.keys(ASSETS);
 export const DEFAULT_MIX = { etf: 40, reit: 30, green: 20, gold: 10, tech: 0 };
 export const BUCKETS = ['sav', 'inv', 'bus', 'res'];
+export const GOAL_TYPES = {
+  savings: { label: 'Sukaupti santaupų ir rezervą', unit: '€' },
+  income: { label: 'Uždirbti pajamų', unit: '€' },
+  business: { label: 'Uždirbti verslo pelno', unit: '€' },
+  netWorth: { label: 'Pasiekti grynąją vertę', unit: '€' },
+  debt: { label: 'Sumažinti skolą iki', unit: '€' },
+};
 
 // ---------- seeded randomness ----------
 export function hashSeed(str) {
@@ -87,12 +94,28 @@ export function newState() {
     reserve: 0, savings: 0, business: 0, debt: 0,
     invest: { etf: 0, tech: 0, green: 0, reit: 0, gold: 0 },
     level: 1, wantsDelta: 0, shield: false, bizBoost: 0, priceRiseActive: false,
+    skills: { work: 0, digital: 0, business: 0 }, reputation: 0,
+    incomeEarned: 0, expensesPaid: 0, businessRevenue: 0, businessExpenses: 0,
+    goal: { type: 'savings', target: 500, progress: 0 },
     forcedSales: 0, secondChances: 0, bankrupt: false,
     history: [],
   };
 }
 export const sumInvest = (s) => ASSET_KEYS.reduce((t, a) => t + s.invest[a], 0);
 export const netWorth = (s) => s.reserve + s.savings + s.business + sumInvest(s) - s.debt;
+export function validateGoal(goal) {
+  if (!goal || typeof goal !== 'object' || !Object.hasOwn(GOAL_TYPES, goal.type)) return 'Nežinomas finansinis tikslas.';
+  if (!Number.isFinite(goal.target) || goal.target <= 0) return 'Tikslo suma turi būti didesnė už nulį.';
+  return null;
+}
+export function goalProgress(s, goal = s.goal) {
+  if (validateGoal(goal)) return 0;
+  if (goal.type === 'savings') return round2(s.savings + s.reserve);
+  if (goal.type === 'income') return round2(s.incomeEarned);
+  if (goal.type === 'business') return round2(s.businessRevenue - s.businessExpenses);
+  if (goal.type === 'netWorth') return round2(netWorth(s));
+  return round2(Math.max(0, goal.target - s.debt));
+}
 export const bizCap = (s) => CONFIG.BIZ_CAP_PER_LEVEL * s.level;
 const round2 = (x) => Math.round(x * 100) / 100;
 
@@ -178,10 +201,13 @@ export function playWeek(prev, season, weekNo, choiceKey, alloc) {
   if (opt.shield) s.shield = true;
   if (opt.wantsDelta) s.wantsDelta += opt.wantsDelta;
   if (opt.bizBoost) s.bizBoost += opt.bizBoost;
-
   // 1 žingsnis — pasirinkimas ir jo tiesioginis poveikis
+  for (const [skill, points] of Object.entries(opt.skill || {})) s.skills[skill] = (s.skills[skill] || 0) + points;
+  s.reputation += opt.reputation || 0;
   step(`Pasirinkimas „${opt.label}".`, null);
   if (opt.cash) step(opt.cash > 0 ? `Iš karto gauta ${signed(opt.cash)} (įskaičiuota į biudžetą).` : `Iš karto sumokėta ${money(-opt.cash)} (įskaičiuota į biudžetą).`, opt.cash);
+  if (opt.earned) step(`Papildomos pajamos: ${signed(opt.earned)}.`, opt.earned);
+  if (opt.businessRevenue) step(`Verslo pajamos ${money(opt.businessRevenue)}, išlaidos ${money(opt.businessExpenses || 0)}, pelnas ${signed((opt.businessRevenue || 0) - (opt.businessExpenses || 0))}.`, (opt.businessRevenue || 0) - (opt.businessExpenses || 0));
   if (opt.shield) step('Apsauga: kainų kilimas šiam sezonui nebeturi įtakos poreikiams.', null);
   if (opt.wantsDelta) step(`Norai ${opt.wantsDelta > 0 ? 'išaugo' : 'sumažėjo'} ${money(Math.abs(opt.wantsDelta))} per savaitę.`, opt.wantsDelta);
   if (opt.bizBoost) step(`Verslo grąža padidėjo ${pctStr(opt.bizBoost)} per savaitę.`, null);
@@ -195,8 +221,13 @@ export function playWeek(prev, season, weekNo, choiceKey, alloc) {
   const rise = s.priceRiseActive && !s.shield ? CONFIG.PRICE_RISE : 0;
   const needs = CONFIG.NEEDS * (1 + rise);
   const wants = Math.max(CONFIG.MIN_WANTS, CONFIG.WANTS + s.wantsDelta);
-  let free = CONFIG.PAY - needs - wants + (opt.cash || 0);
-  report.needs = round2(needs); report.wants = round2(wants); report.income = CONFIG.PAY + Math.max(0, opt.cash || 0);
+  const earned = opt.earned || 0;
+  const businessRevenue = opt.businessRevenue || 0;
+  const businessExpenses = opt.businessExpenses || 0;
+  let free = CONFIG.PAY - needs - wants + (opt.cash || 0) + earned + businessRevenue - businessExpenses;
+  report.needs = round2(needs); report.wants = round2(wants); report.income = CONFIG.PAY + Math.max(0, opt.cash || 0) + businessRevenue;
+  report.earned = round2(earned); report.businessRevenue = round2(businessRevenue); report.businessExpenses = round2(businessExpenses);
+  report.expenses = round2(needs + wants + businessExpenses);
 
   // 2 žingsnis — įvykis ir mėnesio biudžetas
   if (rise > 0) step(`Įvykis: kainos pakilo ${pctStr(rise, 0).replace('+', '')}, todėl poreikiai išaugo iki ${money(needs)}.`, -round2(needs * rise));
@@ -301,6 +332,13 @@ export function playWeek(prev, season, weekNo, choiceKey, alloc) {
 
   if (s.debt > CONFIG.BANKRUPT_DEBT) { s.bankrupt = true; report.bankrupt = true; step(`Skola viršijo ${money(CONFIG.BANKRUPT_DEBT)} – sekanti savaitė prasidės su antrąja galimybe.`, null); }
 
+  s.incomeEarned += report.income + report.earned;
+  s.expensesPaid += report.needs + report.wants;
+  s.businessRevenue += report.businessRevenue;
+  s.businessExpenses += report.businessExpenses;
+  s.goal.progress = goalProgress(s);
+  report.businessProfit = round2(report.businessRevenue - report.businessExpenses);
+  report.skills = { ...s.skills }; report.reputation = s.reputation;
   s.week = weekNo;
   const nw = netWorth(s);
   report.netWorth = round2(nw);

@@ -106,7 +106,7 @@ label{display:block;font-weight:650;margin:14px 0 5px;font-size:.92rem;color:var
 input[type=checkbox],input[type=radio]{accent-color:var(--teal-d)}
 .err{color:#b3261e;font-weight:650;min-height:1.4em;margin:10px 0}
 
-/* -------------------------------------------------------------- pranešimai */
+    .goal-card .row{align-items:end}.goal-card .row>*{flex:1}.goal-track{height:10px;background:#e8eff7;border-radius:999px;overflow:hidden;margin:12px 0}.goal-track span{display:block;height:100%;background:var(--grad-brand);border-radius:inherit}
 #toasts{position:fixed;right:16px;bottom:16px;display:grid;gap:10px;z-index:60;max-width:min(92vw,370px)}
 .toast{
   background:rgba(15,30,61,.96);color:#fff;padding:13px 17px;border-radius:var(--r-sm);

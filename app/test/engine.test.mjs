@@ -1,6 +1,6 @@
 // Engine tests + balance check. Run: node test/engine.test.mjs
 import assert from 'node:assert/strict';
-import { buildSeason, newState, playWeek, netWorth, defaultAlloc, validateAlloc, strategyScore, CONFIG, ASSET_KEYS } from '../public/engine.js';
+import { buildSeason, newState, playWeek, netWorth, defaultAlloc, validateAlloc, validateGoal, strategyScore, CONFIG, ASSET_KEYS } from '../public/engine.js';
 import { WEEKS } from '../public/content.js';
 
 let passed = 0;
@@ -64,6 +64,37 @@ t('bankruptcy -> second chance works', () => {
   assert.equal(r.report.secondChance, true);
   assert.equal(r.state.debt, 0);
   assert.equal(r.state.bankrupt, false);
+});
+t('earning choices create distinct income paths and progression', () => {
+  const season = buildSeason('earning');
+  const job = playWeek(newState(), season, 5, 'job', STRATS.balanced);
+  const freelance = playWeek(newState(), season, 5, 'freelance', STRATS.balanced);
+  const business = playWeek(newState(), season, 5, 'microbiz', STRATS.balanced);
+  assert.ok(job.report.earned > 0);
+  assert.ok(freelance.report.earned > 0);
+  assert.ok(business.report.businessRevenue > 0);
+  assert.notEqual(job.report.earned, freelance.report.earned);
+  assert.ok(job.state.skills.work > 0);
+  assert.ok(freelance.state.skills.digital > 0);
+  assert.ok(business.state.reputation > 0);
+});
+t('income accounting excludes transfers and tracks goal progress', () => {
+  const season = buildSeason('accounting');
+  const result = playWeek(newState(), season, 5, 'job', STRATS.balanced);
+  assert.equal(result.state.incomeEarned, result.report.income + result.report.earned);
+  assert.equal(result.state.expensesPaid, result.report.needs + result.report.wants);
+  assert.equal(result.state.goal.target, 500);
+  assert.equal(result.state.goal.progress, Math.round((result.state.savings + result.state.reserve) * 100) / 100);
+});
+t('financial goals can be selected and progress uses the selected goal', () => {
+  const state = newState();
+  assert.equal(validateGoal({ type: 'income', target: 1000 }), null);
+  assert.ok(validateGoal({ type: 'unknown', target: 1000 }));
+  assert.ok(validateGoal({ type: 'income', target: 0 }));
+  const season = buildSeason('goal');
+  const result = playWeek(state, season, 5, 'job', STRATS.balanced);
+  result.state.goal = { type: 'income', target: 1000, progress: result.state.incomeEarned };
+  assert.equal(result.state.goal.progress, result.state.incomeEarned);
 });
 
 // ---- „Pamoka": žingsnis po žingsnio paaiškinama, kas įvyko ----
