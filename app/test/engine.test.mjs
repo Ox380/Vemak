@@ -96,6 +96,27 @@ t('financial goals can be selected and progress uses the selected goal', () => {
   result.state.goal = { type: 'income', target: 1000, progress: result.state.incomeEarned };
   assert.equal(result.state.goal.progress, result.state.incomeEarned);
 });
+t('earning opportunities are spread across the season', () => {
+  const expected = [
+    [2, 'scholarship'],
+    [3, 'internship'],
+    [4, 'course'],
+    [6, 'marketplace'],
+  ];
+  const season = buildSeason('opportunities');
+  for (const [week, choice] of expected) {
+    const result = playWeek(newState(), season, week, choice, STRATS.balanced);
+    assert.ok(result.report.earned > 0 || result.report.assetSale > 0 || result.report.cashImpact < 0, `${week}/${choice} has no economic effect`);
+    assert.ok(result.report.lesson.length > 20);
+  }
+});
+t('selling an item is tracked separately from earned income', () => {
+  const result = playWeek(newState(), buildSeason('sale'), 6, 'marketplace', STRATS.balanced);
+  assert.equal(result.report.assetSale, 90);
+  assert.equal(result.report.earned, 0);
+  assert.equal(result.state.incomeEarned, result.report.income);
+  assert.match(result.report.steps.map((s) => s.text).join(' '), /turto pavert/);
+});
 
 // ---- „Pamoka": žingsnis po žingsnio paaiškinama, kas įvyko ----
 t('every week explains the result step by step', () => {

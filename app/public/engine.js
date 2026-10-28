@@ -208,6 +208,7 @@ export function playWeek(prev, season, weekNo, choiceKey, alloc) {
   if (opt.cash) step(opt.cash > 0 ? `Iš karto gauta ${signed(opt.cash)} (įskaičiuota į biudžetą).` : `Iš karto sumokėta ${money(-opt.cash)} (įskaičiuota į biudžetą).`, opt.cash);
   if (opt.earned) step(`Papildomos pajamos: ${signed(opt.earned)}.`, opt.earned);
   if (opt.businessRevenue) step(`Verslo pajamos ${money(opt.businessRevenue)}, išlaidos ${money(opt.businessExpenses || 0)}, pelnas ${signed((opt.businessRevenue || 0) - (opt.businessExpenses || 0))}.`, (opt.businessRevenue || 0) - (opt.businessExpenses || 0));
+  if (opt.assetSale) step(`Parduotas nenaudojamas daiktas: ${money(opt.assetSale)} turto pavertė pinigais; tai nėra naujos pajamos.`, opt.assetSale);
   if (opt.shield) step('Apsauga: kainų kilimas šiam sezonui nebeturi įtakos poreikiams.', null);
   if (opt.wantsDelta) step(`Norai ${opt.wantsDelta > 0 ? 'išaugo' : 'sumažėjo'} ${money(Math.abs(opt.wantsDelta))} per savaitę.`, opt.wantsDelta);
   if (opt.bizBoost) step(`Verslo grąža padidėjo ${pctStr(opt.bizBoost)} per savaitę.`, null);
@@ -224,9 +225,10 @@ export function playWeek(prev, season, weekNo, choiceKey, alloc) {
   const earned = opt.earned || 0;
   const businessRevenue = opt.businessRevenue || 0;
   const businessExpenses = opt.businessExpenses || 0;
-  let free = CONFIG.PAY - needs - wants + (opt.cash || 0) + earned + businessRevenue - businessExpenses;
+  const assetSale = opt.assetSale || 0;
+  let free = CONFIG.PAY - needs - wants + (opt.cash || 0) + earned + businessRevenue + assetSale - businessExpenses;
   report.needs = round2(needs); report.wants = round2(wants); report.income = CONFIG.PAY + Math.max(0, opt.cash || 0) + businessRevenue;
-  report.earned = round2(earned); report.businessRevenue = round2(businessRevenue); report.businessExpenses = round2(businessExpenses);
+  report.earned = round2(earned); report.assetSale = round2(assetSale); report.cashImpact = round2(opt.cash || 0); report.businessRevenue = round2(businessRevenue); report.businessExpenses = round2(businessExpenses);
   report.expenses = round2(needs + wants + businessExpenses);
 
   // 2 žingsnis — įvykis ir mėnesio biudžetas
