@@ -1,54 +1,65 @@
-// landing.js — hero city + live demo (runs the REAL engine in the browser, no login, nothing sent to a server).
-import { WEEKS } from './content.js';
-import { buildSeason, newState, playWeek, mentorFacts, mentorNote, ASSET_KEYS } from './engine.js';
+// landing.js — anonymous one-week playable demo; no login, no server writes.
+import { DEMO_CHOICES, DEMO_EVENT, DEMO_CAPITAL, buildDemoReveal, compareDemoChoice, validateDemoAllocation } from './demo.js';
 import { citySVG } from './iso.js';
-import { esc, $, eur, api, toast } from './ui.js';
+import { esc, $, eur, api } from './ui.js';
 
 $('#heroCity').innerHTML = citySVG({ level: 2, savings: 420, reserve: 300, business: 640, invest: 520, mood: 'up' });
-
-const PRESETS = {
-  balanced: { label: 'Subalansuota', desc: '30 % santaupos · 25 % investicijos · 25 % verslas · 20 % rezervas', alloc: { sav: 30, inv: 25, bus: 25, res: 20 } },
-  allbiz:   { label: 'Viskas į verslą', desc: '100 % verslas', alloc: { sav: 0, inv: 0, bus: 100, res: 0 } },
-  noreserve:{ label: 'Be rezervo', desc: '30 % santaupos · 40 % investicijos · 30 % verslas', alloc: { sav: 30, inv: 40, bus: 30, res: 0 } },
-};
-const season = buildSeason('demo-2026');
-let state, round, choice, preset;
 const box = $('#demoBox');
-const mix = { etf: 50, tech: 0, green: 0, reit: 30, gold: 20 };
-const reset = () => { state = newState(); round = 1; choice = null; preset = 'balanced'; draw(); };
+const BUCKETS = [
+  { key: 'sav', name: 'Santaupos', color: '#3b82f6', hint: 'lėtai auga, maža rizika' },
+  { key: 'inv', name: 'Investicijos', color: '#8b5cf6', hint: 'didesnė grąža, bet svyravimai' },
+  { key: 'bus', name: 'Verslas', color: '#f5a524', hint: 'augina tavo mokyklos mugę' },
+  { key: 'res', name: 'Avarinis rezervas', color: '#19b394', hint: 'apsaugo nuo netikėtumų' },
+];
+let phase = 'event';
+let choice = null;
+let alloc = { sav: 25, inv: 25, bus: 25, res: 25 };
+let reveal = null;
+let comparison = null;
 
-function draw() {
-  const w = WEEKS[round - 1];
-  const last = state.history[state.history.length - 1];
-  const city = citySVG({ level: state.level, savings: state.savings, reserve: state.reserve, business: state.business, invest: ASSET_KEYS.reduce((t, a) => t + state.invest[a], 0), mood: last ? (last.delta < -15 ? 'down' : last.delta > 40 ? 'up' : 'neutral') : 'neutral', debt: state.debt });
-  box.innerHTML = `<div class="two"><div class="city">${city}</div><div>
-    <span class="pill amber">Demo · ${round} iš 2 savaičių</span><h3 style="margin-top:8px">${esc(w.title)}</h3><p>${esc(w.body)}</p>
-    <div class="opts" role="radiogroup" aria-label="Pasirinkimas">${w.options.map((o) => `<button class="opt" role="radio" aria-checked="${choice === o.key}" data-c="${o.key}"><span class="dot" style="background:${{ red: '#ef5b4d', green: '#19b394', blue: '#3b82f6' }[o.tone] || '#94a3b8'}">${o.cash > 0 ? '+' : o.cash < 0 ? '−' : '='}</span><span><b>${esc(o.label)}</b><small>${esc(o.desc)}</small></span></button>`).join('')}</div>
-    <h4 style="margin:14px 0 4px">Kaip paskirstysi laisvus pinigus?</h4>
-    <div class="presets">${Object.entries(PRESETS).map(([k, p]) => `<button class="opt" role="radio" aria-checked="${preset === k}" data-p="${k}"><span><b>${p.label}</b><small>${p.desc}</small></span></button>`).join('')}</div>
-    <button class="btn" id="go" style="width:100%" ${choice ? '' : 'disabled'}>Užrakinti ir pamatyti rezultatą</button></div></div>`;
-  box.querySelectorAll('[data-c]').forEach((b) => b.addEventListener('click', () => { choice = b.dataset.c; draw(); }));
-  box.querySelectorAll('[data-p]').forEach((b) => b.addEventListener('click', () => { preset = b.dataset.p; draw(); }));
-  $('#go').addEventListener('click', play);
+function total() { return Object.values(alloc).reduce((sum, value) => sum + value, 0); }
+function allocationError() { return validateDemoAllocation(alloc); }
+function city(result = null) {
+  const s = result || { level: 1, savings: 250, reserve: 250, business: 250, invest: 250, debt: 0 };
+  return citySVG({ level: s.level || 1, savings: s.savings || 0, reserve: s.reserve || 0, business: s.business || 0, invest: s.invest || 0, mood: result?.delta < 0 ? 'down' : result ? 'up' : 'neutral', debt: 0 });
 }
-
-function play() {
-  const { state: ns, report } = playWeek(state, season, round, choice, { ...PRESETS[preset].alloc, mix, upgrade: false });
-  state = ns;
-  const note = mentorNote(mentorFacts(report, round + 1));
-  const city = citySVG({ level: state.level, savings: state.savings, reserve: state.reserve, business: state.business, invest: ASSET_KEYS.reduce((t, a) => t + state.invest[a], 0), mood: report.delta < -15 ? 'down' : report.delta > 40 ? 'up' : 'neutral', debt: state.debt });
-  const done = round >= 2;
-  box.innerHTML = `<div class="two"><div class="city">${city}</div><div>
-    <span class="pill">Penktadienio rezultatas · ${round} savaitė</span>
-    <h3 style="margin-top:8px">Grynosios vertės pokytis: <span class="${report.delta >= 0 ? 'pos' : 'neg'}">${eur(report.delta, true)}</span></h3>
-    ${report.expense ? `<div class="news down">⚠️ Netikėta išlaida: ${eur(report.expense)}${report.forced ? '. Teko parduoti turtą su 15 % praradimu.' : '. Sumokėta be nuostolių.'}</div>` : ''}
-    <p><b>Pamoka:</b> ${esc(report.lesson)}</p>
-    <div class="mentor"><div class="av">🧭</div><div><b>Mentorius</b><ul>${note.points.slice(0, 3).map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div></div>
-    <div class="row" style="margin-top:14px">${done ? `<a class="btn" href="#pilotas">Prašyti pilotinio bandymo</a><button class="btn alt" id="again">Bandyti kitaip</button>` : '<button class="btn" id="next">Kita savaitė →</button>'}</div>
-    ${done ? `<p class="note">Šis demo naudoja tą patį variklį kaip pilnas žaidimas. Pilname žaidime yra 6 savaitės, klasės reitingas ir mokytojo skydelis.</p>` : ''}</div></div>`;
-  $('#next')?.addEventListener('click', () => { round = 2; choice = null; draw(); });
-  $('#again')?.addEventListener('click', reset);
+function header(step, label) {
+  return `<div class="demo-head"><div><span class="pill blue">5 min demo</span><span class="pill amber">${step}/3 · ${label}</span></div><strong>Pradinis kapitalas: ${eur(DEMO_CAPITAL)}</strong></div>`;
 }
+function drawEvent() {
+  box.innerHTML = `${header(1, 'Ekonominis įvykis')}<div class="demo-grid"><div class="city">${city()}</div><div class="card demo-panel"><p class="eyebrow">PIRMADIENIS · MOKYKLOS MUGĖ</p><h3>${esc(DEMO_EVENT.title)}</h3><p>${esc(DEMO_EVENT.body)}</p><div class="news">⚡ Penktadienį paaiškės tikrasis poveikis. Kiti žaidėjai dar nemato tavo sprendimo.</div><div class="choice-grid">${DEMO_CHOICES.map((item) => `<button class="choice-card" data-choice="${item.key}" aria-pressed="${choice === item.key}"><span class="choice-icon">${item.icon}</span><span><b>${esc(item.label)}</b><small>${esc(item.desc)}</small></span></button>`).join('')}</div><button class="btn" id="to-strategy" style="width:100%" ${choice ? '' : 'disabled'}>Tęsti į slaptą strategiją →</button></div></div>`;
+  box.querySelectorAll('[data-choice]').forEach((button) => button.addEventListener('click', () => { choice = button.dataset.choice; drawEvent(); }));
+  $('#to-strategy').addEventListener('click', () => { phase = 'strategy'; draw(); });
+}
+function allocationMarkup() {
+  return `<div class="allocation-bar">${BUCKETS.map((bucket) => `<span style="width:${alloc[bucket.key]}%;background:${bucket.color}"></span>`).join('')}</div><div class="allocation-list">${BUCKETS.map((bucket) => `<label class="allocation-row"><span><b>${bucket.name}</b><small>${bucket.hint}</small></span><input type="range" min="0" max="100" step="5" value="${alloc[bucket.key]}" data-bucket="${bucket.key}"><output>${alloc[bucket.key]}%</output></label>`).join('')}</div><p class="allocation-total ${total() === 100 ? 'pos' : 'neg'}" id="allocation-total">Iš viso: ${total()} % ${total() === 100 ? '✓' : '· reikia tiksliai 100 %'}</p>`;
+}
+function drawStrategy() {
+  const error = allocationError();
+  box.innerHTML = `${header(2, 'Slapta strategija')}<div class="demo-grid"><div class="card demo-panel"><p class="eyebrow">KETVIRTADIENIS</p><h3>Paskirstyk visus €1,000</h3><p>Naudok slankiklius. Strategija lieka privati iki penktadienio atskleidimo.</p>${allocationMarkup()}<div class="private-note">🔒 Klasė nemato tavo pasirinkimo, kol neįvyksta Friday Reveal.</div><button class="btn" id="lock-demo" style="width:100%" ${error ? 'disabled' : ''}>🔒 Užrakinti strategiją</button><p class="note">Užrakinus pamatysi tik patvirtinimą. Rezultato ir kitų mokinių strategijų dar nematysi.</p></div><div class="city">${city()}</div></div>`;
+  box.querySelectorAll('[data-bucket]').forEach((input) => input.addEventListener('input', () => { alloc[input.dataset.bucket] = Number(input.value); drawStrategy(); }));
+  $('#lock-demo').addEventListener('click', () => { phase = 'locked'; draw(); });
+}
+function drawLocked() {
+  box.innerHTML = `${header(2, 'Strategija užrakinta')}<div class="card locked-card"><div class="lock-icon">🔒</div><h3>Strategija užrakinta</h3><p>Tavo sprendimas ir paskirstymas saugiai paslėpti iki penktadienio.</p><div class="allocation-summary">${BUCKETS.map((bucket) => `<div><span>${bucket.name}</span><b>${alloc[bucket.key]}%</b></div>`).join('')}</div><div class="news">⏳ Penktadienio Reveal parodys ekonominį rezultatą, grynąją vertę ir klasės reitingą.</div><button class="btn" id="reveal-demo" style="width:100%">Penktadienio Reveal →</button></div>`;
+  $('#reveal-demo').addEventListener('click', () => { reveal = buildDemoReveal(choice, alloc); phase = 'reveal'; draw(); });
+}
+function resultRow(row) {
+  const isPlayer = row.name === 'Tu';
+  return `<tr class="${isPlayer ? 'me' : ''}"><td><span class="rank">${row.rank}</span></td><td>${isPlayer ? '⭐ ' : ''}${esc(row.name)}</td><td class="${row.delta >= 0 ? 'pos' : 'neg'}">${eur(row.delta, true)}</td><td><b>${eur(row.score)}</b></td></tr>`;
+}
+function drawReveal() {
+  const result = reveal.player;
+  box.innerHTML = `${header(3, 'Friday Reveal')}<div class="demo-grid"><div class="city">${city({ level: 1, savings: result.alloc.sav * 8, reserve: result.alloc.res * 8, business: result.alloc.bus * 8, invest: result.alloc.inv * 8, delta: result.delta })}</div><div class="card demo-panel"><p class="eyebrow">PENKTADIENIS · REZULTATAI</p><h3>Grynoji vertė: <span class="${result.delta >= 0 ? 'pos' : 'neg'}">${eur(result.netWorth)}</span></h3><p>Pokytis per savaitę: <b class="${result.delta >= 0 ? 'pos' : 'neg'}">${eur(result.delta, true)}</b></p><div class="res"><div class="resrow"><span>Netikėta išlaida</span><b>${eur(result.repairCost)}</b></div><div class="resrow"><span>Rezervas panaudotas</span><b>${eur(result.reserveUsed)}</b></div><div class="resrow"><span>Priverstinio pardavimo nuostolis</span><b class="${result.forcedSalePenalty ? 'neg' : 'pos'}">${eur(-result.forcedSalePenalty)}</b></div></div><p><b>Pamoka:</b> ${esc(result.lesson)}</p></div></div><div class="reveal-section"><h3>Klasės lyderių lentelė</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Žaidėjas</th><th>Pokytis</th><th>Strategijos taškai</th></tr></thead><tbody>${reveal.rows.map(resultRow).join('')}</tbody></table></div><div class="demo-awards">${reveal.awards.map((award) => `<div class="award"><small>${esc(award.title)}</small><b>${esc(award.name)}</b><span>${award.value}${award.unit === '€' ? ' €' : ' ' + esc(award.unit)}</span></div>`).join('')}</div><div class="row"><button class="btn" id="second-chance">🌱 Antra galimybė: palyginti sprendimą</button><a class="btn alt" href="#pilotas">Prašyti pilno klasės bandymo</a></div></div>`;
+  $('#second-chance').addEventListener('click', () => { comparison = compareDemoChoice(choice, DEMO_CHOICES.find((item) => item.key !== choice).key, alloc); drawComparison(); });
+}
+function drawComparison() {
+  const alternative = DEMO_CHOICES.find((item) => item.key === comparison.alternative.choice);
+  box.innerHTML = `${header(3, 'Antra galimybė')}<div class="card comparison-card"><p class="eyebrow">MOKYKIS IŠ ALTERNATYVOS</p><h3>Kas būtų, jeigu būtum pasirinkęs „${esc(alternative.label)}“?</h3><div class="compare-grid"><div><small>Tavo pirmas sprendimas</small><b>${eur(comparison.before.netWorth)}</b><span>${eur(comparison.before.delta, true)}</span></div><div class="compare-arrow">→</div><div><small>Alternatyvus sprendimas</small><b>${eur(comparison.alternative.netWorth)}</b><span class="${comparison.difference >= 0 ? 'pos' : 'neg'}">${eur(comparison.difference, true)} skirtumas</span></div></div><p><b>Kas pasikeitė:</b> ${esc(comparison.alternative.lesson)}</p><div class="news">💡 Antra galimybė nekeičia klasės rezultatų. Ji leidžia saugiai palyginti sprendimus ir suprasti pasekmes.</div><div class="row"><button class="btn" id="restart-demo">Žaisti dar kartą</button><a class="btn alt" href="#pilotas">Prašyti pilno bandymo</a></div></div>`;
+  $('#restart-demo').addEventListener('click', reset);
+}
+function draw() { if (phase === 'event') drawEvent(); else if (phase === 'strategy') drawStrategy(); else if (phase === 'locked') drawLocked(); else if (phase === 'reveal') drawReveal(); }
+function reset() { phase = 'event'; choice = null; alloc = { sav: 25, inv: 25, bus: 25, res: 25 }; reveal = null; comparison = null; draw(); }
 reset();
 
 $('#pf').addEventListener('submit', async (e) => {

@@ -26,17 +26,20 @@ let n = 0; const ok = (m) => console.log('ok  ', m, ++n && '');
 
 // ---- landing ----
 {
-  const { d, errors } = await page('/', 'landing.js', BASE + '/');
+  const { d, w, errors } = await page('/', 'landing.js', BASE + '/');
   assert.ok(d.querySelector('#heroCity svg')); ok('hero city renders');
-  await click(d.querySelector('#demoBox [data-c]'));
-  await click(d.querySelector('#go'));
-  assert.match(d.querySelector('#demoBox h3').textContent, /pokytis/); ok('demo week 1 resolves with result');
-  assert.ok(d.querySelector('#demoBox .mentor li')); ok('demo shows mentor');
-  await click(d.querySelector('#next'));
-  await click(d.querySelectorAll('#demoBox [data-p]')[1]);
-  await click(d.querySelector('#demoBox [data-c]'));
-  await click(d.querySelector('#go'));
-  assert.ok(d.querySelector('#again')); ok('demo week 2 (all-in business) completes');
+  await click(d.querySelector('#demoBox [data-choice]'));
+  await click(d.querySelector('#to-strategy'));
+  assert.ok(d.querySelector('#lock-demo').disabled === false); ok('demo event leads to secret strategy');
+  const reserve = d.querySelector('[data-bucket="res"]'); reserve.value = '20'; reserve.dispatchEvent(new w.Event('input', { bubbles: true }));
+  assert.equal(d.querySelector('#lock-demo').disabled, true); ok('demo lock requires exactly 100% allocation');
+  reserve.value = '25'; reserve.dispatchEvent(new w.Event('input', { bubbles: true }));
+  await click(d.querySelector('#lock-demo'));
+  assert.match(d.body.textContent, /Strategija užrakinta/); assert.ok(!d.body.textContent.includes('Klasės lyderių lentelė')); ok('demo keeps strategy private after lock');
+  await click(d.querySelector('#reveal-demo'));
+  assert.match(d.body.textContent, /Klasės lyderių lentelė/); assert.match(d.body.textContent, /Rizikos meistras/); ok('Friday reveal shows leaderboard and awards');
+  await click(d.querySelector('#second-chance'));
+  assert.match(d.body.textContent, /Alternatyvus sprendimas/); ok('second chance compares alternative decision');
   d.querySelector('#pn').value = 'Rūta'; d.querySelector('#pe').value = 'ruta@mokykla.lt'; d.querySelector('#ps').value = 'Gimnazija'; d.querySelector('#pc').checked = true;
   d.querySelector('#pf').dispatchEvent(new d.defaultView.Event('submit', { cancelable: true, bubbles: true })); await sleep(400);
   assert.match(d.querySelector('#pf').textContent, /Ačiū/); ok('pilot form submits');
