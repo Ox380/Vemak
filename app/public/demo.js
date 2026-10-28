@@ -1,8 +1,8 @@
 // demo.js — deterministic, one-week anonymous VEMAK demonstration.
 export const DEMO_CAPITAL = 1000;
 export const DEMO_EVENT = {
-  title: 'Mokyklos mugė ir netikėta telefono avarija',
-  body: 'Šią savaitę gali uždirbti iš mugės, investuoti augimui arba apsisaugoti nuo 120 € netikėtos išlaidos.',
+  title: 'Kainos kyla: kaip paskirstysi 1 000 €?',
+  body: 'Ekonomikoje kyla kainos. Turi 1 000 €. Pasirink kryptį, o tada paskirstyk visus pinigus tarp santaupų, investicijų, verslo ir avarinio rezervo.',
   emergency: 120,
 };
 
@@ -29,17 +29,17 @@ export function validateDemoAllocation(alloc) {
 function round(value) { return Math.round(value * 100) / 100; }
 function choiceFor(key) { return DEMO_CHOICES.find((choice) => choice.key === key); }
 
-export function simulateDemo(choiceKey, alloc) {
+export function simulateDemo(choiceKey, alloc, startingCapital = DEMO_CAPITAL, weekNo = 1) {
   const error = validateDemoAllocation(alloc);
   if (error) throw new Error(error);
   const choice = choiceFor(choiceKey);
   if (!choice) throw new Error('Pasirink strategiją.');
 
-  const savings = DEMO_CAPITAL * alloc.sav / 100 * 1.01;
-  const investing = DEMO_CAPITAL * alloc.inv / 100 * (choiceKey === 'invest' ? 1.10 : 1.03);
-  const business = DEMO_CAPITAL * alloc.bus / 100 * (choiceKey === 'business' ? 1.18 : 1.04);
-  const reserve = DEMO_CAPITAL * alloc.res / 100;
-  const repairCost = choiceKey === 'protect' ? 40 : DEMO_EVENT.emergency;
+  const savings = startingCapital * alloc.sav / 100 * (weekNo === 1 ? 1.01 : 1.012);
+  const investing = startingCapital * alloc.inv / 100 * (choiceKey === 'invest' ? 1.10 : 1.03);
+  const business = startingCapital * alloc.bus / 100 * (choiceKey === 'business' ? 1.18 : 1.04);
+  const reserve = startingCapital * alloc.res / 100;
+  const repairCost = choiceKey === 'protect' ? 40 : DEMO_EVENT.emergency + (weekNo > 1 ? 20 : 0);
   const reserveUsed = Math.min(reserve, repairCost);
   const shortfall = repairCost - reserveUsed;
   const forcedSalePenalty = shortfall * 0.15;
@@ -52,7 +52,8 @@ export function simulateDemo(choiceKey, alloc) {
   return {
     choice: choiceKey,
     alloc: { ...alloc },
-    startingCapital: DEMO_CAPITAL,
+    startingCapital: round(startingCapital),
+    week: weekNo,
     netWorth,
     delta,
     score,
@@ -68,9 +69,9 @@ export function simulateDemo(choiceKey, alloc) {
   };
 }
 
-export function buildDemoReveal(playerChoice, playerAlloc) {
-  const player = simulateDemo(playerChoice, playerAlloc);
-  const rows = [{ name: 'Tu', ...player }, ...PEERS.map((peer) => ({ name: peer.name, ...simulateDemo(peer.choice, peer.alloc) }))]
+export function buildDemoReveal(playerChoice, playerAlloc, startingCapital = DEMO_CAPITAL, weekNo = 1) {
+  const player = simulateDemo(playerChoice, playerAlloc, startingCapital, weekNo);
+  const rows = [{ name: 'Tu', ...player }, ...PEERS.map((peer) => ({ name: peer.name, ...simulateDemo(peer.choice, peer.alloc, startingCapital, weekNo) }))]
     .sort((a, b) => b.score - a.score)
     .map((row, index) => ({ ...row, rank: index + 1 }));
   const riskAward = rows.slice().sort((a, b) => a.maxShare - b.maxShare || b.score - a.score)[0];
@@ -86,8 +87,8 @@ export function buildDemoReveal(playerChoice, playerAlloc) {
   };
 }
 
-export function compareDemoChoice(current, alternativeChoice, alloc) {
-  const before = simulateDemo(current, alloc);
-  const alternative = simulateDemo(alternativeChoice, alloc);
+export function compareDemoChoice(current, alternativeChoice, alloc, startingCapital = DEMO_CAPITAL, weekNo = 1) {
+  const before = simulateDemo(current, alloc, startingCapital, weekNo);
+  const alternative = simulateDemo(alternativeChoice, alloc, startingCapital, weekNo);
   return { before, alternative, difference: round(alternative.netWorth - before.netWorth) };
 }

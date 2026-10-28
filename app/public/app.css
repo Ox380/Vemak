@@ -88,6 +88,8 @@ tr.me td{background:#e6f6f2;font-weight:800}
 .avatars{display:flex;gap:8px;flex-wrap:wrap}
 .avbtn{width:52px;height:52px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:1.6rem}
 .avbtn[aria-pressed=true]{border-color:var(--navy);background:#eef3fb}
+.demo-intro{display:grid;grid-template-columns:minmax(120px,.55fr) 1fr;gap:24px;align-items:center;background:#fff;border-radius:var(--r);padding:28px;box-shadow:var(--shadow)}.demo-intro-art{display:grid;place-items:center;min-height:180px;border-radius:20px;background:linear-gradient(145deg,#dff7f0,#e5efff);font-size:5rem}.demo-intro h3{font-size:clamp(1.6rem,4vw,2.3rem);margin:.45em 0}.demo-intro li{margin:8px 0}.transition-card{max-width:620px;margin:10vh auto;text-align:center;background:#fff;border-radius:var(--r);padding:42px 24px;box-shadow:var(--shadow)}.spinner{font-size:3rem;color:var(--teal);animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:620px){.demo-intro{grid-template-columns:1fr;padding:20px}.demo-intro-art{min-height:110px;font-size:3.5rem}.allocation-row{grid-template-columns:1fr 1fr 90px}.allocation-summary{grid-template-columns:repeat(2,1fr)}}
 .quiz fieldset{border:0;padding:0;margin:0 0 18px}.quiz legend{font-weight:800;margin-bottom:8px;color:var(--navy)}
 .quiz label{display:flex;gap:10px;align-items:center;font-weight:500;border:2px solid var(--line);padding:10px 12px;border-radius:12px;margin:6px 0;cursor:pointer}
 .quiz input{width:auto}

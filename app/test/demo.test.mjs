@@ -9,6 +9,12 @@ const balanced = { sav: 25, inv: 25, bus: 25, res: 25 };
 t('demo starts every player with €1,000', () => {
   assert.equal(simulateDemo('business', balanced).startingCapital, DEMO_CAPITAL);
 });
+t('next week carries the previous net worth forward', () => {
+  const first = simulateDemo('business', balanced);
+  const next = simulateDemo('protect', balanced, first.netWorth, 2);
+  assert.equal(next.startingCapital, first.netWorth);
+  assert.notEqual(next.netWorth, first.netWorth);
+});
 t('allocation must equal exactly 100%', () => {
   assert.equal(validateDemoAllocation(balanced), null);
   assert.match(validateDemoAllocation({ ...balanced, res: 24 }), /tiksliai 100/);
