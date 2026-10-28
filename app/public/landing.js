@@ -44,7 +44,7 @@ function play() {
     ${report.expense ? `<div class="news down">⚠️ Netikėta išlaida: ${eur(report.expense)}${report.forced ? '. Teko parduoti turtą su 15 % praradimu.' : '. Sumokėta be nuostolių.'}</div>` : ''}
     <p><b>Pamoka:</b> ${esc(report.lesson)}</p>
     <div class="mentor"><div class="av">🧭</div><div><b>Mentorius</b><ul>${note.points.slice(0, 3).map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div></div>
-    <div class="row" style="margin-top:14px">${done ? `<a class="btn" href="#pilotas">Prašyti pilotinio bandymo</a><button class="btn alt" id="again">Bandyti kitaip</button>` : '<button class="btn" id="next">Kita savaitė →</button>'}</div>
+    <div class="row" style="margin-top:14px">${done ? `<a class="btn" href="#pilotas">Prašyti vienkartinio bandymo</a><button class="btn alt" id="again">Bandyti kitaip</button>` : '<button class="btn" id="next">Kita savaitė →</button>'}</div>
     ${done ? `<p class="note">Šis demo naudoja tą patį variklį kaip pilnas žaidimas. Pilname žaidime yra 6 savaitės, klasės reitingas ir mokytojo skydelis.</p>` : ''}</div></div>`;
   $('#next')?.addEventListener('click', () => { round = 2; choice = null; draw(); });
   $('#again')?.addEventListener('click', reset);
