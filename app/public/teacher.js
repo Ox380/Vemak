@@ -126,7 +126,10 @@ function renderClass(c, redraw) {
 }
 
 async function boot() {
-  if (!token) return viewLogin();
+  if (!token) {
+    const mode = new URLSearchParams(location.search).get('register') === '1' ? 'register' : 'login';
+    return viewLogin(mode);
+  }
   try { await viewClasses(); } catch (e) { if (e.status === 401) { localStorage.removeItem(KEY); token = null; return viewLogin('login', 'Sesija pasibaigė.'); } toast(e.message, 'err'); }
 }
 boot();

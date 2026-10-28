@@ -27,8 +27,9 @@ let n = 0; const ok = (m) => console.log('ok  ', m, ++n && '');
 // ---- landing ----
 {
   const { d, w, errors } = await page('/', 'landing.js', BASE + '/');
-  assert.ok([...d.querySelectorAll('a.btn')].some((a) => a.textContent.includes('Prašyti vienkartinio bandymo'))); ok('pilot CTA says one-time trial');
-  assert.ok(![...d.querySelectorAll('a.btn')].some((a) => a.textContent.includes('Prašyti pilotinio bandymo'))); ok('old CTA wording removed');
+  assert.ok([...d.querySelectorAll('.nav a.btn')].some((a) => a.textContent.includes('Registruoti paskyrą') && a.getAttribute('href') === '/teacher?register=1')); ok('registration CTA links to signup');
+  assert.ok(![...d.querySelectorAll('.hero .row a')].some((a) => a.getAttribute('href') === '#demo')); ok('duplicate hero demo button removed');
+  assert.ok([...d.querySelectorAll('.nav a')].some((a) => a.textContent.trim() === 'Demo' && a.getAttribute('href') === '#demo')); ok('navigation demo link remains');
   assert.ok(d.querySelector('#heroCity svg')); ok('hero city renders');
   assert.match(d.querySelector('#demoBox').textContent, /Sveikas atvykęs į VEMAK/); ok('demo starts with introduction');
   await click(d.querySelector('#start-demo'));
@@ -59,8 +60,8 @@ await api('POST', `/api/teacher/classes/${cls.id}/start`, null, T);
 
 let studentToken;
 {
-  const { d, w, errors } = await page('/play', 'play.js', BASE + `/play?kodas=${cls.code}`);
-  assert.ok(d.querySelector('#f')); assert.equal(d.querySelector('#code').value, cls.code); ok('join page prefilled from ?kodas=');
+  const { d, w, errors } = await page('/play', 'play.js', BASE + `/play?kodas=${cls.code}`, { 'vemak.student': '' });
+  assert.ok(d.querySelector('#f')); assert.equal(d.querySelector('#code').value, new URL(BASE + `/play?kodas=${cls.code}`).searchParams.get('kodas')); ok('join page prefilled from ?kodas=');
   d.querySelector('#nick').value = 'Testas<b>'; d.querySelector('#f').dispatchEvent(new w.Event('submit', { cancelable: true })); await sleep(700);
   assert.ok(d.querySelector('#q'), 'pre-quiz shown');ok('joined, pre-quiz shown');
   for (let i = 0; i < 4; i++) d.querySelector(`input[name=q${i}]`).checked = true;
@@ -112,5 +113,12 @@ await api('POST', `/api/teacher/classes/${cls.id}/reveal`, null, T);
   assert.match(d.body.textContent, /Poreikiai, norai/); ok('lesson plans render');
   await click(d.querySelector('[data-t=report]')); assert.ok(d.querySelector('#pdf') && d.querySelector('#csv')); ok('report has PDF + CSV buttons');
   assert.deepEqual(errors, [], 'teacher errors: ' + errors.join('|'));
+}
+{
+  const { d, errors } = await page('/teacher', 'teacher.js', BASE + '/teacher?register=1');
+  assert.match(d.querySelector('h1').textContent, /registracija/i);
+  assert.ok(d.querySelector('#name') && d.querySelector('#school'));
+  ok('registration CTA opens account registration form');
+  assert.deepEqual(errors, [], 'registration page errors: ' + errors.join('|'));
 }
 console.log(`\nUI: ${n} checks passed`); process.exit(0);
