@@ -105,10 +105,14 @@ function box(gx, gy, w, d, h, color, opts = {}) {
     s += poly([a, b, ra], shade('#b8524c', 1.12)) + poly([c, e, rb], shade('#b8524c', 0.76));
     s += poly([a, ra, rb, e], shade('#b8524c', 0.94)) + poly([b, c, rb, ra], shade('#b8524c', 0.64));
   }
-  if (opts.dome) { // kupolas
+  if (opts.dome) { // kupolas su smaile (metalinė spalva, kad nesusilietų su augmenija)
     const [cx, cy] = P(gx + w / 2, gy + d / 2, h);
-    s += `<ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${(w * TW * 0.42).toFixed(1)}" ry="${(w * TH * 0.62).toFixed(1)}" fill="${shade(color, 1.2)}"/>`;
-    s += `<ellipse cx="${(cx - w * 2).toFixed(1)}" cy="${(cy - 3).toFixed(1)}" rx="${(w * TW * 0.2).toFixed(1)}" ry="${(w * TH * 0.3).toFixed(1)}" fill="#ffffff" opacity=".28"/>`;
+    const domeCol = typeof opts.dome === 'string' ? opts.dome : shade(color, 1.2);
+    s += `<ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${(w * TW * 0.42).toFixed(1)}" ry="${(w * TH * 0.62).toFixed(1)}" fill="${shade(domeCol, 0.9)}"/>`;
+    s += `<ellipse cx="${(cx - w * 1.6).toFixed(1)}" cy="${(cy - 4).toFixed(1)}" rx="${(w * TW * 0.3).toFixed(1)}" ry="${(w * TH * 0.44).toFixed(1)}" fill="${domeCol}"/>`;
+    s += `<ellipse cx="${(cx - w * 3).toFixed(1)}" cy="${(cy - 6).toFixed(1)}" rx="${(w * TW * 0.13).toFixed(1)}" ry="${(w * TH * 0.2).toFixed(1)}" fill="#ffffff" opacity=".45"/>`;
+    s += `<line x1="${cx.toFixed(1)}" y1="${(cy - 8).toFixed(1)}" x2="${cx.toFixed(1)}" y2="${(cy - 22).toFixed(1)}" stroke="#8a6a2f" stroke-width="1.8"/>`;
+    s += `<circle cx="${cx.toFixed(1)}" cy="${(cy - 24).toFixed(1)}" r="2.6" fill="#ffd166"/>`;
   }
   if (opts.antenna) {
     const [ax, ay] = P(gx + w / 2, gy + d / 2, h + (opts.parapet ? 3.5 : 0));
@@ -308,15 +312,22 @@ export function citySVG(st) {
   pond += disc(9.35, 3.1, 0.55, '#8fd6ea', 'opacity=".7"');
   pond += disc(9.6, 3.3, 0.16, '#e8f6ff', 'opacity=".5"');
 
+  // plokštieji elementai (aikštė, tvenkinys) klojami iškart ant žemės
+  g += plaza + pond;
+
   // ================= ELEMENTAI (iš galo į priekį) =================
   const items = [];
-  const push = (depth, fn) => items.push([depth, fn]);
+  // Sluoksnis = objekto priekinis kampas (gx+w + gy+d). Taip piešiama teisinga tvarka:
+  // tai, kas arčiau žiūrovo, uždengia tai, kas už jo. (Anksčiau sluoksniai buvo rašomi
+  // ranka ir dėl to medis atsidurdavo ant stogo, o etiketė nukrypdavo.)
+  const solid = (gx, gy, w, d, fn) => items.push([gx + w + gy + d, fn]);
+  // rankinis sluoksnis etiketėms, kurios kabo virš pastatų
+  const put = (depth, fn) => items.push([depth, fn]);
 
-  push(0.5, () => pond);
-  push(1.0, () => plaza);
+  const lit = mood === 'up';
 
   // prieplauka prie tvenkinio
-  push(2.4, () => {
+  solid(8.55, 3.6, 0.6, 0.4, () => {
     const a = P(8.55, 3.6, 4), b = P(9.15, 3.6, 4), c = P(9.15, 4.0, 4), d = P(8.55, 4.0, 4);
     let s = poly([a, b, c, d], '#c39a6b');
     for (let i = 0; i < 3; i++) {
@@ -327,45 +338,66 @@ export function citySVG(st) {
   });
 
   // gyvenamasis kvartalas
-  const lit = mood === 'up';
   const houses = [
     [0.5, 0.5, 2.0, 2.0, 30, '#f2e3d0'],
     [2.7, 0.6, 1.7, 1.7, 34, '#e8d6c4'],
     [4.6, 0.5, 1.3, 1.3, 28, '#f0ded0'],
     [0.6, 2.8, 1.8, 1.8, 40, '#efe0cd'],
   ];
-  houses.forEach(([hx, hy, hw, hd, hh, hc], i) => {
-    push(1.6 + i * 0.12, () => box(hx, hy, hw, hd, hh, hc, { windows: true, pitch: true, lit, floors: 2 }));
+  houses.forEach(([hx, hy, hw, hd, hh, hc]) => {
+    solid(hx, hy, hw, hd, () => box(hx, hy, hw, hd, hh, hc, { windows: true, pitch: true, lit, floors: 2 }));
   });
-  push(2.1, () => hedge(0.35, 4.5, 4.2, 0.22));
-  push(2.2, () => flowers(1.1, 4.3) + flowers(2.6, 4.3) + flowers(3.8, 4.3, 0.9));
-  push(2.6, () => label(1.5, 1.5, 30 + 30, 'Namai · ' + Math.round(st.reserve || 0) + ' €'));
+  put(5.3, () => label(1.5, 1.5, 30 + 30, 'Namai \u00b7 ' + Math.round(st.reserve || 0) + ' \u20ac'));
+  solid(0.35, 4.5, 4.2, 0.22, () => hedge(0.35, 4.5, 4.2, 0.22));
+  solid(1.1, 4.8, 0, 0, () => flowers(1.1, 4.8));
+  solid(2.6, 4.3, 0, 0, () => flowers(2.6, 4.3));
+  solid(3.8, 4.8, 0, 0, () => flowers(3.8, 4.8, 0.9));
+  solid(2.6, 2.3, 0, 0, () => tree(2.6, 2.3, 0.9));
+  solid(2.9, 4.2, 0, 0, () => pine(2.9, 4.2, 0.85));
+  solid(4.6, 2.2, 0, 0, () => bush(4.6, 2.2, 0.95));
+  solid(2.2, 2.6, 0, 0, () => bench(2.2, 2.6));
+  solid(2.6, 2.9, 0, 0, () => bench(2.6, 2.9));
 
-  // biurų pastatas
-  push(3.0, () => box(3.1, 2.6, 1.7, 1.7, 56, '#dbe7f5', { windows: true, parapet: true, floors: 7, lit, base: '#b9c9dd', floorLine: true }));
-  push(3.1, () => box(3.4, 2.9, 1.1, 1.1, 68, '#e6eef8', { windows: true, parapet: true, floors: 4, lit }));
-  push(3.2, () => label(3.95, 3.45, 68 + 26, 'Darbovietė'));
+  // biuru pastatas (du turiai)
+  solid(3.1, 2.6, 1.7, 1.7, () => box(3.1, 2.6, 1.7, 1.7, 56, '#dbe7f5', { windows: true, parapet: true, floors: 7, lit, base: '#b9c9dd', floorLine: true }));
+  solid(3.4, 2.9, 1.1, 1.1, () => box(3.4, 2.9, 1.1, 1.1, 68, '#e6eef8', { windows: true, parapet: true, floors: 4, lit }));
+  put(9.4, () => label(3.95, 3.45, 68 + 26, 'Darboviet\u0117'));
 
-  // banko bokštas
-  push(3.4, () => box(7.6, 0.5, 2.1, 2.1, 88, '#d3e5f7', { windows: true, parapet: true, floors: 13, lit, floorLine: true, antenna: true }));
-  push(3.5, () => box(7.95, 0.85, 1.4, 1.4, 104, '#e3eefb', { windows: true, parapet: true, floors: 5, lit }));
-  push(3.6, () => box(9.95, 1.0, 1.1, 1.5, 40, '#c6dbef', { windows: true, parapet: true, floors: 5, lit, base: '#a8bed6' }));
-  push(4.2, () => label(8.65, 1.55, 104 + 26, 'Bankas · ' + Math.round(st.savings || 0) + ' €'));
-  push(4.4, () => hedge(7.4, 2.9, 3.6, 0.22));
+  // banko bokstas
+  solid(7.6, 0.5, 2.1, 2.1, () => box(7.6, 0.5, 2.1, 2.1, 88, '#d3e5f7', { windows: true, parapet: true, floors: 13, lit, floorLine: true, antenna: true }));
+  solid(7.95, 0.85, 1.4, 1.4, () => box(7.95, 0.85, 1.4, 1.4, 104, '#e3eefb', { windows: true, parapet: true, floors: 5, lit }));
+  solid(9.95, 1.0, 1.1, 1.5, () => box(9.95, 1.0, 1.1, 1.5, 40, '#c6dbef', { windows: true, parapet: true, floors: 5, lit, base: '#a8bed6' }));
+  put(13.8, () => label(8.65, 1.55, 104 + 26, 'Bankas \u00b7 ' + Math.round(st.savings || 0) + ' \u20ac'));
+  solid(7.4, 2.9, 3.6, 0.22, () => hedge(7.4, 2.9, 3.6, 0.22));
 
   // parko augmenija
-  push(4.8, () => tree(8.6, 3.1, 0.95) + tree(10.4, 3.0, 1.05) + pine(10.9, 4.3, 0.95));
-  push(4.9, () => tree(8.9, 4.6, 0.85) + bush(10.2, 4.7) + bush(7.6, 4.5, 0.9));
-  push(5.0, () => tree(2.6, 2.3, 0.9) + pine(1.4, 3.2, 0.85) + bush(4.6, 2.2, 0.95));
+  solid(8.6, 3.5, 0, 0, () => tree(8.6, 3.5, 0.95));
+  solid(10.4, 3.6, 0, 0, () => tree(10.4, 3.6, 1.05));
+  solid(10.9, 4.3, 0, 0, () => pine(10.9, 4.3, 0.95));
+  solid(8.9, 4.6, 0, 0, () => tree(8.9, 4.6, 0.85));
+  solid(10.2, 4.7, 0, 0, () => bush(10.2, 4.7));
+  solid(7.6, 4.5, 0, 0, () => bush(7.6, 4.5, 0.9));
+  solid(8.0, 4.2, 0, 0, () => bench(8.0, 4.2));
+  solid(10.6, 4.6, 0, 0, () => bench(10.6, 4.6));
+  solid(9.3, 4.9, 0, 0, () => flowers(9.3, 4.9));
 
-  // birža su kupolu
-  push(6.0, () => box(0.5, 7.5, 2.2, 2.2, 46, '#a9dcd2', { windows: true, parapet: true, floors: 5, lit, base: '#8dc9bd' }));
-  push(6.1, () => box(0.95, 7.95, 1.3, 1.3, 54, '#bfe7df', { windows: true, dome: true, floors: 2 }));
-  push(6.3, () => `<g transform="translate(${P(1.6, 9.8, 62).join(',')})"><text text-anchor="middle" font-size="17">${mood === 'down' ? '📉' : '📈'}</text></g>`);
-  push(6.6, () => label(1.6, 8.6, 54 + 32, 'Birža · ' + Math.round(st.invest || 0) + ' €'));
+  // birza su kupolu
+  solid(0.5, 7.5, 2.2, 2.2, () => box(0.5, 7.5, 2.2, 2.2, 46, '#a9dcd2', { windows: true, parapet: true, floors: 5, lit, base: '#8dc9bd' }));
+  solid(0.95, 7.95, 1.3, 1.3, () => box(0.95, 7.95, 1.3, 1.3, 54, '#bfe7df', { windows: true, dome: '#d9a441', floors: 2 }));
+  put(12.6, () => {
+    const [px, py] = P(1.6, 9.8, 62);
+    const up = mood !== 'down';
+    const col = up ? '#0a8f6f' : '#c0392b';
+    const line = up ? 'M-10,6 L-3,-2 L3,3 L11,-9' : 'M-10,-8 L-3,0 L3,-5 L11,7';
+    const head = up ? 'M5,-9 L11,-9 L11,-3' : 'M5,7 L11,7 L11,1';
+    return `<g transform="translate(${px.toFixed(1)},${py.toFixed(1)})"><circle r="13" fill="#ffffff" opacity=".92"/>`
+      + `<path d="${line}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`
+      + `<path d="${head}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linecap="round"/></g>`;
+  });
+  put(12.8, () => label(1.6, 8.6, 54 + 32, 'Bir\u017ea \u00b7 ' + Math.round(st.invest || 0) + ' \u20ac'));
 
   // kavos baras su terasa
-  push(7.2, () => {
+  solid(3.1, 7.6, 1.7, 1.7, () => {
     const h = 26 + lvl * 13;
     let s = box(3.1, 7.6, 1.7, 1.7, h, '#f4a259', { windows: true, parapet: true, lit: true, floors: 2, base: '#d98b45' });
     const awn = [P(3.1, 9.3, h * 0.58), P(4.8, 9.3, h * 0.58), P(4.8, 9.75, h * 0.42), P(3.1, 9.75, h * 0.42)];
@@ -374,72 +406,99 @@ export function citySVG(st) {
       const a = P(3.1 + i * 0.42, 9.3, h * 0.58), b = P(3.1 + (i + 0.5) * 0.42, 9.3, h * 0.58);
       if (i % 2 === 0) s += poly([a, b, [b[0], b[1] + 8], [a[0], a[1] + 8]], '#fff', 'opacity=".92"');
     }
-    const [cx, cy] = P(3.95, 9.3, h + 9);
-    s += `<text x="${cx.toFixed(1)}" y="${cy.toFixed(1)}" text-anchor="middle" font-size="18">☕</text>`;
+    // iškaba su puodeliu (nupiešta, ne emoji - kad veiktų ir be emoji šrifto)
+    const [sx2, sy2] = P(3.95, 9.3, h + 14);
+    s += `<g transform="translate(${sx2.toFixed(1)},${sy2.toFixed(1)})">`
+      + `<rect x="-13" y="-11" width="26" height="22" rx="5" fill="#0f1e3d"/>`
+      + `<rect x="-8" y="-5" width="12" height="10" rx="2" fill="#f7f2e6"/>`
+      + `<path d="M4 -4 q6 0 6 5 q0 5 -6 5" fill="none" stroke="#f7f2e6" stroke-width="2"/>`
+      + `<rect x="-8" y="6.5" width="12" height="1.8" rx="0.9" fill="#f7f2e6"/>`
+      + `<rect x="-2" y="-9" width="1.6" height="4" rx="0.8" fill="#f7f2e6" opacity=".7"/></g>`;
     [[3.2, 9.9], [4.3, 9.9]].forEach(([tx, ty]) => {
       const [px, py] = P(tx, ty, 0);
       s += `<g transform="translate(${px.toFixed(1)},${py.toFixed(1)})"><ellipse cx="1" cy="0" rx="6" ry="2.4" fill="#08101f" opacity=".18"/>`
         + `<rect x="-4" y="-4" width="8" height="4" rx="1.5" fill="#d9b28a"/><rect x="-1" y="-14" width="2" height="10" fill="#9aa7b8"/>`
-        + `<polygon points="-9,-14 9,-14 0,-22" fill="#f2c94c"/></g>`;
+        + `<ellipse cx="0" cy="-15" rx="9" ry="4.5" fill="#f2c94c"/><polygon points="-9,-15 9,-15 0,-21" fill="#f7d977"/></g>`;
     });
     if (lvl >= 3) {
       const [sx, sy] = P(3.95, 8.45, h + 24);
-      s += `<g transform="translate(${sx.toFixed(1)},${sy.toFixed(1)})"><circle r="9" fill="#ffd166"/><text y="4" text-anchor="middle" font-size="11" font-weight="800" fill="#0f1e3d">★</text></g>`;
+      s += `<g transform="translate(${sx.toFixed(1)},${sy.toFixed(1)})"><circle r="9" fill="#ffd166"/><text y="4" text-anchor="middle" font-size="11" font-weight="800" fill="#0f1e3d">\u2605</text></g>`;
     }
     return s;
   });
-  push(7.4, () => label(3.95, 8.8, 26 + lvl * 13 + 34, 'Kavos baras · ' + Math.round(st.business || 0) + ' €'));
+  put(14.4, () => label(3.95, 8.8, 26 + lvl * 13 + 34, 'Kavos baras \u00b7 ' + Math.round(st.business || 0) + ' \u20ac'));
 
-  // arena su tribūnomis
-  push(8.0, () => {
+  // arena: betoninis žiedas, dviejų pakopų tribūnos, bėgimo takas, veja, vartai, prožektoriai
+  solid(7.35, 7.35, 3.5, 3.5, () => {
     let s = shadow(7.5, 7.5, 3.2, 3.2, 7, 8, '.16');
-    s += disc(9.1, 9.1, 1.75, '#cbb8e6');
-    s += disc(9.1, 9.1, 1.55, '#dccdec');
-    for (let i = 0; i < 14; i++) {
-      const t0 = (i / 14) * Math.PI * 2, t1 = ((i + 0.72) / 14) * Math.PI * 2;
-      const seg = (rr, tt) => P(9.1 + Math.cos(tt) * rr, 9.1 + Math.sin(tt) * rr, 9);
-      s += poly([seg(1.05, t0), seg(1.05, t1), seg(1.55, t1), seg(1.55, t0)], i % 2 ? '#bfa9dd' : '#c9b5e4');
+    s += disc(9.1, 9.1, 1.85, '#b9c2cf');
+    s += disc(9.1, 9.1, 1.72, '#cdd6e1');
+    s += disc(9.1, 9.1, 1.62, '#9aa6b6');
+    s += disc(9.1, 9.1, 1.5, '#c2ccd8');
+    s += disc(9.1, 9.1, 1.38, '#a7b3c1');
+    for (let i = 0; i < 26; i++) {   // sėdimos vietos
+      const t = (i / 26) * Math.PI * 2;
+      const p0 = P(9.1 + Math.cos(t) * 1.12, 9.1 + Math.sin(t) * 1.12, 6);
+      const p1 = P(9.1 + Math.cos(t) * 1.62, 9.1 + Math.sin(t) * 1.62, 6);
+      s += `<line x1="${p0[0].toFixed(1)}" y1="${p0[1].toFixed(1)}" x2="${p1[0].toFixed(1)}" y2="${p1[1].toFixed(1)}" stroke="#7f8b9a" stroke-width=".8" opacity=".5"/>`;
     }
-    s += disc(9.1, 9.1, 1.0, '#7fc98a');
-    s += disc(9.1, 9.1, 0.72, '#8ed49a');
-    const gl = P(8.35, 9.1, 9), gl2 = P(8.35, 9.1, 15);
-    const gr = P(9.85, 9.1, 9), gr2 = P(9.85, 9.1, 15);
-    s += `<line x1="${gl[0].toFixed(1)}" y1="${gl[1].toFixed(1)}" x2="${gl2[0].toFixed(1)}" y2="${gl2[1].toFixed(1)}" stroke="#f4f7fb" stroke-width="2.2"/>`;
-    s += `<line x1="${gr[0].toFixed(1)}" y1="${gr[1].toFixed(1)}" x2="${gr2[0].toFixed(1)}" y2="${gr2[1].toFixed(1)}" stroke="#f4f7fb" stroke-width="2.2"/>`;
-    const [ax, ay] = P(9.1, 9.1, 26);
-    s += `<circle cx="${ax.toFixed(1)}" cy="${ay.toFixed(1)}" r="13" fill="#ffd166"/><text x="${ax.toFixed(1)}" y="${(ay + 5).toFixed(1)}" text-anchor="middle" font-size="15">🏆</text>`;
+    s += disc(9.1, 9.1, 1.22, '#d9665c');
+    s += disc(9.1, 9.1, 1.05, '#e07a70');
+    s += disc(9.1, 9.1, 0.92, '#5fbf72');
+    s += disc(9.1, 9.1, 0.72, '#6ecd80');
+    const c0 = P(9.1, 9.1, 0.2);
+    s += `<ellipse cx="${c0[0].toFixed(1)}" cy="${c0[1].toFixed(1)}" rx="${(0.44 * TW).toFixed(1)}" ry="${(0.44 * TH).toFixed(1)}" fill="none" stroke="#ffffff" stroke-width="1.2" opacity=".75"/>`;
+    const h0 = P(9.1, 9.1 - 0.7, 0.2), h1 = P(9.1, 9.1 + 0.7, 0.2);
+    s += `<line x1="${h0[0].toFixed(1)}" y1="${h0[1].toFixed(1)}" x2="${h1[0].toFixed(1)}" y2="${h1[1].toFixed(1)}" stroke="#ffffff" stroke-width="1.2" opacity=".75"/>`;
+    const gl = P(8.32, 9.1, 9), gl2 = P(8.32, 9.1, 14);
+    const gr = P(9.88, 9.1, 9), gr2 = P(9.88, 9.1, 14);
+    s += `<line x1="${gl[0].toFixed(1)}" y1="${gl[1].toFixed(1)}" x2="${gl2[0].toFixed(1)}" y2="${gl2[1].toFixed(1)}" stroke="#f4f7fb" stroke-width="2.4"/>`;
+    s += `<line x1="${gr[0].toFixed(1)}" y1="${gr[1].toFixed(1)}" x2="${gr2[0].toFixed(1)}" y2="${gr2[1].toFixed(1)}" stroke="#f4f7fb" stroke-width="2.4"/>`;
+    for (const [fx2, fy2] of [[7.85, 7.85], [10.35, 7.85], [7.85, 10.35], [10.35, 10.35]]) {
+      const [px, py] = P(fx2, fy2, 0);
+      s += `<g transform="translate(${px.toFixed(1)},${py.toFixed(1)})"><ellipse cx="1" cy="0" rx="4" ry="1.8" fill="#08101f" opacity=".2"/>`
+        + `<rect x="-1.4" y="-26" width="2.8" height="26" fill="#8b98a8" rx="1.2"/>`
+        + `<rect x="-6" y="-30" width="12" height="5" rx="2" fill="#d9e2ec"/></g>`;
+    }
     return s;
   });
-  push(8.6, () => label(9.1, 9.1, 26 + 36, 'Arena'));
-  push(8.7, () => tree(7.4, 10.6, 0.95) + tree(11.0, 10.9, 0.9) + bush(10.9, 7.5, 0.95));
+  put(22.0, () => label(9.1, 9.1, 26 + 36, 'Arena'));
+  solid(9.4, 11.2, 0, 0, () => tree(9.4, 11.2, 0.95));
+  solid(11.0, 10.9, 0, 0, () => tree(11.0, 10.9, 0.9));
+  solid(10.9, 7.5, 0, 0, () => bush(10.9, 7.5, 0.95));
 
-  // smulkūs pastatai
-  push(5.4, () => box(0.6, 5.0, 1.4, 1.2, 26, '#e7d3bd', { windows: true, pitch: true, lit }));
-  push(5.6, () => box(2.4, 5.1, 1.5, 1.1, 22, '#f0dcc6', { windows: true, parapet: true, lit }));
-  push(5.8, () => box(4.4, 5.0, 1.2, 1.3, 30, '#dce8f4', { windows: true, parapet: true, lit, floors: 3 }));
-  push(9.4, () => box(4.5, 10.4, 1.6, 1.4, 24, '#e9d8c4', { windows: true, pitch: true, lit }));
-  push(9.6, () => box(7.0, 10.6, 1.4, 1.2, 28, '#dbe7f5', { windows: true, parapet: true, lit, floors: 3 }));
+  // smulkus pastatai
+  solid(0.6, 5.0, 1.4, 1.2, () => box(0.6, 5.0, 1.4, 1.2, 26, '#e7d3bd', { windows: true, pitch: true, lit }));
+  solid(2.4, 5.1, 1.5, 1.1, () => box(2.4, 5.1, 1.5, 1.1, 22, '#f0dcc6', { windows: true, parapet: true, lit }));
+  solid(4.4, 5.0, 1.2, 1.3, () => box(4.4, 5.0, 1.2, 1.3, 30, '#dce8f4', { windows: true, parapet: true, lit, floors: 3 }));
+  solid(4.5, 10.4, 1.6, 1.4, () => box(4.5, 10.4, 1.6, 1.4, 24, '#e9d8c4', { windows: true, pitch: true, lit }));
+  solid(7.0, 10.6, 1.4, 1.2, () => box(7.0, 10.6, 1.4, 1.2, 28, '#dbe7f5', { windows: true, parapet: true, lit, floors: 3 }));
 
   // transportas
-  push(10.2, () => car(1.2, 6.35, '#e05a4f') + car(4.0, 6.75, '#3b82f6', true) + car(8.2, 6.35, '#f5a524'));
-  push(10.3, () => bus(6.35, 2.2));
-  push(10.4, () => car(6.35, 9.6, '#8b5cf6') + car(6.75, 4.6, '#12b48c', true));
+  solid(1.2, 6.35, 0, 0, () => car(1.2, 6.35, '#e05a4f'));
+  solid(4.0, 6.75, 0, 0, () => car(4.0, 6.75, '#3b82f6', true));
+  solid(8.2, 6.35, 0, 0, () => car(8.2, 6.35, '#f5a524'));
+  solid(6.35, 2.2, 0, 0, () => bus(6.35, 2.2));
+  solid(6.35, 9.6, 0, 0, () => car(6.35, 9.6, '#8b5cf6'));
+  solid(6.75, 4.6, 0, 0, () => car(6.75, 4.6, '#12b48c', true));
 
-  // žibintai, suoliukai, šviesoforai, gėlės
-  push(11.0, () => {
-    let s = '';
-    for (const [lx, ly] of [[5.6, 2.4], [5.6, 5.2], [5.6, 9.2], [2.4, 5.6], [8.4, 5.6], [5.6, 10.8], [10.6, 5.6], [2.6, 10.4]]) s += lamp(lx, ly);
-    return s;
-  });
-  push(11.1, () => trafficLight(5.4, 5.4) + trafficLight(7.6, 7.6) + hydrant(5.5, 7.6) + hydrant(9.2, 5.5));
-  push(11.2, () => bench(2.2, 2.6) + bench(4.2, 2.6) + bench(8.0, 4.2) + bench(10.6, 4.6));
-  push(11.3, () => planter(5.5, 4.4) + planter(7.4, 5.5) + flowers(9.3, 4.9) + flowers(2.0, 4.35, 0.9));
+  // zibintai, sviesoforai, hidrantai, sodai
+  for (const [lx, ly] of [[5.6, 2.4], [5.6, 4.7], [5.6, 9.2], [2.4, 4.85], [8.4, 5.6], [5.6, 9.9], [10.6, 5.6], [2.6, 10.4]]) {
+    solid(lx, ly, 0, 0, () => lamp(lx, ly));
+  }
+  solid(5.4, 4.6, 0, 0, () => trafficLight(5.4, 4.6));
+  solid(7.6, 7.6, 0, 0, () => trafficLight(7.6, 7.6));
+  solid(5.5, 7.6, 0, 0, () => hydrant(5.5, 7.6));
+  solid(9.2, 5.5, 0, 0, () => hydrant(9.2, 5.5));
+  solid(5.5, 4.4, 0, 0, () => planter(5.5, 4.4));
+  solid(7.4, 5.5, 0, 0, () => planter(7.4, 5.5));
+  solid(2.0, 4.8, 0, 0, () => flowers(2.0, 4.8, 0.9));
 
   if (st.debt > 0) {
-    push(12, () => {
+    put(40, () => {
       const [bx, by] = P(6.5, 6.5, 9);
       return `<g transform="translate(${bx.toFixed(1)},${by.toFixed(1)})"><rect x="-48" y="-15" width="96" height="26" rx="13" fill="#e63946"/>`
-        + `<text y="3.5" text-anchor="middle" font-size="12" font-weight="800" fill="#fff" font-family="system-ui,sans-serif">Skola ${Math.round(st.debt)} €</text></g>`;
+        + `<text y="3.5" text-anchor="middle" font-size="12" font-weight="800" fill="#fff" font-family="system-ui,sans-serif">Skola ${Math.round(st.debt)} \u20ac</text></g>`;
     });
   }
 
