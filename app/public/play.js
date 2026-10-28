@@ -102,6 +102,32 @@ function stepBar() {
   return `<div class="steps" aria-label="Savaitės eiga">${['Pirm.', 'Antr.–treč.', 'Ketv.', 'Penkt.'].map((n, i) => `<div class="step ${i + 1 < phase ? 'done' : i + 1 === phase ? 'on' : ''}" title="${names[i]}">${n}</div>`).join('')}</div>`;
 }
 
+function progressionCard() {
+  const played = me.reports.length;
+  const locked = me.cls.revealed < me.cls.week && me.locked ? 1 : 0;
+  const xp = played * 120 + locked * 30 + (me.cls.revealed >= 1 ? 80 : 0);
+  const level = Math.max(1, Math.floor(xp / 200) + 1);
+  const next = level * 200;
+  const progress = Math.min(100, Math.round((xp / next) * 100));
+  const achievements = [];
+  if (locked) achievements.push(['🔒', 'Strategas', 'Užrakinai savaitės planą']);
+  if (played) achievements.push(['📊', 'Pirmas rezultatas', 'Pamatėi savo sprendimo pasekmes']);
+  if ((me.state.reserve || 0) >= 100) achievements.push(['🛡️', 'Atsargus', 'Sukaupei bent 100 € rezervą']);
+  if (!achievements.length) achievements.push(['🌱', 'Pradžia', 'Priimk pirmą finansinį sprendimą']);
+  return `<div class="progress-card card"><div class="progress-top"><div class="avatar-badge">${AVATARS[me.me.avatar]}</div><div><span class="eyebrow">TAVO PAŽANGA</span><h3 style="margin:0">${esc(me.me.nickname)} · ${level} lygis</h3><p class="muted" style="margin:.2em 0 0">${xp} XP iki kito lygio</p></div><strong class="xp-pill">${progress}%</strong></div><div class="xp-track"><span style="width:${progress}%"></span></div><div class="achievement"><span class="achievement-icon">${achievements[0][0]}</span><div><b>${esc(achievements[0][1])}</b><small>${esc(achievements[0][2])}</small></div></div></div>`;
+}
+function cityActions() {
+  const buildings = [
+    ['home', '🏠', 'Namai', 'Mentorius', 'mentor'],
+    ['bank', '🏦', 'Bankas', 'Biudžetas', 'budget'],
+    ['work', '💼', 'Darbovietė', 'Savaitės sprendimas', 'week'],
+    ['cafe', '☕', 'Kavos baras', 'Verslo kapitalas', 'invest'],
+    ['invest', '📈', 'Investicijų centras', 'Turto pasirinkimai', 'invest'],
+    ['arena', '🏆', 'Varžybų arena', 'Klasės lyderiai', 'board'],
+  ];
+  return `<section class="city-actions" aria-label="Miesto vietos"><div class="section-kicker">MIESTO HUB · PASIRINK VEIKLĄ</div><div class="building-grid">${buildings.map(([key, icon, name, desc, go]) => `<button class="building-card" data-building="${key}" data-go="${go}"><span class="building-icon">${icon}</span><span><b>${name}</b><small>${desc}</small></span><span class="building-arrow">→</span></button>`).join('')}</div></section>`;
+}
+
 function viewCity() {
   const c = me.cls;
   const notStarted = c.week < 1;
@@ -115,7 +141,7 @@ function viewCity() {
     banner = `<div class="card">${stepBar()}<span class="pill amber">${c.week} savaitė iš ${c.weeks}</span><h2 style="margin-top:8px">${esc(w.title)}</h2><p>${esc(w.body)}</p>
       <button class="btn" data-go="week">${me.locked ? 'Strategija užrakinta ✓' : 'Priimti sprendimą'}</button></div>`;
   }
-  return `${hud()}<div class="two"><div class="city">${citySVG(stateSummary())}</div><div class="grid">${banner}${me.mentor ? mentorCard(true) : ''}</div></div>`;
+  return `${hud()}${progressionCard()}<div class="city-hero"><div><span class="pill amber">TAVO MIESTAS</span><h2>Augink savo finansinį miestą</h2><p class="muted">Kiekvienas pastatas atveria kitą žaidimo dalį. Pasirink, kur eiti toliau.</p></div><span class="city-status">${c.status === 'live' ? '● Gyvas sezonas' : c.status === 'done' ? '✓ Baigta' : '○ Laukiame starto'}</span></div><div class="city-hub"><div class="city">${citySVG(stateSummary())}</div>${cityActions()}</div><div class="grid">${banner}${me.mentor ? mentorCard(true) : ''}</div>`;
 }
 
 function mentorCard(short = false) {

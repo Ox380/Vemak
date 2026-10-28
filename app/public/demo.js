@@ -19,10 +19,10 @@ const PEERS = [
 ];
 
 export function validateDemoAllocation(alloc) {
-  if (!alloc || typeof alloc !== 'object') return 'Choose an allocation.';
+  if (!alloc || typeof alloc !== 'object') return 'Pasirink paskirstymą.';
   const keys = ['sav', 'inv', 'bus', 'res'];
-  if (keys.some((key) => !Number.isInteger(alloc[key]) || alloc[key] < 0 || alloc[key] > 100)) return 'Each allocation must be a whole number from 0 to 100.';
-  if (keys.reduce((sum, key) => sum + alloc[key], 0) !== 100) return 'Allocation must total exactly 100%.';
+  if (keys.some((key) => !Number.isInteger(alloc[key]) || alloc[key] < 0 || alloc[key] > 100)) return 'Kiekvienas paskirstymas turi būti sveikas skaičius nuo 0 iki 100.';
+  if (keys.reduce((sum, key) => sum + alloc[key], 0) !== 100) return 'Paskirstymas turi sudaryti tiksliai 100 %.';
   return null;
 }
 
@@ -33,7 +33,7 @@ export function simulateDemo(choiceKey, alloc) {
   const error = validateDemoAllocation(alloc);
   if (error) throw new Error(error);
   const choice = choiceFor(choiceKey);
-  if (!choice) throw new Error('Choose a strategy.');
+  if (!choice) throw new Error('Pasirink strategiją.');
 
   const savings = DEMO_CAPITAL * alloc.sav / 100 * 1.01;
   const investing = DEMO_CAPITAL * alloc.inv / 100 * (choiceKey === 'invest' ? 1.10 : 1.03);

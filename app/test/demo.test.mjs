@@ -11,8 +11,8 @@ t('demo starts every player with €1,000', () => {
 });
 t('allocation must equal exactly 100%', () => {
   assert.equal(validateDemoAllocation(balanced), null);
-  assert.match(validateDemoAllocation({ ...balanced, res: 24 }), /exactly 100/);
-  assert.throws(() => simulateDemo('business', { sav: 30, inv: 30, bus: 30, res: 0 }), /exactly 100/);
+  assert.match(validateDemoAllocation({ ...balanced, res: 24 }), /tiksliai 100/);
+  assert.throws(() => simulateDemo('business', { sav: 30, inv: 30, bus: 30, res: 0 }), /tiksliai 100/);
 });
 t('economic choices produce different deterministic results', () => {
   const business = simulateDemo('business', balanced);

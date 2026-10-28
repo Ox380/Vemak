@@ -96,6 +96,10 @@ export function citySVG(st) {
   items.push([2, () => label(5.3, 1.6, 62, 'Bankas · ' + Math.round(st.savings || 0) + ' €')]);
   items.push([6, () => box(0.4, 4.2, 2.2, 2.2, 38 + Math.min(40, Math.round((st.invest || 0) / 40)), '#9bd1c7', { windows: true }) + `<g transform="translate(${P(1.5, 6.4, 20).join(',')})"><text text-anchor="middle" font-size="18">${mood === 'down' ? '📉' : '📈'}</text></g>`]);
   items.push([6.2, () => label(1.5, 5.3, 92, 'Birža · ' + Math.round(st.invest || 0) + ' €')]);
+  items.push([2.8, () => box(2.1, 0.8, 1.4, 1.5, 46, '#f7c873', { windows: true, lit: true }) + `<text x="${P(2.8, 2.35, 55)[0]}" y="${P(2.8, 2.35, 55)[1]}" text-anchor="middle" font-size="18">💼</text>`]);
+  items.push([3.8, () => label(2.8, 1.55, 72, 'Darbovietė')]);
+  items.push([7.1, () => box(2.2, 5.0, 1.5, 1.4, 32, '#c39bd3', { windows: true }) + `<g transform="translate(${P(3, 6.4, 43).join(',')})"><circle r="12" fill="#ffd166"/><text y="5" text-anchor="middle" font-size="17">🏆</text></g>`]);
+  items.push([7.4, () => label(2.95, 5.7, 72, 'Arena')]);
   items.push([7.5, () => cafe(4.3, 4.3, lvl)]);
   items.push([8, () => label(5.3, 5.4, 52 + lvl * 16 + 20, 'Kavos baras · ' + Math.round(st.business || 0) + ' €')]);
   items.push([3.2, () => tree(3.5, 0.2) + tree(3.5, 6.7, 1.1)]);
