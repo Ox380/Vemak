@@ -27,6 +27,8 @@ let n = 0; const ok = (m) => console.log('ok  ', m, ++n && '');
 // ---- landing ----
 {
   const { d, w, errors } = await page('/', 'landing.js', BASE + '/');
+  assert.ok([...d.querySelectorAll('a.btn')].some((a) => a.textContent.includes('Prašyti vienkartinio bandymo'))); ok('pilot CTA says one-time trial');
+  assert.ok(![...d.querySelectorAll('a.btn')].some((a) => a.textContent.includes('Prašyti pilotinio bandymo'))); ok('old CTA wording removed');
   assert.ok(d.querySelector('#heroCity svg')); ok('hero city renders');
   assert.match(d.querySelector('#demoBox').textContent, /Sveikas atvykęs į VEMAK/); ok('demo starts with introduction');
   await click(d.querySelector('#start-demo'));
