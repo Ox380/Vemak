@@ -1,6 +1,6 @@
 // Engine tests + balance check. Run: node test/engine.test.mjs
 import assert from 'node:assert/strict';
-import { buildSeason, newState, playWeek, netWorth, defaultAlloc, validateAlloc, strategyScore, CONFIG, ASSET_KEYS } from '../public/engine.js';
+import { buildSeason, newState, playWeek, netWorth, defaultAlloc, validateAlloc, validateGoal, strategyScore, CONFIG, ASSET_KEYS } from '../public/engine.js';
 import { WEEKS } from '../public/content.js';
 
 let passed = 0;
@@ -64,6 +64,77 @@ t('bankruptcy -> second chance works', () => {
   assert.equal(r.report.secondChance, true);
   assert.equal(r.state.debt, 0);
   assert.equal(r.state.bankrupt, false);
+});
+t('earning choices create distinct income paths and progression', () => {
+  const season = buildSeason('earning');
+  const job = playWeek(newState(), season, 5, 'job', STRATS.balanced);
+  const freelance = playWeek(newState(), season, 5, 'freelance', STRATS.balanced);
+  const business = playWeek(newState(), season, 5, 'microbiz', STRATS.balanced);
+  assert.ok(job.report.earned > 0);
+  assert.ok(freelance.report.earned > 0);
+  assert.ok(business.report.businessRevenue > 0);
+  assert.notEqual(job.report.earned, freelance.report.earned);
+  assert.ok(job.state.skills.work > 0);
+  assert.ok(freelance.state.skills.digital > 0);
+  assert.ok(business.state.reputation > 0);
+});
+t('income accounting excludes transfers and tracks goal progress', () => {
+  const season = buildSeason('accounting');
+  const result = playWeek(newState(), season, 5, 'job', STRATS.balanced);
+  assert.equal(result.state.incomeEarned, result.report.income + result.report.earned);
+  assert.equal(result.state.expensesPaid, result.report.needs + result.report.wants);
+  assert.equal(result.state.goal.target, 500);
+  assert.equal(result.state.goal.progress, Math.round((result.state.savings + result.state.reserve) * 100) / 100);
+});
+t('financial goals can be selected and progress uses the selected goal', () => {
+  const state = newState();
+  assert.equal(validateGoal({ type: 'income', target: 1000 }), null);
+  assert.ok(validateGoal({ type: 'unknown', target: 1000 }));
+  assert.ok(validateGoal({ type: 'income', target: 0 }));
+  const season = buildSeason('goal');
+  const result = playWeek(state, season, 5, 'job', STRATS.balanced);
+  result.state.goal = { type: 'income', target: 1000, progress: result.state.incomeEarned };
+  assert.equal(result.state.goal.progress, result.state.incomeEarned);
+});
+
+// ---- „Pamoka": žingsnis po žingsnio paaiškinama, kas įvyko ----
+t('every week explains the result step by step', () => {
+  const season = buildSeason('steps');
+  let s = newState();
+  for (let w = 1; w <= CONFIG.WEEKS; w++) {
+    const r = playWeek(s, season, w, choiceFor(w), STRATS.balanced);
+    s = r.state;
+    const steps = r.report.steps;
+    assert.ok(Array.isArray(steps) && steps.length >= 4, `week ${w}: ${steps && steps.length} steps`);
+    for (const st of steps) {
+      assert.equal(typeof st.text, 'string', 'step has text');
+      assert.ok(st.text.length > 5, 'step text is not empty');
+      assert.ok(!/undefined|NaN/.test(st.text), 'no undefined/NaN: ' + st.text);
+    }
+    assert.match(steps[0].text, /Pradinė grynoji vertė/);
+    assert.match(steps[steps.length - 1].text, /Galutinė grynoji vertė/);
+    assert.equal(steps[steps.length - 1].amount, r.report.delta, 'last step amount = week delta');
+  }
+});
+t('step trail is deterministic for the same seed', () => {
+  const a = playWeek(newState(), buildSeason('K1'), 1, choiceFor(1), STRATS.balanced);
+  const b = playWeek(newState(), buildSeason('K1'), 1, choiceFor(1), STRATS.balanced);
+  assert.deepEqual(a.report.steps, b.report.steps);
+});
+t('a forced sale is named in its own step', () => {
+  const season = buildSeason('force');
+  const w = season.weeks.findIndex((x) => x.expense > 0) + 1;
+  assert.ok(w > 0, 'season has an expense week');
+  const r = playWeek(newState(), season, w, choiceFor(w), STRATS.all_tech);
+  assert.ok(r.report.forced > 0, 'no reserve + all invested must force a sale');
+  assert.ok(r.report.steps.some((s) => /Priverstinis turto pardavimas/.test(s.text)), 'forced sale step present');
+  assert.ok(r.report.steps.some((s) => /Netikėta išlaida/.test(s.text)), 'expense step present');
+});
+t('allocation is itemised per bucket', () => {
+  const r = playWeek(newState(), buildSeason('K1'), 1, choiceFor(1), STRATS.balanced);
+  for (const label of ['santaup', 'investicij', 'verslą', 'rezerv']) {
+    assert.ok(r.report.steps.some((s) => s.text.includes(label)), `step for ${label}`);
+  }
 });
 
 // ---- balance ----

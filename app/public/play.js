@@ -1,8 +1,8 @@
 // play.js — student app. Screens: join, quiz, city/week, strategy, results, leaderboard, investments, budget, mentor, finish.
 import { WEEKS, ASSET_META, TOPICS } from './content.js';
-import { CONFIG, ASSET_KEYS, DEFAULT_MIX } from './engine.js';
+import { CONFIG, ASSET_KEYS, DEFAULT_MIX, GOAL_TYPES } from './engine.js';
 import { citySVG } from './iso.js';
-import { esc, $, $$, eur, pct, api, toast, AVATARS, TONE } from './ui.js';
+import { esc, $, $$, eur, pct, api, toast, lessonBlock, AVATARS, TONE } from './ui.js';
 
 const app = $('#app');
 const TOKEN_KEY = 'vemak.student';
@@ -95,12 +95,20 @@ function hud() {
     <div class="stat"><span>Investicijos</span><b>${eur(inv)}</b></div>
     <div class="stat"><span>Verslas (lyg. ${s.level})</span><b>${eur(s.business)}</b></div>
     <div class="stat"><span>Rezervas</span><b>${eur(s.reserve)}</b></div>
+    <div class="stat"><span>Įgūdžiai / reputacija</span><b>${Object.values(s.skills || {}).reduce((a, b) => a + b, 0)} / ${s.reputation || 0}</b></div>
     ${s.debt > 0 ? `<div class="stat" style="background:#fde8e5"><span>Skola</span><b>${eur(s.debt)}</b></div>` : ''}</div>`;
 }
 function stepBar() {
   const phase = me.cls.revealed >= me.cls.week ? 4 : me.locked ? 3 : 1;
   const names = ['Pirmadienis: įvykis', 'Antradienis–trečiadienis: sprendimai', 'Ketvirtadienis: užrakinta', 'Penktadienis: rezultatai'];
   return `<div class="steps" aria-label="Savaitės eiga">${['Pirm.', 'Antr.–treč.', 'Ketv.', 'Penkt.'].map((n, i) => `<div class="step ${i + 1 < phase ? 'done' : i + 1 === phase ? 'on' : ''}" title="${names[i]}">${n}</div>`).join('')}</div>`;
+}
+
+function goalCard() {
+  const g = me.state.goal || { type: 'savings', target: 500, progress: 0 };
+  const meta = GOAL_TYPES[g.type] || GOAL_TYPES.savings;
+  const progress = Math.min(100, Math.round((Number(g.progress || 0) / Math.max(1, g.target)) * 100));
+  return `<div class="card goal-card"><div class="section-kicker">TAVO FINANSINIS TIKSLAS</div><h3>${esc(meta.label)} · ${eur(g.target)}</h3><div class="goal-track"><span style="width:${progress}%"></span></div><p class="muted">${eur(g.progress || 0)} iš ${eur(g.target)} · ${progress}%</p><label for="goal-type">Keisti tikslą iki pirmos savaitės rezultatų</label><div class="row"><select id="goal-type">${Object.entries(GOAL_TYPES).map(([k, v]) => `<option value="${k}" ${k === g.type ? 'selected' : ''}>${esc(v.label)}</option>`).join('')} </select><input id="goal-target" type="number" min="1" step="50" value="${Number(g.target) || 500}" aria-label="Tikslo suma"><button class="btn" id="save-goal">Išsaugoti</button></div></div>`;
 }
 
 function progressionCard() {
@@ -138,7 +146,7 @@ function viewCity() {
     banner = `<div class="card">${stepBar()}<span class="pill amber">${c.week} savaitė iš ${c.weeks}</span><h2 style="margin-top:8px">${esc(w.title)}</h2><p>${esc(w.body)}</p>
       <button class="btn" data-go="week">${me.locked ? 'Strategija užrakinta ✓' : 'Priimti sprendimą'}</button></div>`;
   }
-  return `${hud()}${progressionCard()}<div class="city-hero"><div><span class="pill amber">TAVO MIESTAS</span><h2>Augink savo finansinį miestą</h2><p class="muted">Kiekvienas pastatas atveria kitą žaidimo dalį. Pasirink, kur eiti toliau.</p></div><span class="city-status">${c.status === 'live' ? '● Gyvas sezonas' : c.status === 'done' ? '✓ Baigta' : '○ Laukiame starto'}</span></div><div class="city-hub"><div class="city">${citySVG(stateSummary())}</div>${cityActions()}</div><div class="grid">${banner}${me.mentor ? mentorCard(true) : ''}</div>`;
+  return `${hud()}${goalCard()}${progressionCard()}<div class="city-hero"><div><span class="pill amber">TAVO MIESTAS</span><h2>Augink savo finansinį miestą</h2><p class="muted">Kiekvienas pastatas atveria kitą žaidimo dalį. Pasirink, kur eiti toliau.</p></div><span class="city-status">${c.status === 'live' ? '● Gyvas sezonas' : c.status === 'done' ? '✓ Baigta' : '○ Laukiame starto'}</span></div><div class="city-hub"><div class="city">${citySVG(stateSummary())}</div>${cityActions()}</div><div class="grid">${banner}${me.mentor ? mentorCard(true) : ''}</div>`;
 }
 
 function mentorCard(short = false) {
@@ -214,6 +222,8 @@ function viewResults() {
         <div class="resrow"><span>Poreikiai</span><b>${eur(-r.needs)}</b></div>
         <div class="resrow"><span>Norai</span><b>${eur(-r.wants)}</b></div>
         <div class="resrow"><span>Laisvi pinigai paskirstymui</span><b>${eur(r.free)}</b></div>
+        ${r.earned ? `<div class="resrow"><span>Papildomos pajamos</span><b class="pos">${eur(r.earned, true)}</b></div>` : ''}
+        ${r.businessRevenue ? `<div class="resrow"><span>Verslo pajamos</span><b class="pos">${eur(r.businessRevenue, true)}</b></div><div class="resrow"><span>Verslo išlaidos</span><b class="neg">${eur(-r.businessExpenses)}</b></div><div class="resrow"><span>Verslo pelnas</span><b class="${r.businessProfit >= 0 ? 'pos' : 'neg'}">${eur(r.businessProfit, true)}</b></div>` : ''}
         ${r.expense ? `<div class="resrow"><span>Netikėta išlaida</span><b class="neg">${eur(-r.expense)}</b></div>` : ''}
         ${r.forced ? `<div class="resrow"><span>Priverstinis turto pardavimas (−15 %)</span><b class="neg">${eur(-r.penaltyLost)}</b></div>` : ''}
         ${r.newDebt > 0 ? `<div class="resrow"><span>Naujas trūkumas (skola)</span><b class="neg">${eur(-r.newDebt)}</b></div>` : ''}
@@ -222,7 +232,7 @@ function viewResults() {
       <h3 style="margin-top:14px">Kas nutiko su turtu</h3>
       <div class="cmp">${ASSET_KEYS.filter((a) => r.alloc.inv > 0 && (r.alloc.mix[a] || 0) > 0).map((a) => `<div>${ASSET_META[a].icon}<b class="${r.market[a] >= 0 ? 'pos' : 'neg'}">${pct(r.market[a])}</b><small>${ASSET_META[a].name}</small></div>`).join('') || '<small class="muted">Šią savaitę neinvestavai.</small>'}
         <div>☕<b class="${r.bizReturn >= 0 ? 'pos' : 'neg'}">${pct(r.bizReturn)}</b><small>Kavos baras</small></div></div>
-      <p style="margin-top:14px"><b>Pamoka:</b> ${esc(r.lesson)}</p>
+      ${lessonBlock(r.lesson, r.steps)}
       <div class="reveal-rewards"><h3>Penktadienio apdovanojimai</h3><p>+${reward.xp} XP · ${reward.level} lygis</p><p class="muted">Tavo strategijos ir mokymosi pasiekimai saugomi visam sezonui.</p></div>
       ${r.bankrupt ? '<div class="news down">⚠️ Skola per didelė. Kitą savaitę pradėsi iš naujo su antra galimybe.</div>' : ''}
     </div>
@@ -303,6 +313,12 @@ function render() {
   $$('[data-go]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.go; render(); }));
   if (tab === 'week') bindWeek();
   if (tab === 'reveal') bindReveal();
+  $('#save-goal')?.addEventListener('click', async () => {
+    try {
+      await api('POST', '/api/me/goal', { type: $('#goal-type').value, target: Number($('#goal-target').value) }, token);
+      await load(); render(); toast('Finansinis tikslas išsaugotas ✓', 'ok');
+    } catch (e) { toast(e.message, 'err'); }
+  });
   window.scrollTo(0, 0);
 }
 function bindReveal() {

@@ -5,44 +5,105 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>VEMAK · Finansinis raštingumas, kurį mokiniai nori žaisti</title>
 <meta name="description" content="VEMAK – žaidimas klasei: mokiniai 6 savaites valdo virtualų biudžetą, verslą ir investicijas, o mokytojas gauna paruoštus pamokų planus ir ataskaitas.">
-<meta name="theme-color" content="#12213f">
+<meta name="theme-color" content="#0f1e3d">
 <link rel="icon" href="/icon.svg">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="stylesheet" href="/app.css">
 <style>
-.hero{background:linear-gradient(160deg,#12213f 0%,#1d3a6b 60%,#19b394 140%);color:#fff;padding:56px 0 64px}
-.hero h1{color:#fff;font-size:clamp(2rem,5vw,3.3rem);max-width:15em}
-.hero p.lead{font-size:1.2rem;max-width:36em;opacity:.92}
-.hero .cols{display:grid;grid-template-columns:1.1fr 1fr;gap:32px;align-items:center}
-@media(max-width:860px){.hero .cols{grid-template-columns:1fr}}
-.hero .city{box-shadow:0 18px 50px rgba(0,0,0,.35)}
-.nav{display:flex;align-items:center;gap:14px;padding:16px 0}.nav .logo{color:#fff}.nav a:not(.logo):not(.btn){color:#fff;text-decoration:none;font-weight:600;opacity:.9}.nav .sp{flex:1}
-section{padding:60px 0}section.alt{background:#fff}
-.sec-h{text-align:center;max-width:40em;margin:0 auto 32px}.sec-h h2{font-size:clamp(1.6rem,3.5vw,2.3rem)}
-.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
-.feat .card h3{margin-top:6px}.feat .ic{font-size:2rem}
-.aud{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
-.aud .card{border-top:6px solid var(--teal)}.aud .card:nth-child(2){border-color:var(--purple)}.aud .card:nth-child(3){border-color:var(--amber)}
-.aud ul{padding-left:1.1em}.aud li{margin:.5em 0}
-.week{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;counter-reset:w}
-.week div{background:#fff;border-radius:14px;padding:16px;box-shadow:var(--shadow)}.week b{display:block;color:var(--teal-d)}
-.demo{background:#fff;border-radius:22px;box-shadow:var(--shadow);padding:20px;max-width:980px;margin:0 auto}
+/* ---------- pagrindinis puslapis (landing) ---------- */
+.hero{position:relative;background:var(--grad-hero);color:#fff;padding:26px 0 76px;overflow:hidden;isolation:isolate}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;
+  background:radial-gradient(680px 420px at 78% 8%,rgba(18,180,140,.34),transparent 62%),
+             radial-gradient(620px 380px at 8% 92%,rgba(124,92,255,.30),transparent 62%)}
+.hero::after{content:"";position:absolute;inset:0;z-index:-1;opacity:.16;
+  background-image:linear-gradient(rgba(255,255,255,.35) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.35) 1px,transparent 1px);
+  background-size:46px 46px;mask-image:radial-gradient(circle at 60% 30%,#000 0%,transparent 72%)}
+.hero h1{color:#fff;font-size:clamp(2.05rem,5.2vw,3.4rem);max-width:16em;letter-spacing:-.03em}
+.hero p.lead{font-size:clamp(1.05rem,2.2vw,1.2rem);max-width:36em;opacity:.9;color:#dbe6f6}
+.hero .cols{display:grid;grid-template-columns:1.08fr 1fr;gap:38px;align-items:center}
+@media(max-width:860px){.hero .cols{grid-template-columns:1fr;gap:26px}}
+.hero .city{box-shadow:0 30px 70px rgba(0,0,0,.45);border-color:rgba(255,255,255,.16)}
+.hero-badge{display:inline-flex;align-items:center;gap:9px;padding:7px 15px;border-radius:var(--r-pill);
+  background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(8px);
+  font-weight:750;font-size:.83rem;color:#eaf3ff;margin-bottom:20px}
+.hero-badge span{width:8px;height:8px;border-radius:50%;background:#3ce0b0;box-shadow:0 0 0 4px rgba(60,224,176,.25)}
+.trust{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;list-style:none;padding:0}
+.trust li{display:inline-flex;align-items:center;gap:8px;font-size:.86rem;color:#cfe0f5;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);padding:8px 13px;border-radius:var(--r-pill)}
+.trust b{color:#7ff0cc}
+.nav{display:flex;align-items:center;gap:16px;padding:14px 0;flex-wrap:wrap}
+.nav .logo{color:#fff}
+.nav a:not(.logo):not(.btn){color:#e8f0fb;text-decoration:none;font-weight:650;opacity:.88;transition:opacity .18s var(--ease)}
+.nav a:not(.logo):not(.btn):hover{opacity:1;color:#fff}
+.nav .sp{flex:1}
+@media(max-width:760px){
+  .nav{gap:10px 14px;padding:12px 0}
+  .nav .sp{display:none}
+  .nav a:not(.logo):not(.btn){font-size:.88rem}
+  .nav .btn{padding:11px 16px;min-height:42px;font-size:.88rem}
+}
+section{padding:72px 0}
+section.alt{background:#fff}
+.sec-h{text-align:center;max-width:42em;margin:0 auto 38px}
+.sec-h h2{font-size:clamp(1.6rem,3.6vw,2.35rem);letter-spacing:-.03em}
+.sec-h p{font-size:1.03rem}
+.kicker{display:inline-block;font-size:.74rem;letter-spacing:.16em;font-weight:900;color:var(--teal-d);margin-bottom:12px}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px}
+.feat .card{padding:24px}
+.feat .card:hover{transform:translateY(-3px);box-shadow:var(--sh-3)}
+.feat .ic{display:grid;place-items:center;width:50px;height:50px;border-radius:15px;font-size:1.5rem;
+  background:linear-gradient(140deg,#e9f6ff,#e4f8f0);border:1px solid var(--line-soft);margin-bottom:14px}
+.feat h3{margin-top:4px}
+.aud{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:20px}
+.aud .card{border-top:5px solid var(--teal);padding:24px;position:relative;overflow:hidden}
+.aud .card::after{content:"";position:absolute;right:-40px;top:-40px;width:130px;height:130px;border-radius:50%;
+  background:radial-gradient(circle,rgba(18,180,140,.13),transparent 70%)}
+.aud .card:nth-child(2){border-color:var(--purple)}
+.aud .card:nth-child(2)::after{background:radial-gradient(circle,rgba(124,92,255,.13),transparent 70%)}
+.aud .card:nth-child(3){border-color:var(--amber)}
+.aud .card:nth-child(3)::after{background:radial-gradient(circle,rgba(245,165,36,.14),transparent 70%)}
+.aud h3{font-size:1.1rem}
+.aud ul{padding-left:0;list-style:none;margin:14px 0 0}
+.aud li{margin:.62em 0;padding-left:26px;position:relative;font-size:.95rem}
+.aud li::before{content:"✓";position:absolute;left:0;top:0;color:var(--teal-d);font-weight:900}
+.week{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;counter-reset:w}
+.week div{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:20px;box-shadow:var(--sh-1);
+  counter-increment:w;position:relative;transition:transform .2s var(--ease),box-shadow .2s var(--ease)}
+.week div:hover{transform:translateY(-3px);box-shadow:var(--sh-2)}
+.week div::before{content:counter(w);position:absolute;top:14px;right:16px;font-size:.78rem;font-weight:900;
+  color:var(--teal-d);background:var(--teal-l);width:26px;height:26px;border-radius:50%;display:grid;place-items:center}
+.week b{display:block;color:var(--navy);margin-bottom:6px;padding-right:32px}
+.week div{font-size:.93rem;color:var(--muted)}
+.demo{background:#fff;border:1px solid var(--line);border-radius:var(--r-xl);box-shadow:var(--sh-3);padding:24px;max-width:1000px;margin:0 auto}
 .presets{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:12px 0}
-.faq details{background:#fff;border-radius:14px;padding:14px 18px;margin:10px 0;box-shadow:var(--shadow)}.faq summary{font-weight:700;cursor:pointer}
-footer{background:var(--navy);color:#c8d3e6;padding:36px 0}footer a{color:#fff}
-.note{font-size:.85rem;color:var(--muted)}
+.faq details{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:0;margin:12px 0;box-shadow:var(--sh-1);overflow:hidden}
+.faq summary{font-weight:750;cursor:pointer;padding:17px 20px;list-style:none;display:flex;justify-content:space-between;gap:12px;align-items:center;color:var(--navy)}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-size:1.35rem;color:var(--teal-d);font-weight:800;line-height:1}
+.faq details[open] summary::after{content:"–"}
+.faq details p{padding:0 20px 18px;margin:0;color:var(--muted)}
+.pilot-card{max-width:660px;margin:0 auto;padding:30px}
+footer{background:linear-gradient(160deg,var(--navy-2),var(--navy));color:#c8d3e6;padding:44px 0}
+footer a{color:#fff}
+footer .note{color:#9fb0cc}
+.foot-row{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:center}
 </style>
 </head>
 <body>
 <header class="hero">
   <div class="wrap">
-    <nav class="nav" aria-label="Pagrindinė navigacija"><a class="logo" href="/"><i>V</i>VEMAK</a><span class="sp"></span><a href="#mokytojams">Mokytojams</a><a href="/teacher">Mokytojo prisijungimas</a><a class="btn" href="/teacher?register=1">Registruoti paskyrą</a></nav>
-    <div class="cols" style="margin-top:28px">
+    <nav class="nav" aria-label="Pagrindinė navigacija"><a class="logo" href="/"><i>V</i>VEMAK</a><span class="sp"></span><a href="#demo">Demo</a><a href="#mokytojams">Mokytojams</a><a href="/teacher">Mokytojo prisijungimas</a><a class="btn" href="/teacher?register=1">Registruoti paskyrą</a></nav>
+    <div class="cols" style="margin-top:30px">
       <div>
+        <span class="hero-badge"><span></span>6 savaičių sezonas · vienai klasei</span>
         <h1>Finansinis raštingumas, kurį mokiniai nori žaisti.</h1>
         <p class="lead">Šešias savaites klasė valdo virtualų biudžetą, kavos barą ir investicijas. Klysta be tikrų pinigų, o mokytojas gauna paruoštus pamokų planus ir ataskaitą.</p>
-        <div class="row" style="margin-top:20px"><a class="btn" href="/teacher">Registruoti paskyrą</a></div>
-        <p style="margin-top:18px;opacity:.85">✓ Veikia naršyklėje, be diegimo &nbsp; ✓ Mokiniams nereikia el. pašto &nbsp; ✓ Tik virtualūs pinigai</p>
+        <div class="row" style="margin-top:24px"><a class="btn" href="/teacher">Registruoti paskyrą</a></div>
+        <ul class="trust">
+          <li><b>✓</b> Veikia naršyklėje, be diegimo</li>
+          <li><b>✓</b> Mokiniams nereikia el. pašto</li>
+          <li><b>✓</b> Tik virtualūs pinigai</li>
+        </ul>
       </div>
       <div class="city" id="heroCity"></div>
     </div>
@@ -51,12 +112,12 @@ footer{background:var(--navy);color:#c8d3e6;padding:36px 0}footer a{color:#fff}
 
 <main>
 <section id="demo"><div class="wrap">
-  <div class="sec-h"><h2>Išbandyk dabar. Prisijungti nereikia.</h2><p class="muted">Du trumpi sprendimai iš tikro žaidimo. Pamatysi, kaip veikia pasekmės ir mentorius.</p></div>
+  <div class="sec-h"><span class="kicker">DEMO</span><h2>Išbandyk dabar. Prisijungti nereikia.</h2><p class="muted">Du trumpi sprendimai iš tikro žaidimo. Pamatysi, kaip veikia pasekmės ir mentorius.</p></div>
   <div class="demo" id="demoBox" aria-live="polite"></div>
 </div></section>
 
 <section class="alt"><div class="wrap">
-  <div class="sec-h"><h2>Kaip atrodo viena savaitė</h2><p class="muted">Aiškus ritmas, kuris telpia į vieną pamoką ar namų darbą.</p></div>
+  <div class="sec-h"><span class="kicker">SAVAITĖS RITMAS</span><h2>Kaip atrodo viena savaitė</h2><p class="muted">Aiškus ritmas, kuris telpia į vieną pamoką ar namų darbą.</p></div>
   <div class="week">
     <div><b>Pirmadienis</b>Įvykis: kainos kyla, rinkos krenta arba kyla pigūs pagundų pasiūlymai.</div>
     <div><b>Antradienis–trečiadienis</b>Mokiniai sprendžia ir mokosi iš jų pasirinkimo pasekmių.</div>
@@ -66,7 +127,7 @@ footer{background:var(--navy);color:#c8d3e6;padding:36px 0}footer a{color:#fff}
 </div></section>
 
 <section id="mokytojams"><div class="wrap">
-  <div class="sec-h"><h2>Naudinga visiems klasės dalyviams</h2></div>
+  <div class="sec-h"><span class="kicker">NAUDA</span><h2>Naudinga visiems klasės dalyviams</h2></div>
   <div class="aud">
     <article class="card"><h3>Mokytojams: pamoka paruošta už jus</h3><ul>
       <li>6 savaičių pamokų planai su tikslais ir diskusijos klausimais</li>
@@ -90,7 +151,7 @@ footer{background:var(--navy);color:#c8d3e6;padding:36px 0}footer a{color:#fff}
 </div></section>
 
 <section class="alt"><div class="wrap">
-  <div class="sec-h"><h2>Kodėl tai veikia</h2></div>
+  <div class="sec-h"><span class="kicker">KODĖL TAI VEIKIA</span><h2>Mokymasis per pasekmes</h2></div>
   <div class="feat">
     <div class="card"><div class="ic">🎯</div><h3>Vienodos sąlygos</h3><p>Visa klasė patiria tuos pačius įvykius ir kainas, todėl rezultatus galima palyginti, o nusirašinėjimas naudos neduoda.</p></div>
     <div class="card"><div class="ic">⚖️</div><h3>Rizika svarbi</h3><p>Viskas į vieną krepšelį gali laimėti vieną kartą, bet reitinge laimi subalansuota strategija.</p></div>
@@ -99,28 +160,32 @@ footer{background:var(--navy);color:#c8d3e6;padding:36px 0}footer a{color:#fff}
   </div>
 </div></section>
 
-<section id="pilotas"><div class="wrap" style="max-width:640px">
-  <div class="sec-h"><h2>Prašyti vienkartinio bandymo klasei</h2><p class="muted">Pasakyk, kas esi, ir susisieksime dėl vienos klasės bandymo.</p></div>
-  <form class="card" id="pf">
+<section id="pilotas"><div class="wrap">
+  <div class="sec-h"><span class="kicker">PILOTAS</span><h2>Prašyti vienkartinio bandymo klasei</h2><p class="muted">Pasakyk, kas esi, ir susisieksime dėl vienos klasės bandymo.</p></div>
+  <form class="card pilot-card" id="pf">
     <label for="pn">Vardas, pavardė</label><input id="pn" required maxlength="80">
     <label for="pe">El. paštas</label><input id="pe" type="email" required maxlength="120">
     <label for="ps">Mokykla</label><input id="ps" required maxlength="120">
     <label for="pr">Pareigos</label><select id="pr"><option>Mokytojas</option><option>Direktorius / vadovybė</option><option>Kita</option></select>
     <label for="pm">Žinutė (nebūtina)</label><textarea id="pm" rows="3" maxlength="500"></textarea>
-    <label style="display:flex;gap:8px;align-items:flex-start;font-weight:500"><input type="checkbox" id="pc" style="width:auto;margin-top:5px" required> Sutinku, kad su manimi susisiektų dėl pilotinio bandymo. Duomenys naudojami tik šiam tikslui.</label>
+    <label style="display:flex;gap:9px;align-items:flex-start;font-weight:500;margin-top:16px"><input type="checkbox" id="pc" style="width:auto;margin-top:5px" required> Sutinku, kad su manimi susisieuktų dėl pilotinio bandymo. Duomenys naudojami tik šiam tikslui.</label>
     <p class="err" id="perr" role="alert"></p><button class="btn" style="width:100%">Siųsti prašymą</button>
   </form>
 </div></section>
 
-<section class="alt faq"><div class="wrap" style="max-width:760px">
-  <div class="sec-h"><h2>Dažni klausimai</h2></div>
+<section class="alt faq"><div class="wrap" style="max-width:780px">
+  <div class="sec-h"><span class="kicker">DUK</span><h2>Dažni klausimai</h2></div>
   <details><summary>Ar mokiniai naudoja tikrus pinigus?</summary><p>Ne. Visi pinigai yra virtualūs: nėra mokėjimų, brokerio ar prizų.</p></details>
   <details><summary>Kokius duomenis renkate apie mokinius?</summary><p>Tik slapyvardį ir žaidimo sprendimus. El. pašto ar tikro vardo nereikia.</p></details>
   <details><summary>Ar tai atitinka Bendrąsias programas?</summary><p>Pamokų planus rengiame pagal temas (biudžetas, taupymas, investavimas, rizika). Konkretų atitikimą programos pasiekimams patvirtinsime atskirai, kol kas to netvirtiname.</p></details>
   <details><summary>Kiek laiko užtrunka?</summary><p>Vienas sezonas yra 6 savaitės, po vieną 15–25 min. veiklą per savaitę.</p></details>
 </div></section>
 </main>
-<footer><div class="wrap"><b style="color:#fff">VEMAK</b> · Finansinio raštingumo žaidimas mokykloms · <a href="/play">Mokiniams: prisijungti su kodu</a> · <a href="/teacher">Mokytojams</a><p class="note" style="color:#9fb0cc">Žaidimas yra mokomoji priemonė. Jis nesiūlo finansinių ar investavimo patarimų.</p></div></footer>
+<footer><div class="wrap">
+  <div class="foot-row"><b style="color:#fff;font-size:1.05rem">VEMAK · Finansinio raštingumo žaidimas mokykloms</b>
+    <div class="row"><a href="/play">Mokiniams: prisijungti su kodu</a><a href="/teacher">Mokytojams</a></div></div>
+  <p class="note" style="margin-top:14px;font-size:.86rem">Žaidimas yra mokomoji priemonė. Jis nesiūlo finansinių ar investavimo patarimų.</p>
+</div></footer>
 <script type="module" src="/landing.js"></script>
 </body>
 </html>

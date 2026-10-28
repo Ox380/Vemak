@@ -29,6 +29,10 @@ export function validateDemoAllocation(alloc) {
 function round(value) { return Math.round(value * 100) / 100; }
 function choiceFor(key) { return DEMO_CHOICES.find((choice) => choice.key === key); }
 
+// „Pamoka" žingsniams — tie patys formatai kaip ekonomikos variklyje.
+const money = (n) => String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' €';
+const signed = (n) => { const v = Math.round(Number(n) || 0); return (v > 0 ? '+' : v < 0 ? '−' : '') + money(Math.abs(v)); };
+
 export function simulateDemo(choiceKey, alloc, startingCapital = DEMO_CAPITAL, weekNo = 1) {
   const error = validateDemoAllocation(alloc);
   if (error) throw new Error(error);
@@ -49,6 +53,22 @@ export function simulateDemo(choiceKey, alloc, startingCapital = DEMO_CAPITAL, w
   const score = round(netWorth - riskPenalty);
   const delta = round(netWorth - DEMO_CAPITAL);
 
+  // ---- „Pamoka": faktinė įvykių seka, sudaryta tik iš apskaičiuotų skaičių ----
+  const savBase = startingCapital * alloc.sav / 100;
+  const invBase = startingCapital * alloc.inv / 100;
+  const busBase = startingCapital * alloc.bus / 100;
+  const steps = [];
+  const step = (text, amount = null) => steps.push({ text, amount });
+  step(`Pradinis kapitalas: ${money(startingCapital)}.`, round(startingCapital));
+  step(`Pasirinkimas „${choice.label}": ${choiceKey === 'invest' ? 'investicijos auga ×1,10' : choiceKey === 'business' ? 'verslas auga ×1,18' : 'avarijos išlaida sumažėja iki 40 € (mokestis 40 €)'}.`, null);
+  step(`Paskirstymas: santaupos ${alloc.sav} % = ${money(savBase)}, investicijos ${alloc.inv} % = ${money(invBase)}, verslas ${alloc.bus} % = ${money(busBase)}, rezervas ${alloc.res} % = ${money(reserve)}.`, null);
+  step(`Savaitei pasibaigus: santaupos ${signed(savings - savBase)} → ${money(savings)}; investicijos ${signed(investing - invBase)} → ${money(investing)}; verslas ${signed(business - busBase)} → ${money(business)}.`, round(savings - savBase + (investing - invBase) + (business - busBase)));
+  step(`Netikėta išlaida: ${money(repairCost)}.`, -round(repairCost));
+  if (reserveUsed >= repairCost - 0.005) step(`Rezervas padengė visą išlaidą (${money(reserveUsed)}) be jokių nuostolių.`, -round(reserveUsed));
+  else step(`Rezervo užteko tik ${money(reserveUsed)}, todėl trūkstamą ${money(shortfall)} teko parduoti su 15 % nuostoliu: −${money(forcedSalePenalty)}.`, -round(shortfall + forcedSalePenalty));
+  if (choiceKey === 'protect') step(`Apsaugos mokestis: −${money(40)}.`, -40);
+  step(`Galutinė grynoji vertė: ${money(netWorth)} (${signed(delta)} nuo pradinio kapitalo).`, delta);
+
   return {
     choice: choiceKey,
     alloc: { ...alloc },
@@ -61,6 +81,7 @@ export function simulateDemo(choiceKey, alloc, startingCapital = DEMO_CAPITAL, w
     reserveUsed: round(reserveUsed),
     forcedSalePenalty: round(forcedSalePenalty),
     maxShare,
+    steps,
     lesson: choiceKey === 'protect'
       ? 'Apsauga kainavo 40 €, bet sumažino avarijos poveikį. Rezervas vis tiek padeda išlaikyti lankstumą.'
       : reserveUsed >= repairCost

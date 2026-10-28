@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { buildSeason, newState, playWeek, validateAlloc, defaultAlloc, netWorth, strategyScore, mentorFacts, mentorNote, CONFIG } from './public/engine.js';
+import { buildSeason, newState, playWeek, validateAlloc, validateGoal, defaultAlloc, netWorth, strategyScore, mentorFacts, mentorNote, CONFIG } from './public/engine.js';
 import { createRewards, awardOnce, weeklyXp, trophyEligibility, levelForXp } from './public/rewards.js';
 import { WEEKS as CONTENT } from './public/content.js';
 import { LESSONS, QUIZ } from './server/teaching.mjs';
@@ -320,7 +320,7 @@ route('GET', '/api/me', (req) => {
     quizResult: st.quiz.post ? { pre: st.quiz.pre?.pct, post: st.quiz.post.pct, byTopic: { pre: st.quiz.pre?.byTopic, post: st.quiz.post.byTopic } } : null,
     locked: !!mySub && cw > revealed,
     myPending: cw > revealed && mySub ? { choice: mySub.choice, alloc: mySub.alloc } : null,
-    state: reports.length ? reports[reports.length - 1].state : { reserve: 0, savings: 0, business: 0, debt: 0, level: 1, invest: { etf: 0, tech: 0, green: 0, reit: 0, gold: 0 } },
+    state: reports.length ? reports[reports.length - 1].state : s,
     netWorth: reports.length ? reports[reports.length - 1].netWorth : 0,
     shield: !!s.shield && revealed >= 3, wantsDelta: reports.length ? s.wantsDelta : 0,
     bankrupt: revealed ? !!s.bankrupt : false,
@@ -331,6 +331,14 @@ route('GET', '/api/me', (req) => {
   };
   if (revealed) res.rankings = rankings(c);
   return res;
+});
+route('POST', '/api/me/goal', (req, body) => {
+  const st = authStudent(req); const c = classOf(st);
+  if (c.revealed > 0) throw bad('Tikslą galima pasirinkti iki pirmos savaitės rezultatų.');
+  const goal = { type: String(body.type || ''), target: Number(body.target), progress: 0 };
+  const err = validateGoal(goal);
+  if (err) throw bad(err);
+  st.state.goal = goal; save(); return { ok: true, goal };
 });
 route('POST', '/api/me/quiz', (req, body) => {
   const st = authStudent(req); const c = classOf(st);
