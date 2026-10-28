@@ -1,71 +1,72 @@
-# Team guide: work on VEMAK together on GitHub
+# Team guide: how to edit VEMAK with the team
 
-First-time agent connection (owner): see `GIT_CONNECT_AGENT.md`.
+Set up takes 10 minutes. After that, it is 5 simple steps each time.
 
-Goal: several people edit code at the same time without overwriting each other.
-Repo: `https://github.com/Ox380/Vemak` (owner name is the letter **O**, not a zero).
+## Set up (only once)
 
-## The rules (read this first)
-1. **Nobody commits straight to `main`.** Everyone works on their own branch, e.g. `ruta/leaderboard-fix`.
-2. **Pull before you start, push often.** Small commits cause small conflicts.
-3. **Changes reach `main` through a pull request (PR)** that one teammate reviews.
-4. **One person per file at a time** where possible. Agree in chat who is touching `engine.js`, `server.mjs` or `content.js`; those are the files people will collide on.
-5. **Never commit secrets or real data** (`.env`, tokens, `app/data/`). The repo is public.
+1. Make a free account at **github.com**. Send your username to the owner.
+2. The owner invites you. **Open the email and click Accept.**
+3. Download and install **GitHub Desktop**: https://desktop.github.com
+4. Open it and click **Sign in to GitHub.com**.
+5. Click **Clone a repository from the Internet**. Choose **Ox380/Vemak**. Click **Clone**.
 
-## Part A. Owner setup (once)
-1. Repo → Settings → Collaborators → **Add people**. Each teammate needs their **own GitHub account**. Then commits show their real names and they can push without sharing keys.
-2. Protect `main`: Repo → Settings → Rules → Rulesets → **New branch ruleset** → target `main` → tick **Require a pull request before merging** (and optionally 1 approval). An agent or script cannot do this for you without admin rights.
-3. Optional: turn on **Automatically delete head branches** (Settings → General → Pull Requests).
+Done. The project is now on your computer.
 
-## Part B. Each teammate joins (once)
-Pick the way you work.
+## Every time you want to change something
 
-**B1. On your own computer** (best for most people)
-1. Install Git, and sign in: easiest is **GitHub Desktop** (free), or run `git clone https://github.com/Ox380/Vemak.git`.
-2. Set your identity: `git config --global user.name "Your Name"` and `git config --global user.email "you@example.com"`.
+**1. Get the newest version**
+Click **Fetch origin** at the top. If it changes to **Pull origin**, click it.
 
-**B2. With your own Hermes agent (a separate container)**
-Give your agent this prompt. Your agent makes its own key; it must **not** reuse the key from another container.
+**2. Make your own branch**
+A branch is your own copy. It keeps your work safe from other people's work.
+Click **Current Branch**, then **New Branch**. Name it like `anna-fix-colors`. Click **Create Branch**.
+
+**3. Change the code**
+Open the project folder in your code editor. Make your changes. Save.
+
+**4. Save your work**
+Go back to GitHub Desktop. Your changes show on the left.
+Type a short message at the bottom, like `Fix button color`.
+Click **Commit**.
+
+**5. Share it**
+Click **Publish branch** (later: **Push origin**).
+Click **Create Pull Request**. A web page opens. Click the green **Create pull request** button.
+Tell the team in chat: "Please check my pull request."
+
+A teammate checks it and clicks **Merge**. Your change is now in the project.
+
+## Golden rules
+
+- **Never work on `main`.** Always make your own branch first (step 2).
+- **Always do step 1 first.**
+- **Tell the team which file you are editing.** Two people in the same file causes trouble.
+- **Never upload passwords or private files.** The repo is public. Everyone can see it.
+
+## Something went wrong?
+
+- **Red "conflict" message:** two people changed the same lines. Stop and ask a teammate.
+- **"Permission denied":** you did not accept the invite. Check your email.
+- **Not sure?** Ask in the team chat. Every change is saved, so it can be undone.
+
+---
+
+## For the owner (one time)
+
+1. On GitHub open the repo: **Settings → Collaborators → Add people**. Add each teammate's username.
+2. Protect `main`: **Settings → Rules → Rulesets → New branch ruleset**. Name it `protect main`. Target: `main`. Tick **Require a pull request before merging**. Save.
+
+## For people who use a Hermes agent
+
+Paste this to your agent:
+
 ```
-Connect this workspace to my team's GitHub repo over SSH.
-Repo: https://github.com/Ox380/Vemak
-Clone into: /data/workspace/VEMAK
-
-1. Check git is installed. Do not ask me for passwords or tokens.
-2. Generate an ed25519 key at ~/.ssh/<myname>_github with no passphrase, add github.com to known_hosts, and write ~/.ssh/config so GitHub uses that key.
-3. Print ONLY the public key and tell me where to add it: my own GitHub account, Settings -> SSH and GPG keys -> New key (NOT a repo deploy key, so my commits count as me).
-4. When I say "done": run ssh -T git@github.com, then git clone git@github.com:Ox380/Vemak.git, and set git user.name / user.email to the values I give you.
-5. Work only on a branch (git switch -c <myname>/<topic>). Never push to main.
+Connect me to https://github.com/Ox380/Vemak over SSH.
+Make my own SSH key. Show me ONLY the public key and tell me where to paste it
+(my own GitHub account: Settings -> SSH and GPG keys -> New key).
+When I say "done", clone the repo into /data/workspace/VEMAK.
+Always make a new branch for my work. Never push to main.
+When I say "push", commit, push my branch, and give me the pull request link.
 ```
-Why your own account key and not a deploy key: a repo deploy key is one shared identity and works for one repo only, so commits can't be told apart. A key on your own account gives each person their name and access.
 
-## Part C. Daily workflow (everyone)
-```
-git switch main && git pull                 # 1. get the latest
-git switch -c yourname/what-you-change      # 2. your own branch
-# ... edit, run `cd app && npm test` ...
-git add -A && git commit -m "Short clear message"
-git pull --rebase origin main               # 3. bring in others' changes first
-git push -u origin yourname/what-you-change # 4. publish your branch
-```
-Then open GitHub → **Compare & pull request** → ask a teammate to review → **Merge**. After merging, everyone runs `git switch main && git pull`.
-
-With an agent you can say: "Create a branch `<name>/<topic>`, commit my changes, pull --rebase from main, push, and give me the PR link."
-
-## If two people changed the same lines (conflict)
-1. `git pull --rebase origin main` stops and lists conflicted files.
-2. Open each file, find `<<<<<<<` / `=======` / `>>>>>>>`, keep the right version, delete the markers.
-3. `git add <file>` then `git rebase --continue`, and push again.
-Ask your agent to explain a conflict before resolving it. Never use `git push --force` on a shared branch.
-
-## Before each PR
-- `cd app && npm test` passes.
-- No secrets or real class data in the diff.
-- Docs updated if behavior changed (the code is the source of truth; some older docs are outdated, see `HANDOFF.md`).
-
-## Gotchas
-- **Same SSH key in two places fails.** GitHub refuses a deploy key already used on another repo, and sharing one private key across people hides who changed what.
-- **Forgot write access / wrong account?** Push fails with "Permission denied". Check the collaborator invite was accepted.
-- **Agents in different containers don't see each other's files.** Only what is pushed to GitHub is shared, so push often.
-- **Remove access any time:** Settings → Collaborators (people) or Deploy keys (keys).
-- **No GitHub access from your agent?** Fallback: download the folder from the web UI, unzip it, and upload with **Add file → Upload files**. This is for one-off use only, not for teamwork.
+Command-line version for experienced people: `TEAM_WORKFLOW_ADVANCED.md`
