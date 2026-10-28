@@ -103,18 +103,14 @@ function stepBar() {
 }
 
 function progressionCard() {
-  const played = me.reports.length;
-  const locked = me.cls.revealed < me.cls.week && me.locked ? 1 : 0;
-  const xp = played * 120 + locked * 30 + (me.cls.revealed >= 1 ? 80 : 0);
-  const level = Math.max(1, Math.floor(xp / 200) + 1);
+  const rewards = me.rewards || { xp: 0, level: 1, trophies: [], cosmetics: [] };
+  const xp = rewards.xp || 0;
+  const level = rewards.level || 1;
   const next = level * 200;
-  const progress = Math.min(100, Math.round((xp / next) * 100));
-  const achievements = [];
-  if (locked) achievements.push(['🔒', 'Strategas', 'Užrakinai savaitės planą']);
-  if (played) achievements.push(['📊', 'Pirmas rezultatas', 'Pamatėi savo sprendimo pasekmes']);
-  if ((me.state.reserve || 0) >= 100) achievements.push(['🛡️', 'Atsargus', 'Sukaupei bent 100 € rezervą']);
-  if (!achievements.length) achievements.push(['🌱', 'Pradžia', 'Priimk pirmą finansinį sprendimą']);
-  return `<div class="progress-card card"><div class="progress-top"><div class="avatar-badge">${AVATARS[me.me.avatar]}</div><div><span class="eyebrow">TAVO PAŽANGA</span><h3 style="margin:0">${esc(me.me.nickname)} · ${level} lygis</h3><p class="muted" style="margin:.2em 0 0">${xp} XP iki kito lygio</p></div><strong class="xp-pill">${progress}%</strong></div><div class="xp-track"><span style="width:${progress}%"></span></div><div class="achievement"><span class="achievement-icon">${achievements[0][0]}</span><div><b>${esc(achievements[0][1])}</b><small>${esc(achievements[0][2])}</small></div></div></div>`;
+  const progress = Math.min(100, Math.round((xp % 200) / 2));
+  const trophyNames = { 'financial-genius': 'Finansinis genijus', 'best-saver': 'Geriausias taupytojas', 'risk-master': 'Rizikos meistras', 'comeback-king': 'Sugrįžimo karalius', 'business-tycoon': 'Verslo magnatas', 'smart-investor': 'Sumanus investuotojas', 'most-improved': 'Didžiausia pažanga' };
+  const trophies = rewards.trophies?.map((key) => trophyNames[key] || key) || [];
+  return `<div class="progress-card card"><div class="progress-top"><div class="avatar-badge">${AVATARS[me.me.avatar]}</div><div><span class="eyebrow">TAVO PAŽANGA</span><h3 style="margin:0">${esc(me.me.nickname)} · ${level} lygis</h3><p class="muted" style="margin:.2em 0 0">${xp} XP · dar ${Math.max(0, next - xp)} XP iki kito lygio</p></div><strong class="xp-pill">${progress}%</strong></div><div class="xp-track"><span style="width:${progress}%"></span></div><div class="achievement"><span class="achievement-icon">🏆</span><div><b>${trophies[0] || 'Pradžia'}</b><small>${trophies.length ? 'Savaitės apdovanojimas atrakintas' : 'Pirmas apdovanojimas laukia po atskleidimo'}</small></div></div><div class="rewards-cabinet"><h4>Apdovanojimų kabinetas</h4><p class="muted">${trophies.length ? trophies.join(' · ') : 'Kol kas apdovanojimų nėra'}</p><h4>Savaitės kelias</h4><div class="reward-pass">${Array.from({ length: 6 }, (_, i) => `<span class="reward-week ${i < me.reports.length ? 'unlocked' : ''}" title="${i < me.reports.length ? 'Atrakinta' : 'Užrakinta'}">${i + 1}</span>`).join('')}</div><p class="muted">${rewards.cosmetics?.length ? `Atrakinta: ${esc(rewards.cosmetics.join(' · '))}` : 'Kiekviena savaitė atrakina naują kosmetinį daiktą.'}</p></div></div>`;
 }
 function cityActions() {
   const buildings = [
@@ -172,8 +168,9 @@ function viewWeek() {
       <p class="muted" style="font-size:.85rem">${esc(w.info)}</p></div>
   </div>
   <div class="card"><h2>Ketvirtadienis: paskirstyk pinigus</h2>
-    <p class="muted">Laisvus pinigus padalink į 4 krepšelius. Suma turi būti 100 %.</p>
-    <div class="bar" aria-hidden="true">${BUCKET_META.map((b) => `<span style="width:${draft[b.k]}%;background:${b.color}"></span>`).join('')}</div>
+  <p class="muted">Laisvus pinigus padalink į 4 krepšelius. Suma turi būti 100 %.</p>
+  ${me.revealProgress ? `<div class="reveal-progress" role="status">🔒 ${me.revealProgress.locked} iš ${me.revealProgress.total} bendraklasių jau pasirinko strategiją!<small>Pasirinkimai lieka slapti iki penktadienio atskleidimo.</small></div>` : ''}
+  <div class="bar" aria-hidden="true">${BUCKET_META.map((b) => `<span style="width:${draft[b.k]}%;background:${b.color}"></span>`).join('')}</div>
     <div class="alloc" style="margin-top:12px">${BUCKET_META.map((b) => `<div><div class="slider"><label for="s_${b.k}" style="margin:0">${b.name}</label>
       <input type="range" id="s_${b.k}" data-k="${b.k}" min="0" max="100" step="5" value="${draft[b.k]}" ${dis}><b id="v_${b.k}">${draft[b.k]} %</b></div><small class="muted">${b.hint}</small></div>`).join('')}</div>
     <p id="tot" class="${tot === 100 ? 'pos' : 'neg'}" role="status">Iš viso: ${tot} % ${tot === 100 ? '✓' : '(turi būti 100 %)'}</p>
@@ -188,6 +185,7 @@ function viewResults() {
   const rs = me.reports;
   if (!rs.length) return `<div class="card"><h2>Rezultatų dar nėra</h2><p class="muted">Pirmos savaitės rezultatai bus atskleisti penktadienį.</p></div>`;
   const r = rs[rs.length - 1];
+  const reward = me.rewards || { xp: 0, level: 1, trophies: [], cosmetics: [] };
   const posn = (v) => `<span class="${v >= 0 ? 'pos' : 'neg'}">${eur(v, true)}</span>`;
   const ev = r.events.map((e) => ({ priceRise: '📈 Kainos kilo 12 %', marketDown: '📉 Rinkos krito', marketUp: '📈 Rinkos atsigavo', bizBoom: '🎪 Verslo mugė' }[e.kind])).filter(Boolean);
   return `${hud()}<div class="two"><div class="grid">
@@ -207,6 +205,7 @@ function viewResults() {
       <div class="cmp">${ASSET_KEYS.filter((a) => r.alloc.inv > 0 && (r.alloc.mix[a] || 0) > 0).map((a) => `<div>${ASSET_META[a].icon}<b class="${r.market[a] >= 0 ? 'pos' : 'neg'}">${pct(r.market[a])}</b><small>${ASSET_META[a].name}</small></div>`).join('') || '<small class="muted">Šią savaitę neinvestavai.</small>'}
         <div>☕<b class="${r.bizReturn >= 0 ? 'pos' : 'neg'}">${pct(r.bizReturn)}</b><small>Kavos baras</small></div></div>
       <p style="margin-top:14px"><b>Pamoka:</b> ${esc(r.lesson)}</p>
+      <div class="reveal-rewards"><h3>Penktadienio apdovanojimai</h3><p>+${reward.xp} XP · ${reward.level} lygis</p><p class="muted">Tavo strategijos ir mokymosi pasiekimai saugomi visam sezonui.</p></div>
       ${r.bankrupt ? '<div class="news down">⚠️ Skola per didelė. Kitą savaitę pradėsi iš naujo su antra galimybe.</div>' : ''}
     </div>
   </div><div class="grid">${mentorCard()}<div class="card"><h3>Grynosios vertės kelias</h3>${chart(rs)}</div></div></div>`;

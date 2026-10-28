@@ -5,6 +5,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { buildSeason, newState, playWeek, validateAlloc, defaultAlloc, netWorth, strategyScore, mentorFacts, mentorNote, CONFIG } from './public/engine.js';
+import { createRewards, awardOnce, weeklyXp, trophyEligibility, levelForXp } from './public/rewards.js';
 import { WEEKS as CONTENT } from './public/content.js';
 import { LESSONS, QUIZ } from './server/teaching.mjs';
 
@@ -101,6 +102,25 @@ function revealWeek(cls) {
     report.auto = !!sub.auto;
     state.history[state.history.length - 1] = report;
     st.state = state;
+    st.rewards = st.rewards || createRewards();
+    const points = weeklyXp(report);
+    for (const [kind, amount] of Object.entries(points)) if (amount) st.rewards = awardOnce(st.rewards, `week-${cls.week}-${kind}`, amount);
+    st.rewards = awardOnce(st.rewards, `week-${cls.week}-knowledge`, st.quiz?.post && st.quiz.post.pct > (st.quiz.pre?.pct || 0) ? 100 : 0);
+    st.rewards.level = levelForXp(st.rewards.xp);
+    const row = {
+      id: st.id, score: strategyScore(state), delta: report.delta, alloc: report.alloc,
+      bizReturn: report.bizReturn, investmentReturn: Object.values(report.market || {}).reduce((sum, value) => sum + value, 0),
+      knowledgeImprovement: (st.quiz?.post?.pct || 0) - (st.quiz?.pre?.pct || 0),
+    };
+    const classmates = studentsOf(cls).filter((x) => x.id !== st.id).map((x) => {
+      const last = x.state?.history?.at(-1);
+      return last ? { id: x.id, score: strategyScore(x.state), delta: last.delta, alloc: last.alloc, bizReturn: last.bizReturn, investmentReturn: Object.values(last.market || {}).reduce((sum, value) => sum + value, 0), knowledgeImprovement: (x.quiz?.post?.pct || 0) - (x.quiz?.pre?.pct || 0) } : null;
+    }).filter(Boolean);
+    const trophies = trophyEligibility([...classmates, row], row);
+    for (const trophy of trophies) if (!st.rewards.trophies.includes(trophy.key)) st.rewards.trophies.push(trophy.key);
+    const unlocks = { 1: 'Pradžios ženklelis', 2: 'Naujas avataro aksesuaras', 3: 'Kavos baro dekoracija', 4: 'Profilio rėmelis', 5: 'Miesto dekoracija', 6: 'Sezono čempiono kolekcija' };
+    const cosmetic = unlocks[cls.week]; if (cosmetic && !st.rewards.cosmetics.includes(cosmetic)) st.rewards.cosmetics.push(cosmetic);
+    state.history[state.history.length - 1] = report;
     st.mentor = st.mentor || {};
     st.mentor[cls.week] = { facts: mentorFacts(report, cls.week + 1), ...mentorNote(mentorFacts(report, cls.week + 1)) };
   }
@@ -280,7 +300,7 @@ route('POST', '/api/join', (req, body) => {
   if (studentsOf(c).some((s) => s.nickname.toLowerCase() === nickname.toLowerCase())) throw bad('Toks slapyvardis jau naudojamas klasėje.');
   if (studentsOf(c).length >= 60) throw bad('Klasė pilna.');
   const avatar = Math.max(0, Math.min(5, Number(body.avatar) || 0));
-  const st = { id: rid(), classId: c.id, nickname, avatar, subs: {}, quiz: {}, state: newState(), mentor: {}, joinedAt: new Date().toISOString() };
+  const st = { id: rid(), classId: c.id, nickname, avatar, subs: {}, quiz: {}, state: newState(), mentor: {}, rewards: createRewards(), joinedAt: new Date().toISOString() };
   db.students[st.id] = st;
   const tok = rid(24); db.sessions[sha(tok)] = { role: 'student', id: st.id }; save();
   return { token: tok };
@@ -305,6 +325,8 @@ route('GET', '/api/me', (req) => {
     shield: !!s.shield && revealed >= 3, wantsDelta: reports.length ? s.wantsDelta : 0,
     bankrupt: revealed ? !!s.bankrupt : false,
     reports,
+    rewards: { ...st.rewards, level: levelForXp(st.rewards?.xp || 0) },
+    revealProgress: c.week > 0 ? { locked: studentsOf(c).filter((x) => x.subs[c.week] && !x.subs[c.week].auto).length, total: studentsOf(c).length, revealed: c.revealed >= c.week } : { locked: 0, total: studentsOf(c).length, revealed: false },
     mentor: revealed ? st.mentor[revealed] : null,
   };
   if (revealed) res.rankings = rankings(c);
@@ -316,7 +338,13 @@ route('POST', '/api/me/quiz', (req, body) => {
   if (kind !== 'pre' && kind !== 'post') throw bad('Neteisingas testas.');
   if (st.quiz[kind]) throw bad('Testas jau išspręstas.');
   if (kind === 'post' && c.status !== 'done') throw bad('Baigiamasis testas dar neatidarytas.');
-  st.quiz[kind] = quizScore(kind, body.answers); save();
+  st.quiz[kind] = quizScore(kind, body.answers);
+  if (kind === 'post' && st.quiz.pre && st.quiz.post.pct > st.quiz.pre.pct) {
+    st.rewards = st.rewards || createRewards();
+    st.rewards = awardOnce(st.rewards, 'knowledge-improvement', 100);
+    st.rewards.level = levelForXp(st.rewards.xp);
+  }
+  save();
   return { ok: true, pct: st.quiz[kind].pct };
 });
 route('POST', '/api/me/lock', (req, body) => {
