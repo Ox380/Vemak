@@ -2,7 +2,7 @@
 import { WEEKS, ASSET_META, TOPICS } from './content.js';
 import { CONFIG, ASSET_KEYS, DEFAULT_MIX } from './engine.js';
 import { citySVG } from './iso.js';
-import { esc, $, $$, eur, pct, api, toast, AVATARS, TONE } from './ui.js';
+import { esc, $, $$, eur, pct, api, toast, lessonBlock, AVATARS, TONE } from './ui.js';
 
 const app = $('#app');
 const TOKEN_KEY = 'vemak.student';
@@ -206,7 +206,7 @@ function viewResults() {
       <h3 style="margin-top:14px">Kas nutiko su turtu</h3>
       <div class="cmp">${ASSET_KEYS.filter((a) => r.alloc.inv > 0 && (r.alloc.mix[a] || 0) > 0).map((a) => `<div>${ASSET_META[a].icon}<b class="${r.market[a] >= 0 ? 'pos' : 'neg'}">${pct(r.market[a])}</b><small>${ASSET_META[a].name}</small></div>`).join('') || '<small class="muted">Šią savaitę neinvestavai.</small>'}
         <div>☕<b class="${r.bizReturn >= 0 ? 'pos' : 'neg'}">${pct(r.bizReturn)}</b><small>Kavos baras</small></div></div>
-      <p style="margin-top:14px"><b>Pamoka:</b> ${esc(r.lesson)}</p>
+      ${lessonBlock(r.lesson, r.steps)}
       ${r.bankrupt ? '<div class="news down">⚠️ Skola per didelė. Kitą savaitę pradėsi iš naujo su antra galimybe.</div>' : ''}
     </div>
   </div><div class="grid">${mentorCard()}<div class="card"><h3>Grynosios vertės kelias</h3>${chart(rs)}</div></div></div>`;

@@ -22,6 +22,19 @@ export async function api(method, url, body, token) {
   return data;
 }
 
+// „Pamoka" blokas: mokymo tekstas + žingsnis po žingsnio įvykių seka.
+// Naudoja ir žaidimo rezultatų ekranas (engine.js), ir anoniminis demo (demo.js).
+export function lessonBlock(lesson, steps = []) {
+  const rows = (steps || []).map((s) => `<li><span>${esc(s.text)}</span>`
+    + (s.amount != null ? `<b class="${s.amount > 0 ? 'pos' : s.amount < 0 ? 'neg' : 'muted'}">${eur(s.amount, true)}</b>` : '')
+    + '</li>').join('');
+  return `<div class="lesson">`
+    + `<div class="lesson-head"><span class="lesson-icon">💡</span><div><b>Pamoka</b>`
+    + `<p class="muted">${esc(lesson || '')}</p></div></div>`
+    + (rows ? `<div class="lesson-title">Kas įvyko žingsnis po žingsnio</div><ol class="lesson-steps">${rows}</ol>` : '')
+    + '</div>';
+}
+
 export function toast(msg, kind = 'info') {
   let box = $('#toasts');
   if (!box) { box = document.createElement('div'); box.id = 'toasts'; box.setAttribute('role', 'status'); box.setAttribute('aria-live', 'polite'); document.body.appendChild(box); }

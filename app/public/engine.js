@@ -1,6 +1,6 @@
 // engine.js — VEMAK economy engine. Pure functions, no I/O. Runs in Node (server) and browser (demo).
 // Everything is deterministic from the class seed, so every student in a class sees the same market.
-import { WEEKS as WEEK_CONTENT } from './content.js';
+import { WEEKS as WEEK_CONTENT, ASSET_META } from './content.js';
 
 export const CONFIG = {
   WEEKS: 6,
@@ -96,6 +96,12 @@ export const netWorth = (s) => s.reserve + s.savings + s.business + sumInvest(s)
 export const bizCap = (s) => CONFIG.BIZ_CAP_PER_LEVEL * s.level;
 const round2 = (x) => Math.round(x * 100) / 100;
 
+// --- „Pamoka" žingsniams: vienodas skaičių formatas serveryje ir naršyklėje ---
+const money = (n) => String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' €';
+const signed = (n) => { const v = Math.round(Number(n) || 0); return (v > 0 ? '+' : v < 0 ? '−' : '') + money(Math.abs(v)); };
+const pctStr = (x, d = 1) => (x >= 0 ? '+' : '−') + Math.abs(Number(x) * 100).toFixed(d).replace('.', ',') + ' %';
+const BUCKET_LABELS = { sav: 'santaupas', inv: 'investicijas', bus: 'verslą', res: 'rezervą' };
+
 export function defaultAlloc() {
   return { sav: 30, inv: 25, bus: 25, res: 20, mix: { ...DEFAULT_MIX }, upgrade: false };
 }
@@ -154,18 +160,33 @@ export function playWeek(prev, season, weekNo, choiceKey, alloc) {
   const nwBefore = netWorth(s);
   const report = { week: weekNo, choice: choiceKey, forced: 0, penaltyLost: 0, newDebt: 0, secondChance: false, events: [], notes: [] };
 
+  // „Pamoka" — faktinė įvykių seka, sudaryta tik iš apskaičiuotų skaičių (nieko neišgalvojama).
+  const steps = [];
+  const step = (text, amount = null) => steps.push({ text, amount });
+  step(`Pradinė grynoji vertė: ${money(nwBefore)}.`, nwBefore);
+
   // second chance after bankruptcy (guided restart, once per season is shown; rule allows repeat but flagged)
   if (s.bankrupt) {
     s.debt = 0; s.savings = 0; s.business = 0; s.level = 1;
     for (const a of ASSET_KEYS) s.invest[a] = 0;
     s.reserve = CONFIG.RESTART_RESERVE; s.bankrupt = false; s.secondChances += 1;
     report.secondChance = true;
+    step(`Antra galimybė: skola nurašyta, turtas atstatytas, pradedi su ${money(CONFIG.RESTART_RESERVE)} rezervu.`, CONFIG.RESTART_RESERVE);
   }
 
   // persistent effects of the choice
   if (opt.shield) s.shield = true;
   if (opt.wantsDelta) s.wantsDelta += opt.wantsDelta;
   if (opt.bizBoost) s.bizBoost += opt.bizBoost;
+
+  // 1 žingsnis — pasirinkimas ir jo tiesioginis poveikis
+  step(`Pasirinkimas „${opt.label}".`, null);
+  if (opt.cash) step(opt.cash > 0 ? `Iš karto gauta ${signed(opt.cash)} (įskaičiuota į biudžetą).` : `Iš karto sumokėta ${money(-opt.cash)} (įskaičiuota į biudžetą).`, opt.cash);
+  if (opt.shield) step('Apsauga: kainų kilimas šiam sezonui nebeturi įtakos poreikiams.', null);
+  if (opt.wantsDelta) step(`Norai ${opt.wantsDelta > 0 ? 'išaugo' : 'sumažėjo'} ${money(Math.abs(opt.wantsDelta))} per savaitę.`, opt.wantsDelta);
+  if (opt.bizBoost) step(`Verslo grąža padidėjo ${pctStr(opt.bizBoost)} per savaitę.`, null);
+  if (opt.sellInvest) step('Pasirinkta parduoti investicijas – po savaitės rezultatų visos lėšos perkeliamos į rezervą.', null);
+  if (opt.buyInvest) step(`Papildomai nupirkta ETF už ${money(opt.buyInvest)} po savaitės rezultatų.`, opt.buyInvest);
   if (sw.priceRise) { s.priceRiseActive = true; report.events.push({ kind: 'priceRise', pct: sw.priceRise }); }
   if (sw.shock < 0) report.events.push({ kind: 'marketDown', pct: sw.shock });
   if (sw.shock > 0) report.events.push({ kind: 'marketUp', pct: sw.shock });
@@ -177,6 +198,13 @@ export function playWeek(prev, season, weekNo, choiceKey, alloc) {
   let free = CONFIG.PAY - needs - wants + (opt.cash || 0);
   report.needs = round2(needs); report.wants = round2(wants); report.income = CONFIG.PAY + Math.max(0, opt.cash || 0);
 
+  // 2 žingsnis — įvykis ir mėnesio biudžetas
+  if (rise > 0) step(`Įvykis: kainos pakilo ${pctStr(rise, 0).replace('+', '')}, todėl poreikiai išaugo iki ${money(needs)}.`, -round2(needs * rise));
+  else if (s.priceRiseActive && s.shield) step(`Apsauga suveikė: kainų kilimas nepaveikė poreikių (${money(needs)}).`, null);
+  const choiceCash = opt.cash || 0;
+  const cashPart = choiceCash ? `${choiceCash > 0 ? '+' : '−'} ${money(Math.abs(choiceCash))} ` : '';
+  step(`Biudžetas: pajamos ${money(CONFIG.PAY)} ${cashPart}− poreikiai ${money(needs)} − norai ${money(wants)} = ${money(free)} laisvų pinigų.`, round2(free));
+
   let buyInvest = opt.buyInvest || 0;
   if (free < 0) {
     const deficit = -free;
@@ -184,10 +212,12 @@ export function playWeek(prev, season, weekNo, choiceKey, alloc) {
     payExpense(s, deficit, report);
     report.deficit = round2(deficit);
     free = 0;
+    step(`Trūkumas ${money(deficit)}: pirmiausia nuskaityta iš rezervo ir santaupų${report.forced ? ', o likusią dalį teko parduoti su 15 % nuostoliu' : ''}.`, -round2(deficit));
   }
   if (s.debt > 0 && free > 0) {
     const pay = Math.min(free, s.debt);
     s.debt -= pay; free -= pay; report.debtRepaid = round2(pay);
+    step(`Grąžinta skola: ${money(pay)} (skola mažėja iki ${money(s.debt)}).`, -round2(pay));
   }
   report.free = round2(free);
 
@@ -199,7 +229,20 @@ export function playWeek(prev, season, weekNo, choiceKey, alloc) {
   s.business += (free * alloc.bus) / 100;
   for (const a of ASSET_KEYS) s.invest[a] += (free * alloc.inv / 100) * ((mix[a] || 0) / mixTotal);
 
+  // 3 žingsnis — tavo paskirstymas
+  for (const k of BUCKETS) {
+    if (alloc[k] > 0) step(`Paskirstei ${alloc[k]} % į ${BUCKET_LABELS[k]}: ${money((free * alloc[k]) / 100)}.`, round2((free * alloc[k]) / 100));
+  }
+  if (alloc.inv > 0) {
+    const parts = ASSET_KEYS.filter((a) => (mix[a] || 0) > 0)
+      .map((a) => `${ASSET_META[a].name} ${mix[a]} %`).join(', ');
+    if (parts) step(`Investicijų dalis padalinta: ${parts}.`, null);
+  }
+
   // returns
+  const invBefore = Object.fromEntries(ASSET_KEYS.map((a) => [a, s.invest[a]]));
+  const bizBefore = s.business;
+  const savBefore = s.savings;
   const mkt = {};
   for (const a of ASSET_KEYS) { mkt[a] = sw.market[a]; s.invest[a] *= 1 + sw.market[a]; }
   const cap = bizCap(s);
@@ -213,24 +256,50 @@ export function playWeek(prev, season, weekNo, choiceKey, alloc) {
   if (s.debt > 0) s.debt *= 1 + CONFIG.DEBT_RATE;
   report.market = mkt; report.bizReturn = bizRet;
 
+  // 4 žingsnis — ką uždirbo ar prarado tavo turtas
+  for (const a of ASSET_KEYS) {
+    const d = s.invest[a] - invBefore[a];
+    if (Math.abs(invBefore[a]) > 0.005) {
+      step(`${ASSET_META[a].name} ${pctStr(sw.market[a])}: ${signed(d)} (liko ${money(s.invest[a])}).`, round2(d));
+    }
+  }
+  step(`Kavos baras ${pctStr(bizRet)}: ${signed(s.business - bizBefore)} (liko ${money(s.business)}).`, round2(s.business - bizBefore));
+  step(`Santaupos ${pctStr(CONFIG.SAVINGS_RATE)}: ${signed(s.savings - savBefore)} (liko ${money(s.savings)}).`, round2(s.savings - savBefore));
+  if (s.debt > 0) step(`Skola auga ${pctStr(CONFIG.DEBT_RATE, 0).replace('+', '')} per savaitę: dabar ${money(s.debt)}.`, null);
+
   // choice effects that act after returns
   if (opt.sellInvest) {
     const t = sumInvest(s);
     s.reserve += t;
     for (const a of ASSET_KEYS) s.invest[a] = 0;
     report.sold = round2(t);
+    step(`Investicijos parduotos: ${money(t)} perkelta į rezervą.`, round2(t));
   }
-  if (buyInvest > 0) { s.invest.etf += buyInvest; }
+  if (buyInvest > 0) {
+    s.invest.etf += buyInvest;
+    step(`Papildomai nupirkta ETF už ${money(buyInvest)}.`, round2(buyInvest));
+  }
 
   // business upgrade (needs a full business, costs sunk equipment money)
   if (alloc.upgrade && s.level < CONFIG.BIZ_MAX_LEVEL && s.business >= cap * 0.95 && s.business > CONFIG.BIZ_UPGRADE_COST) {
     s.business -= CONFIG.BIZ_UPGRADE_COST; s.level += 1; report.upgraded = s.level;
+    step(`Kavos baro plėtra: sumokėta ${money(CONFIG.BIZ_UPGRADE_COST)}, naujas lygis ${s.level} (didesnis kapitalo limitas).`, -CONFIG.BIZ_UPGRADE_COST);
   }
 
   // unexpected expense
-  if (sw.expense) { report.expense = sw.expense; payExpense(s, sw.expense, report); }
+  if (sw.expense) {
+    const fBefore = report.forced, pBefore = report.penaltyLost;
+    report.expense = sw.expense; payExpense(s, sw.expense, report);
+    const soldGross = (report.penaltyLost - pBefore) / CONFIG.FORCED_PENALTY;
+    const covered = Math.max(0, sw.expense - soldGross);
+    step(`Netikėta išlaida: ${money(sw.expense)}.`, -sw.expense);
+    if (covered > 0.005) step(`Rezervas ir santaupos padengė ${money(covered)} be nuostolių.`, null);
+    else step('Rezervo neužteko, todėl teko parduoti turtą.', null);
+    if (report.forced > fBefore) step(`Priverstinis turto pardavimas: parduota už ${money(soldGross)}, prarasta ${money(report.penaltyLost - pBefore)} (15 %).`, -round2(report.penaltyLost - pBefore));
+    if (report.newDebt > 0) step(`Turto neužteko, todėl liko skola: ${money(report.newDebt)}.`, -round2(report.newDebt));
+  }
 
-  if (s.debt > CONFIG.BANKRUPT_DEBT) { s.bankrupt = true; report.bankrupt = true; }
+  if (s.debt > CONFIG.BANKRUPT_DEBT) { s.bankrupt = true; report.bankrupt = true; step(`Skola viršijo ${money(CONFIG.BANKRUPT_DEBT)} – sekanti savaitė prasidės su antrąja galimybe.`, null); }
 
   s.week = weekNo;
   const nw = netWorth(s);
@@ -238,7 +307,9 @@ export function playWeek(prev, season, weekNo, choiceKey, alloc) {
   report.delta = round2(nw - nwBefore);
   report.reservePct = alloc.res; report.maxShare = Math.max(...BUCKETS.map((k) => alloc[k]));
   report.investPct = alloc.inv; report.savingsPct = alloc.sav; report.businessPct = alloc.bus;
-  report.alloc = alloc; report.lesson = opt.lesson;
+  // 5 žingsnis — išvada
+  step(`Galutinė grynoji vertė: ${money(nw)} (${signed(nw - nwBefore)} per savaitę).`, round2(nw - nwBefore));
+  report.alloc = alloc; report.lesson = opt.lesson; report.steps = steps;
   report.state = { reserve: round2(s.reserve), savings: round2(s.savings), business: round2(s.business), debt: round2(s.debt), level: s.level, invest: Object.fromEntries(ASSET_KEYS.map((a) => [a, round2(s.invest[a])])) };
   s.history.push(report);
   return { state: s, report };

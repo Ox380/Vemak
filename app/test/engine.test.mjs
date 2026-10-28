@@ -66,6 +66,46 @@ t('bankruptcy -> second chance works', () => {
   assert.equal(r.state.bankrupt, false);
 });
 
+// ---- „Pamoka": žingsnis po žingsnio paaiškinama, kas įvyko ----
+t('every week explains the result step by step', () => {
+  const season = buildSeason('steps');
+  let s = newState();
+  for (let w = 1; w <= CONFIG.WEEKS; w++) {
+    const r = playWeek(s, season, w, choiceFor(w), STRATS.balanced);
+    s = r.state;
+    const steps = r.report.steps;
+    assert.ok(Array.isArray(steps) && steps.length >= 4, `week ${w}: ${steps && steps.length} steps`);
+    for (const st of steps) {
+      assert.equal(typeof st.text, 'string', 'step has text');
+      assert.ok(st.text.length > 5, 'step text is not empty');
+      assert.ok(!/undefined|NaN/.test(st.text), 'no undefined/NaN: ' + st.text);
+    }
+    assert.match(steps[0].text, /Pradinė grynoji vertė/);
+    assert.match(steps[steps.length - 1].text, /Galutinė grynoji vertė/);
+    assert.equal(steps[steps.length - 1].amount, r.report.delta, 'last step amount = week delta');
+  }
+});
+t('step trail is deterministic for the same seed', () => {
+  const a = playWeek(newState(), buildSeason('K1'), 1, choiceFor(1), STRATS.balanced);
+  const b = playWeek(newState(), buildSeason('K1'), 1, choiceFor(1), STRATS.balanced);
+  assert.deepEqual(a.report.steps, b.report.steps);
+});
+t('a forced sale is named in its own step', () => {
+  const season = buildSeason('force');
+  const w = season.weeks.findIndex((x) => x.expense > 0) + 1;
+  assert.ok(w > 0, 'season has an expense week');
+  const r = playWeek(newState(), season, w, choiceFor(w), STRATS.all_tech);
+  assert.ok(r.report.forced > 0, 'no reserve + all invested must force a sale');
+  assert.ok(r.report.steps.some((s) => /Priverstinis turto pardavimas/.test(s.text)), 'forced sale step present');
+  assert.ok(r.report.steps.some((s) => /Netikėta išlaida/.test(s.text)), 'expense step present');
+});
+t('allocation is itemised per bucket', () => {
+  const r = playWeek(newState(), buildSeason('K1'), 1, choiceFor(1), STRATS.balanced);
+  for (const label of ['santaup', 'investicij', 'verslą', 'rezerv']) {
+    assert.ok(r.report.steps.some((s) => s.text.includes(label)), `step for ${label}`);
+  }
+});
+
 // ---- balance ----
 const N = 2000;
 const res = {};

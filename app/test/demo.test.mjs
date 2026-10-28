@@ -40,4 +40,28 @@ t('alternative decision comparison is deterministic', () => {
 });
 t('all demo choices are present', () => assert.equal(DEMO_CHOICES.length, 3));
 
+// ---- „Pamoka": žingsnis po žingsnio paaiškinama, kas įvyko ----
+t('demo lesson explains the result step by step', () => {
+  const result = simulateDemo('business', balanced);
+  assert.ok(Array.isArray(result.steps) && result.steps.length >= 6, `${result.steps && result.steps.length} steps`);
+  for (const step of result.steps) {
+    assert.ok(typeof step.text === 'string' && step.text.length > 5);
+    assert.ok(!/undefined|NaN/.test(step.text), 'no undefined/NaN: ' + step.text);
+  }
+  assert.match(result.steps[0].text, /Pradinis kapitalas/);
+  assert.match(result.steps[result.steps.length - 1].text, /Galutinė grynoji vertė/);
+  assert.equal(result.steps[result.steps.length - 1].amount, result.delta);
+});
+t('step trail names the unexpected expense and its funding', () => {
+  const covered = simulateDemo('business', { sav: 10, inv: 10, bus: 10, res: 70 });
+  assert.ok(covered.steps.some((s) => /Netikėta išlaida/.test(s.text)));
+  assert.ok(covered.steps.some((s) => /Rezervas padengė visą išlaidą/.test(s.text)));
+  const short = simulateDemo('business', { sav: 10, inv: 60, bus: 30, res: 0 });
+  assert.ok(short.steps.some((s) => /nuostoliu/.test(s.text)), 'forced-sale penalty is explained');
+});
+t('protected choice shows the 40 € insurance cost', () => {
+  const result = simulateDemo('protect', balanced);
+  assert.ok(result.steps.some((s) => /Apsaugos mokestis/.test(s.text)));
+});
+
 console.log(`\nDemo: ${passed} checks passed`);
