@@ -26,7 +26,7 @@ function city(result = null) {
   return citySVG({ level: s.level || 1, savings: s.savings || 0, reserve: s.reserve || 0, business: s.business || 0, invest: s.invest || 0, mood: result?.delta < 0 ? 'down' : result ? 'up' : 'neutral', debt: 0 });
 }
 function header(step, label) {
-  return `<div class="demo-head"><div><span class="pill blue">5 min demo</span><span class="pill amber">${step}/3 · ${label}</span></div><strong>Šios savaitės kapitalas: ${eur(startingCapital)}</strong></div>`;
+  return `<div class="demo-head"><div><span class="pill amber">${step}/3 · ${label}</span></div><strong>Šios savaitės kapitalas: ${eur(startingCapital)}</strong></div>`;
 }
 function drawIntro() {
   box.innerHTML = `<div class="demo-intro"><div class="demo-intro-art">🏙️</div><div><span class="pill blue">VEMAK · finansinė strategija</span><h3>Sveikas atvykęs į VEMAK!</h3><p>Turi <b>1 000 virtualių eurų</b>. Tavo tikslas – per 6 savaites užauginti savo turtą, priimant protingus finansinius sprendimus.</p><ul><li>Pasirink kryptį pagal ekonominį įvykį.</li><li>Paskirstyk visus pinigus ir užrakink slaptą strategiją.</li><li>Penktadienį palygink rezultatą su klasės draugais.</li></ul><button class="btn" id="start-demo">Pradėti</button></div></div>`;
