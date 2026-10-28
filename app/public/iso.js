@@ -1,17 +1,20 @@
 // iso.js — procedūrinė izometrinė miesto scena (SVG). Jokių paveikslų failų:
 // įkeliama akimirksniu net mokyklos kompiuteryje.
 //
-// Struktūra v3 (detalus miesto žemėlapis): 12x12 kvartalai, du bulvarai su šaligatviais,
-// perėjos ir šviesoforai, centrinė aikštė su fontanu, parkas su tvenkiniu ir prieplauka,
-// skirtingų tipų pastatai (gyvenamieji su dvišlaičiais stogais, biurų bokštas, bankas,
-// birža su kupolu, arena su tribūnomis), transportas, žibintai, suoliukai, sodai,
-// pėsčiųjų takai, lietaus balos.
+// Struktūra v5 (išplėstas miestas): 15x15 kvartalų, keturi kvartalai aplink du bulvarus,
+// centrinė aikštė su fontanu, parkas su tvenkiniu ir prieplauka, prekyvietė,
+// arena su tribūnomis, 26 pastatai (gyvenamieji, biurų, banko bokštas, birža su kupolu,
+// kavos baras su terasa, parduotuvės), transportas, žibintai, suoliukai, sodai.
+// Scena užpildo visą drobę: tinklelio įstrižainė 780x390 px, plotis 100 %, aukštis ~100 %.
 //
-// Art direction: tai vis dar „bazinis" variantas (sprendimas 20). Dizaineris gali pakeisti
-// kiekvieną pastatą iliustruotu SVG/PNG sprite'u, naudodamas tas pačias tinklelio koordinates.
+// Taisyklės, kurių laikomasi (kad scena būtų stabili ir teisinga):
+//  - visi „organiški" pasirinkimai imami iš sėklos (rng), todėl scena visada ta pati;
+//  - sluoksniavimas skaičiuojamas pagal priekinį kampą (gx + w + gy + d), ne ranka;
+//  - plokštieji elementai (aikštė, tvenkinys, takai, balos) klojami kartu su žeme;
+//  - simboliai piešiami figūromis, ne emoji (veikia ir be emoji šrifto).
 const TW = 26, TH = 13;      // plytelės pusė: plotis / aukštis
-const OX = 400, OY = 118;    // tinklelio (0,0) ekrano pozicija
-const N = 12;                // kvartalų skaičius kraštinėje
+const OX = 395, OY = 112;    // tinklelio (0,0) ekrano pozicija (kalibruota, kad miestas tiksliai tilptų)
+const N = 15;                // kvartalų skaičius kraštinėje
 const W = 800, H = 520;      // SVG drobė
 
 const P = (x, y, z = 0) => [OX + (x - y) * TW, OY + (x + y) * TH - z];
@@ -28,8 +31,6 @@ function mix(a, b, t) {
   const c = (s) => Math.round((((pa >> s) & 255) * (1 - t)) + (((pb >> s) & 255) * t));
   return '#' + [16, 8, 0].map((s) => c(s).toString(16).padStart(2, '0')).join('');
 }
-
-// deterministinis pseudo-atsitiktinis (kad scena visada būtų ta pati)
 function rng(seed) {
   let a = seed >>> 0;
   return () => {
@@ -42,7 +43,7 @@ function rng(seed) {
 }
 
 // ---- žemės plokštumos geometrija ----
-function disc(cx, cy, r, fill, extra = '', seg = 28) {
+function disc(cx, cy, r, fill, extra = '', seg = 30) {
   const a = [];
   for (let i = 0; i < seg; i++) {
     const t = (i / seg) * Math.PI * 2;
@@ -82,7 +83,7 @@ function box(gx, gy, w, d, h, color, opts = {}) {
   const right = [P(gx + w, gy, 0), P(gx + w, gy + d, 0), P(gx + w, gy + d, h), P(gx + w, gy, h)];
   let s = shadow(gx, gy, w, d);
   s += poly(left, shade(color, 0.80)) + poly(right, shade(color, 0.60)) + poly(top, opts.top || shade(color, 1.14));
-  if (opts.base) { // cokolinis aukštas
+  if (opts.base) {
     const bh = Math.min(h * 0.18, 12);
     s += poly([P(gx, gy + d, 0), P(gx + w, gy + d, 0), P(gx + w, gy + d, bh), P(gx, gy + d, bh)], shade(opts.base, 0.86));
     s += poly([P(gx + w, gy, 0), P(gx + w, gy + d, 0), P(gx + w, gy + d, bh), P(gx + w, gy, bh)], shade(opts.base, 0.68));
@@ -98,14 +99,14 @@ function box(gx, gy, w, d, h, color, opts = {}) {
     s += poly([P(gx + w, gy, h + t), P(gx + w, gy + d, h + t), P(gx + w, gy + d, h), P(gx + w, gy, h)], shade(color, 0.74));
     s += poly([P(gx, gy, h + t), P(gx + w, gy, h + t), P(gx + w, gy + d, h + t), P(gx, gy + d, h + t)], shade(color, 1.08));
   }
-  if (opts.pitch) { // dvišlaitis stogas
+  if (opts.pitch) {
     const midx = gx + w / 2;
     const a = P(gx, gy, h), b = P(gx + w, gy, h), c = P(gx + w, gy + d, h), e = P(gx, gy + d, h);
     const ra = P(midx, gy, h + w * 7), rb = P(midx, gy + d, h + w * 7);
     s += poly([a, b, ra], shade('#b8524c', 1.12)) + poly([c, e, rb], shade('#b8524c', 0.76));
     s += poly([a, ra, rb, e], shade('#b8524c', 0.94)) + poly([b, c, rb, ra], shade('#b8524c', 0.64));
   }
-  if (opts.dome) { // kupolas su smaile (metalinė spalva, kad nesusilietų su augmenija)
+  if (opts.dome) {
     const [cx, cy] = P(gx + w / 2, gy + d / 2, h);
     const domeCol = typeof opts.dome === 'string' ? opts.dome : shade(color, 1.2);
     s += `<ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${(w * TW * 0.42).toFixed(1)}" ry="${(w * TH * 0.62).toFixed(1)}" fill="${shade(domeCol, 0.9)}"/>`;
@@ -119,16 +120,10 @@ function box(gx, gy, w, d, h, color, opts = {}) {
     s += `<line x1="${ax.toFixed(1)}" y1="${ay.toFixed(1)}" x2="${ax.toFixed(1)}" y2="${(ay - 26).toFixed(1)}" stroke="#8fa2bd" stroke-width="2"/>`;
     s += `<circle cx="${ax.toFixed(1)}" cy="${(ay - 29).toFixed(1)}" r="3.6" fill="#ef5b4d"/>`;
   }
-  if (opts.sign) {
-    const [sx, sy] = P(gx + w / 2, gy + d, h * 0.72);
-    const sw = opts.sign.length * 6 + 14;
-    s += `<g transform="translate(${sx.toFixed(1)},${sy.toFixed(1)})"><rect x="${(-sw / 2).toFixed(1)}" y="-10" width="${sw}" height="18" rx="6" fill="#0f1e3d" opacity=".88"/>`
-      + `<text y="3" text-anchor="middle" font-size="10" font-weight="700" fill="#fff" font-family="system-ui,sans-serif">${opts.sign}</text></g>`;
-  }
   return s;
 }
 
-// ---- augmenija ----
+// ---- augmenija ir smulkūs objektai ----
 function tree(x, y, s = 1) {
   const [px, py] = P(x, y, 0);
   return `<g transform="translate(${px.toFixed(1)},${py.toFixed(1)})">`
@@ -161,8 +156,6 @@ function flowers(x, y, s = 1) {
   }
   return g + '</g>';
 }
-
-// ---- gatvės elementai ----
 function lamp(x, y) {
   const [px, py] = P(x, y, 0);
   return `<g transform="translate(${px.toFixed(1)},${py.toFixed(1)})"><ellipse cx="1" cy="0" rx="6" ry="2.4" fill="#08101f" opacity=".2"/>`
@@ -189,6 +182,12 @@ function hydrant(x, y) {
     + `<rect x="-2.2" y="-9" width="4.4" height="9" rx="2" fill="#d9534f"/><rect x="-3.4" y="-6.5" width="6.8" height="2" rx="1" fill="#b8403c"/>`
     + `<circle cx="0" cy="-9.5" r="2.4" fill="#e66863"/></g>`;
 }
+function planter(x, y) {
+  const [px, py] = P(x, y, 0);
+  return `<g transform="translate(${px.toFixed(1)},${py.toFixed(1)})"><ellipse cx="1" cy="0" rx="8" ry="3" fill="#08101f" opacity=".16"/>`
+    + `<rect x="-6" y="-7" width="12" height="7" rx="2" fill="#b0bccb"/><rect x="-6" y="-7" width="12" height="2" rx="1" fill="#cfd8e4"/>`
+    + `<ellipse cx="0" cy="-10" rx="6" ry="3.4" fill="#35b077"/><circle cx="-2" cy="-11" r="1.7" fill="#ff8fa3"/><circle cx="2.4" cy="-10.4" r="1.7" fill="#ffd166"/></g>`;
+}
 function car(x, y, color, flip = false) {
   const [px, py] = P(x, y, 0);
   const w = 22, h = 8;
@@ -208,11 +207,14 @@ function bus(x, y) {
     + `<polygon points="-14,-16 14,-16 14,-20 -14,-20" fill="#cfe9f8" opacity=".92"/>`
     + `<circle cx="-10" cy="1" r="3" fill="#26313f"/><circle cx="10" cy="1" r="3" fill="#26313f"/></g>`;
 }
-function planter(x, y) {
+// prekyvietės prekystalis (nupieštas, ne emoji)
+function stall(x, y) {
   const [px, py] = P(x, y, 0);
-  return `<g transform="translate(${px.toFixed(1)},${py.toFixed(1)})"><ellipse cx="1" cy="0" rx="8" ry="3" fill="#08101f" opacity=".16"/>`
-    + `<rect x="-6" y="-7" width="12" height="7" rx="2" fill="#b0bccb"/><rect x="-6" y="-7" width="12" height="2" rx="1" fill="#cfd8e4"/>`
-    + `<ellipse cx="0" cy="-10" rx="6" ry="3.4" fill="#35b077"/><circle cx="-2" cy="-11" r="1.7" fill="#ff8fa3"/><circle cx="2.4" cy="-10.4" r="1.7" fill="#ffd166"/></g>`;
+  return `<g transform="translate(${px.toFixed(1)},${py.toFixed(1)})"><ellipse cx="2" cy="0" rx="9" ry="3.2" fill="#08101f" opacity=".18"/>`
+    + `<rect x="-7" y="-8" width="14" height="8" rx="2" fill="#c8a06a"/>`
+    + `<polygon points="-9,-8 9,-8 7,-15 -7,-15" fill="#e05a4f"/>`
+    + `<polygon points="-9,-8 0,-8 0,-15 -7,-15" fill="#ef7a6f"/>`
+    + `<circle cx="-3" cy="-11" r="1.6" fill="#ffd166"/><circle cx="3" cy="-11.5" r="1.6" fill="#8fd18b"/></g>`;
 }
 
 function label(x, y, z, text) {
@@ -231,44 +233,87 @@ function sky(mood) {
     + '<radialGradient id="vig" cx=".5" cy=".45" r=".8"><stop offset=".62" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#0b1730" stop-opacity=".16"/></radialGradient>'
     + '</defs>'
     + `<rect width="${W}" height="${H}" fill="url(#sky)"/>`;
-  if (mood === 'up') s += `<circle cx="700" cy="62" r="70" fill="url(#sunglow)"/><circle cx="700" cy="62" r="24" fill="#ffd166"/>`;
+  if (mood === 'up') s += `<circle cx="690" cy="56" r="74" fill="url(#sunglow)"/><circle cx="690" cy="56" r="24" fill="#ffd166"/>`;
   s += mood === 'down'
-    ? '<g fill="#64718a" opacity=".9"><ellipse cx="150" cy="66" rx="62" ry="19"/><ellipse cx="210" cy="56" rx="44" ry="16"/><ellipse cx="600" cy="84" rx="66" ry="19"/></g>'
-    : '<g fill="#fff" opacity=".92"><ellipse cx="140" cy="66" rx="48" ry="14"/><ellipse cx="180" cy="58" rx="32" ry="12"/><ellipse cx="616" cy="88" rx="54" ry="14"/><ellipse cx="656" cy="82" rx="32" ry="11"/></g>';
+    ? '<g fill="#64718a" opacity=".9"><ellipse cx="150" cy="62" rx="62" ry="19"/><ellipse cx="210" cy="52" rx="44" ry="16"/><ellipse cx="600" cy="80" rx="66" ry="19"/></g>'
+    : '<g fill="#fff" opacity=".92"><ellipse cx="140" cy="58" rx="48" ry="14"/><ellipse cx="180" cy="50" rx="32" ry="12"/><ellipse cx="606" cy="80" rx="54" ry="14"/><ellipse cx="646" cy="74" rx="32" ry="11"/></g>';
   if (mood !== 'down') {
     s += '<g stroke="#5b6b80" stroke-width="1.6" fill="none" opacity=".55">'
-      + '<path d="M300 92 q6 -6 12 0"/><path d="M316 100 q5 -5 10 0"/><path d="M286 104 q4 -4 8 0"/></g>';
+      + '<path d="M300 84 q6 -6 12 0"/><path d="M316 92 q5 -5 10 0"/><path d="M286 96 q4 -4 8 0"/></g>';
   }
   return s;
 }
 
-// state: { level, savings, reserve, business, invest (total), mood: 'up'|'down'|'neutral', debt }
+// ================= MIESTO DUOMENYS (lengva tikrinti ir plėsti) =================
+// Kvartalai: NW (0-7, 0-7), NE (8-15, 0-7), SW (0-7, 8-15), SE (8-15, 8-15)
+const BUILDINGS = [
+  // gyvenamasis kvartalas (šiaurės vakarai)
+  { gx: 0.4, gy: 0.4, w: 1.5, d: 1.5, h: 30, c: '#f2e3d0', o: { windows: true, pitch: true, floors: 2 } },
+  { gx: 2.1, gy: 0.4, w: 1.5, d: 1.5, h: 32, c: '#e8d6c4', o: { windows: true, pitch: true, floors: 2 } },
+  { gx: 3.8, gy: 0.4, w: 1.5, d: 1.5, h: 28, c: '#f0ded0', o: { windows: true, pitch: true, floors: 2 } },
+  { gx: 0.4, gy: 2.1, w: 1.5, d: 1.5, h: 34, c: '#efe0cd', o: { windows: true, pitch: true, floors: 2 } },
+  { gx: 2.1, gy: 2.1, w: 1.5, d: 1.5, h: 30, c: '#f6ece0', o: { windows: true, pitch: true, floors: 2 } },
+  { gx: 0.4, gy: 3.8, w: 1.5, d: 1.5, h: 32, c: '#eddcc9', o: { windows: true, pitch: true, floors: 2 } },
+  { gx: 2.1, gy: 3.8, w: 1.5, d: 1.5, h: 28, c: '#f2e6d6', o: { windows: true, pitch: true, floors: 2 } },
+  // biurų pastatas (du tūriai)
+  { gx: 4.3, gy: 0.5, w: 2.3, d: 2.3, h: 58, c: '#dbe7f5', o: { windows: true, parapet: true, floors: 7, base: '#b9c9dd', floorLine: true } },
+  { gx: 4.75, gy: 0.95, w: 1.4, d: 1.4, h: 74, c: '#e6eef8', o: { windows: true, parapet: true, floors: 5 } },
+  // mažieji pastatai
+  { gx: 0.4, gy: 5.5, w: 1.7, d: 1.3, h: 24, c: '#e7d3bd', o: { windows: true, pitch: true } },
+  { gx: 2.4, gy: 5.5, w: 1.7, d: 1.3, h: 22, c: '#f0dcc6', o: { windows: true, parapet: true } },
+  { gx: 4.3, gy: 5.4, w: 1.5, d: 1.5, h: 30, c: '#dce8f4', o: { windows: true, parapet: true, floors: 3 } },
+  // banko kvartalas (šiaurės rytai)
+  { gx: 9.0, gy: 0.5, w: 2.4, d: 2.4, h: 92, c: '#d3e5f7', o: { windows: true, parapet: true, floors: 13, floorLine: true, antenna: true } },
+  { gx: 9.45, gy: 0.95, w: 1.5, d: 1.5, h: 108, c: '#e3eefb', o: { windows: true, parapet: true, floors: 5 } },
+  { gx: 11.7, gy: 1.1, w: 1.3, d: 1.7, h: 42, c: '#c6dbef', o: { windows: true, parapet: true, floors: 5, base: '#a8bed6' } },
+  { gx: 8.6, gy: 5.2, w: 1.7, d: 1.4, h: 24, c: '#e9d8c4', o: { windows: true, parapet: true } },
+  { gx: 10.5, gy: 5.2, w: 1.7, d: 1.4, h: 26, c: '#f0e2d2', o: { windows: true, parapet: true } },
+  { gx: 12.4, gy: 5.2, w: 1.7, d: 1.4, h: 22, c: '#e4d3c0', o: { windows: true, pitch: true } },
+  { gx: 13.1, gy: 2.6, w: 1.4, d: 1.4, h: 34, c: '#dce8f4', o: { windows: true, parapet: true, floors: 3 } },
+  // biržos kvartalas (pietvakariai)
+  { gx: 0.4, gy: 8.4, w: 2.4, d: 2.4, h: 48, c: '#a9dcd2', o: { windows: true, parapet: true, floors: 5, base: '#8dc9bd' } },
+  { gx: 0.9, gy: 8.9, w: 1.4, d: 1.4, h: 56, c: '#bfe7df', o: { windows: true, dome: '#d9a441', floors: 2 } },
+  { gx: 0.4, gy: 11.6, w: 1.6, d: 1.4, h: 22, c: '#e4d3c0', o: { windows: true, pitch: true } },
+  { gx: 2.4, gy: 11.6, w: 1.6, d: 1.4, h: 24, c: '#f0dcc6', o: { windows: true, parapet: true } },
+  { gx: 4.6, gy: 11.5, w: 1.6, d: 1.5, h: 30, c: '#dce8f4', o: { windows: true, parapet: true, floors: 3 } },
+  { gx: 5.9, gy: 8.5, w: 1.2, d: 1.8, h: 28, c: '#e7d3bd', o: { windows: true, parapet: true, floors: 3 } },
+  // pietryčiai: aplink areną
+  { gx: 12.6, gy: 8.6, w: 1.7, d: 1.7, h: 30, c: '#e9d8c4', o: { windows: true, pitch: true } },
+  { gx: 8.6, gy: 12.9, w: 1.7, d: 1.3, h: 24, c: '#e4d3c0', o: { windows: true, pitch: true } },
+  { gx: 10.6, gy: 13.0, w: 1.6, d: 1.2, h: 26, c: '#f0dcc6', o: { windows: true, parapet: true } },
+  { gx: 13.2, gy: 12.9, w: 1.4, d: 1.3, h: 28, c: '#dbe7f5', o: { windows: true, parapet: true, floors: 3 } },
+  { gx: 8.5, gy: 8.5, w: 1.5, d: 1.5, h: 32, c: '#dce8f4', o: { windows: true, parapet: true, floors: 4 } },
+];
+
 export function citySVG(st) {
   const lvl = st.level || 1, mood = st.mood || 'neutral';
+  const lit = mood === 'up';
   const r = rng(20261028);
   let g = sky(mood);
 
   // ================= ŽEMĖ =================
-  const isRoad = (x, y) => x === 6 || y === 6;
-  const isSidewalk = (x, y) => {
-    const near = (a) => a === 5 || a === 7;
-    return !isRoad(x, y) && (near(x) || near(y));
+  // Kelias: x=7 ir y=7. Šaligatviai: juostos [6,7) ir [8,9) abiejose ašyse.
+  const isRoad = (x, y) => x === 7 || y === 7;
+  const isWalk = (x, y) => {
+    const f = (v) => Math.floor(v);
+    return !isRoad(x, y) && (f(x) === 6 || f(x) === 8 || f(y) === 6 || f(y) === 8);
   };
   let ground = '';
   for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) {
     const t = [P(x, y), P(x + 1, y), P(x + 1, y + 1), P(x, y + 1)];
     let col;
     if (isRoad(x, y)) col = (x + y) % 2 ? '#8d99ab' : '#96a2b4';
-    else if (isSidewalk(x, y)) col = (x + y) % 2 ? '#dfe6ef' : '#e6ecf4';
+    else if (isWalk(x, y)) col = (x + y) % 2 ? '#dfe6ef' : '#e6ecf4';
     else {
       const v = r();
       col = (x + y) % 2 ? mix('#7fd18b', '#6cc47a', v * 0.5) : mix('#74c982', '#63bd74', v * 0.5);
     }
     ground += poly(t, col, 'stroke="#ffffff22" stroke-width=".6"');
   }
-  // parko pėsčiųjų takai
-  for (const [tx, ty] of [[2, 2], [2, 3], [3, 3], [3, 4], [4, 4], [4, 3], [9, 9], [9, 10], [10, 10]]) {
-    ground += poly([P(tx + .08, ty + .08), P(tx + .92, ty + .08), P(tx + .92, ty + .92), P(tx + .08, ty + .92)], '#d9c9a8', 'opacity=".9"');
+  // pėsčiųjų takai parkuose
+  for (const [tx, ty] of [[9.4, 2.4], [10.4, 2.4], [11.4, 2.4], [12.4, 2.4], [13.4, 2.4], [13.4, 3.4], [13.4, 4.4],
+                          [3.4, 5.6], [4.4, 5.6], [1.4, 5.6], [0.6, 5.6], [9.4, 13.4], [10.4, 13.4], [12.4, 13.4]]) {
+    ground += poly([P(tx + .1, ty + .1), P(tx + .9, ty + .1), P(tx + .9, ty + .9), P(tx + .1, ty + .9)], '#d9c9a8', 'opacity=".88"');
   }
   g += poly([P(0, N), P(N, N), P(N, N, -18), P(0, N, -18)], '#6b5b4b');
   g += poly([P(N, 0), P(N, N), P(N, N, -18), P(N, 0, -18)], '#53463a');
@@ -276,14 +321,13 @@ export function citySVG(st) {
 
   // kelio žymėjimas
   for (let i = 0; i < N; i++) {
-    if (i !== 6) {
-      const a = P(6.44, i + 0.34), b = P(6.56, i + 0.66);
+    if (i !== 7) {
+      const a = P(7.44, i + 0.34), b = P(7.56, i + 0.66);
       g += `<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" stroke="#fff" stroke-width="1.9" opacity=".5"/>`;
-      const c = P(i + 0.34, 6.44), d = P(i + 0.66, 6.56);
+      const c = P(i + 0.34, 7.44), d = P(i + 0.66, 7.56);
       g += `<line x1="${c[0].toFixed(1)}" y1="${c[1].toFixed(1)}" x2="${d[0].toFixed(1)}" y2="${d[1].toFixed(1)}" stroke="#fff" stroke-width="1.9" opacity=".5"/>`;
     }
   }
-  // perėjos
   const crosswalk = (cx, cy, along) => {
     let s = '';
     for (let i = 0; i < 5; i++) {
@@ -295,97 +339,90 @@ export function citySVG(st) {
     }
     return s;
   };
-  g += crosswalk(5, 6, 'x') + crosswalk(7, 6, 'x') + crosswalk(6, 5, 'y') + crosswalk(6, 7, 'y');
+  g += crosswalk(6, 7, 'x') + crosswalk(8, 7, 'x') + crosswalk(7, 6, 'y') + crosswalk(7, 8, 'y');
 
-  // ================= AIKŠTĖ IR PARKAS =================
-  let plaza = disc(6.5, 6.5, 1.0, '#e2e9f2');
-  plaza += disc(6.5, 6.5, 0.82, '#cfd9e6');
-  plaza += disc(6.5, 6.5, 0.55, '#a9d4ec');
-  plaza += disc(6.5, 6.5, 0.30, '#7fbfe0');
-  const [fx, fy] = P(6.5, 6.5, 0);
+  // ================= PLOKŠTIEJI ELEMENTAI (klojami su žeme) =================
+  // centrinė aikštė su fontanu
+  let plaza = disc(7.5, 7.5, 1.2, '#e2e9f2');
+  plaza += disc(7.5, 7.5, 0.95, '#cfd9e6');
+  plaza += disc(7.5, 7.5, 0.62, '#a9d4ec');
+  plaza += disc(7.5, 7.5, 0.34, '#7fbfe0');
+  const [fx, fy] = P(7.5, 7.5, 0);
   plaza += `<ellipse cx="${fx.toFixed(1)}" cy="${(fy - 9).toFixed(1)}" rx="5.5" ry="7.5" fill="#ffffff" opacity=".85"/>`
     + `<rect x="${(fx - 1.8).toFixed(1)}" y="${(fy - 19).toFixed(1)}" width="3.6" height="14" fill="#eef3f9" rx="1.6"/>`
     + `<circle cx="${fx.toFixed(1)}" cy="${(fy - 21).toFixed(1)}" r="2.6" fill="#cfe9f8"/>`;
+  // tvenkinys su atspindžiu
+  let pond = disc(13.3, 3.6, 1.0, '#4fa8cc', 'opacity=".97"');
+  pond += disc(13.3, 3.6, 0.84, '#63bcd8');
+  pond += disc(13.05, 3.4, 0.46, '#8fd6ea', 'opacity=".7"');
+  pond += disc(13.3, 3.6, 0.16, '#e8f6ff', 'opacity=".5"');
+  // prekyvietės grindinys
+  let market = disc(2.5, 14.2, 1.0, '#e8e2d4');
+  market += disc(2.5, 14.2, 0.74, '#ded5c4');
+  g += plaza + pond + market;
 
-  let pond = disc(9.6, 3.3, 1.15, '#4fa8cc', 'opacity=".97"');
-  pond += disc(9.6, 3.3, 1.0, '#63bcd8');
-  pond += disc(9.35, 3.1, 0.55, '#8fd6ea', 'opacity=".7"');
-  pond += disc(9.6, 3.3, 0.16, '#e8f6ff', 'opacity=".5"');
-
-  // plokštieji elementai (aikštė, tvenkinys) klojami iškart ant žemės
-  g += plaza + pond;
-
-  // ================= ELEMENTAI (iš galo į priekį) =================
+  // ================= ELEMENTAI (rikiuojama pagal priekinį kampą) =================
   const items = [];
-  // Sluoksnis = objekto priekinis kampas (gx+w + gy+d). Taip piešiama teisinga tvarka:
-  // tai, kas arčiau žiūrovo, uždengia tai, kas už jo. (Anksčiau sluoksniai buvo rašomi
-  // ranka ir dėl to medis atsidurdavo ant stogo, o etiketė nukrypdavo.)
   const solid = (gx, gy, w, d, fn) => items.push([gx + w + gy + d, fn]);
-  // rankinis sluoksnis etiketėms, kurios kabo virš pastatų
   const put = (depth, fn) => items.push([depth, fn]);
 
-  const lit = mood === 'up';
+  BUILDINGS.forEach((b) => {
+    solid(b.gx, b.gy, b.w, b.d, () => box(b.gx, b.gy, b.w, b.d, b.h, b.c, { ...b.o, lit }));
+  });
 
-  // prieplauka prie tvenkinio
-  solid(8.55, 3.6, 0.6, 0.4, () => {
-    const a = P(8.55, 3.6, 4), b = P(9.15, 3.6, 4), c = P(9.15, 4.0, 4), d = P(8.55, 4.0, 4);
-    let s = poly([a, b, c, d], '#c39a6b');
-    for (let i = 0; i < 3; i++) {
-      const p0 = P(8.62 + i * 0.24, 3.6, 4), p1 = P(8.62 + i * 0.24, 4.0, 4);
-      s += `<line x1="${p0[0].toFixed(1)}" y1="${p0[1].toFixed(1)}" x2="${p1[0].toFixed(1)}" y2="${p1[1].toFixed(1)}" stroke="#a97f52" stroke-width="1"/>`;
+  // pavadinimų etiketės (kiekviena iškart po savo pastato)
+  put(8.4, () => label(1.6, 1.6, 60, 'Namai \u00b7 ' + Math.round(st.reserve || 0) + ' \u20ac'));
+  put(8.8, () => label(4.75, 1.55, 74 + 26, 'Darboviet\u0117'));
+  put(14.4, () => label(10.2, 1.65, 108 + 26, 'Bankas \u00b7 ' + Math.round(st.savings || 0) + ' \u20ac'));
+  put(14.4, () => label(1.6, 10.2, 56 + 32, 'Bir\u017ea \u00b7 ' + Math.round(st.invest || 0) + ' \u20ac'));
+  put(16.8, () => label(4.9, 9.9, 26 + lvl * 13 + 34, 'Kavos baras \u00b7 ' + Math.round(st.business || 0) + ' \u20ac'));
+  put(27.2, () => label(11.5, 11.5, 26 + 36, 'Arena'));
+
+  // gyvatvorės
+  solid(0.3, 5.05, 5.4, 0.15, () => hedge(0.3, 5.05, 5.4, 0.15));
+  solid(9.3, 4.7, 5.4, 0.15, () => hedge(9.3, 4.7, 5.4, 0.15));
+  solid(0.3, 11.6, 5.4, 0.15, () => hedge(0.3, 11.6, 5.4, 0.15));
+  solid(9.0, 13.7, 5.6, 0.15, () => hedge(9.0, 13.7, 5.6, 0.15));
+
+  // sodai
+  solid(2.8, 5.5, 0, 0, () => flowers(2.8, 5.5));
+  solid(1.2, 5.5, 0, 0, () => flowers(1.2, 5.5, 0.9));
+  solid(9.4, 3.8, 0, 0, () => flowers(9.4, 3.8));
+  solid(12.4, 4.6, 0, 0, () => flowers(12.4, 4.6, 0.9));
+
+  // kavos baras su terasa ir iškaba
+  solid(4.0, 9.0, 1.8, 1.8, () => {
+    const h = 26 + lvl * 13;
+    let s = box(4.0, 9.0, 1.8, 1.8, h, '#f4a259', { windows: true, parapet: true, lit: true, floors: 2, base: '#d98b45' });
+    const awn = [P(4.0, 10.8, h * 0.58), P(5.8, 10.8, h * 0.58), P(5.8, 11.25, h * 0.42), P(4.0, 11.25, h * 0.42)];
+    s += poly(awn, '#e63946');
+    for (let i = 0; i < 4; i++) {
+      const a = P(4.0 + i * 0.45, 10.8, h * 0.58), b = P(4.0 + (i + 0.5) * 0.45, 10.8, h * 0.58);
+      if (i % 2 === 0) s += poly([a, b, [b[0], b[1] + 8], [a[0], a[1] + 8]], '#fff', 'opacity=".92"');
+    }
+    const [sx2, sy2] = P(4.9, 10.8, h + 14);
+    s += `<g transform="translate(${sx2.toFixed(1)},${sy2.toFixed(1)})">`
+      + `<rect x="-13" y="-11" width="26" height="22" rx="5" fill="#0f1e3d"/>`
+      + `<rect x="-8" y="-5" width="12" height="10" rx="2" fill="#f7f2e6"/>`
+      + `<path d="M4 -4 q6 0 6 5 q0 5 -6 5" fill="none" stroke="#f7f2e6" stroke-width="2"/>`
+      + `<rect x="-8" y="6.5" width="12" height="1.8" rx="0.9" fill="#f7f2e6"/>`
+      + `<rect x="-2" y="-9" width="1.6" height="4" rx="0.8" fill="#f7f2e6" opacity=".7"/></g>`;
+    [[4.15, 11.45], [5.65, 11.45]].forEach(([tx, ty]) => {
+      const [px, py] = P(tx, ty, 0);
+      s += `<g transform="translate(${px.toFixed(1)},${py.toFixed(1)})"><ellipse cx="1" cy="0" rx="6" ry="2.4" fill="#08101f" opacity=".18"/>`
+        + `<rect x="-4" y="-4" width="8" height="4" rx="1.5" fill="#d9b28a"/><rect x="-1" y="-14" width="2" height="10" fill="#9aa7b8"/>`
+        + `<ellipse cx="0" cy="-15" rx="9" ry="4.5" fill="#f2c94c"/><polygon points="-9,-15 9,-15 0,-21" fill="#f7d977"/></g>`;
+    });
+    if (lvl >= 3) {
+      const [sx3, sy3] = P(4.9, 9.9, h + 24);
+      s += `<g transform="translate(${sx3.toFixed(1)},${sy3.toFixed(1)})"><circle r="9" fill="#ffd166"/><path d="M-4,-2 L0,-6 L4,0" fill="none" stroke="#0f1e3d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>`;
     }
     return s;
   });
 
-  // gyvenamasis kvartalas
-  const houses = [
-    [0.5, 0.5, 2.0, 2.0, 30, '#f2e3d0'],
-    [2.7, 0.6, 1.7, 1.7, 34, '#e8d6c4'],
-    [4.6, 0.5, 1.3, 1.3, 28, '#f0ded0'],
-    [0.6, 2.8, 1.8, 1.8, 40, '#efe0cd'],
-  ];
-  houses.forEach(([hx, hy, hw, hd, hh, hc]) => {
-    solid(hx, hy, hw, hd, () => box(hx, hy, hw, hd, hh, hc, { windows: true, pitch: true, lit, floors: 2 }));
-  });
-  put(5.3, () => label(1.5, 1.5, 30 + 30, 'Namai \u00b7 ' + Math.round(st.reserve || 0) + ' \u20ac'));
-  solid(0.35, 4.5, 4.2, 0.22, () => hedge(0.35, 4.5, 4.2, 0.22));
-  solid(1.1, 4.8, 0, 0, () => flowers(1.1, 4.8));
-  solid(2.6, 4.3, 0, 0, () => flowers(2.6, 4.3));
-  solid(3.8, 4.8, 0, 0, () => flowers(3.8, 4.8, 0.9));
-  solid(2.6, 2.3, 0, 0, () => tree(2.6, 2.3, 0.9));
-  solid(2.9, 4.2, 0, 0, () => pine(2.9, 4.2, 0.85));
-  solid(4.6, 2.2, 0, 0, () => bush(4.6, 2.2, 0.95));
-  solid(2.2, 2.6, 0, 0, () => bench(2.2, 2.6));
-  solid(2.6, 2.9, 0, 0, () => bench(2.6, 2.9));
-
-  // biuru pastatas (du turiai)
-  solid(3.1, 2.6, 1.7, 1.7, () => box(3.1, 2.6, 1.7, 1.7, 56, '#dbe7f5', { windows: true, parapet: true, floors: 7, lit, base: '#b9c9dd', floorLine: true }));
-  solid(3.4, 2.9, 1.1, 1.1, () => box(3.4, 2.9, 1.1, 1.1, 68, '#e6eef8', { windows: true, parapet: true, floors: 4, lit }));
-  put(9.4, () => label(3.95, 3.45, 68 + 26, 'Darboviet\u0117'));
-
-  // banko bokstas
-  solid(7.6, 0.5, 2.1, 2.1, () => box(7.6, 0.5, 2.1, 2.1, 88, '#d3e5f7', { windows: true, parapet: true, floors: 13, lit, floorLine: true, antenna: true }));
-  solid(7.95, 0.85, 1.4, 1.4, () => box(7.95, 0.85, 1.4, 1.4, 104, '#e3eefb', { windows: true, parapet: true, floors: 5, lit }));
-  solid(9.95, 1.0, 1.1, 1.5, () => box(9.95, 1.0, 1.1, 1.5, 40, '#c6dbef', { windows: true, parapet: true, floors: 5, lit, base: '#a8bed6' }));
-  put(13.8, () => label(8.65, 1.55, 104 + 26, 'Bankas \u00b7 ' + Math.round(st.savings || 0) + ' \u20ac'));
-  solid(7.4, 2.9, 3.6, 0.22, () => hedge(7.4, 2.9, 3.6, 0.22));
-
-  // parko augmenija
-  solid(8.6, 3.5, 0, 0, () => tree(8.6, 3.5, 0.95));
-  solid(10.4, 3.6, 0, 0, () => tree(10.4, 3.6, 1.05));
-  solid(10.9, 4.3, 0, 0, () => pine(10.9, 4.3, 0.95));
-  solid(8.9, 4.6, 0, 0, () => tree(8.9, 4.6, 0.85));
-  solid(10.2, 4.7, 0, 0, () => bush(10.2, 4.7));
-  solid(7.6, 4.5, 0, 0, () => bush(7.6, 4.5, 0.9));
-  solid(8.0, 4.2, 0, 0, () => bench(8.0, 4.2));
-  solid(10.6, 4.6, 0, 0, () => bench(10.6, 4.6));
-  solid(9.3, 4.9, 0, 0, () => flowers(9.3, 4.9));
-
-  // birza su kupolu
-  solid(0.5, 7.5, 2.2, 2.2, () => box(0.5, 7.5, 2.2, 2.2, 46, '#a9dcd2', { windows: true, parapet: true, floors: 5, lit, base: '#8dc9bd' }));
-  solid(0.95, 7.95, 1.3, 1.3, () => box(0.95, 7.95, 1.3, 1.3, 54, '#bfe7df', { windows: true, dome: '#d9a441', floors: 2 }));
-  put(12.6, () => {
-    const [px, py] = P(1.6, 9.8, 62);
+  // biržos grafikas (nupieštas, ne emoji)
+  put(14.6, () => {
+    const [px, py] = P(1.6, 11.5, 64);
     const up = mood !== 'down';
     const col = up ? '#0a8f6f' : '#c0392b';
     const line = up ? 'M-10,6 L-3,-2 L3,3 L11,-9' : 'M-10,-8 L-3,0 L3,-5 L11,7';
@@ -394,109 +431,105 @@ export function citySVG(st) {
       + `<path d="${line}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`
       + `<path d="${head}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linecap="round"/></g>`;
   });
-  put(12.8, () => label(1.6, 8.6, 54 + 32, 'Bir\u017ea \u00b7 ' + Math.round(st.invest || 0) + ' \u20ac'));
 
-  // kavos baras su terasa
-  solid(3.1, 7.6, 1.7, 1.7, () => {
-    const h = 26 + lvl * 13;
-    let s = box(3.1, 7.6, 1.7, 1.7, h, '#f4a259', { windows: true, parapet: true, lit: true, floors: 2, base: '#d98b45' });
-    const awn = [P(3.1, 9.3, h * 0.58), P(4.8, 9.3, h * 0.58), P(4.8, 9.75, h * 0.42), P(3.1, 9.75, h * 0.42)];
-    s += poly(awn, '#e63946');
-    for (let i = 0; i < 4; i++) {
-      const a = P(3.1 + i * 0.42, 9.3, h * 0.58), b = P(3.1 + (i + 0.5) * 0.42, 9.3, h * 0.58);
-      if (i % 2 === 0) s += poly([a, b, [b[0], b[1] + 8], [a[0], a[1] + 8]], '#fff', 'opacity=".92"');
-    }
-    // iškaba su puodeliu (nupiešta, ne emoji - kad veiktų ir be emoji šrifto)
-    const [sx2, sy2] = P(3.95, 9.3, h + 14);
-    s += `<g transform="translate(${sx2.toFixed(1)},${sy2.toFixed(1)})">`
-      + `<rect x="-13" y="-11" width="26" height="22" rx="5" fill="#0f1e3d"/>`
-      + `<rect x="-8" y="-5" width="12" height="10" rx="2" fill="#f7f2e6"/>`
-      + `<path d="M4 -4 q6 0 6 5 q0 5 -6 5" fill="none" stroke="#f7f2e6" stroke-width="2"/>`
-      + `<rect x="-8" y="6.5" width="12" height="1.8" rx="0.9" fill="#f7f2e6"/>`
-      + `<rect x="-2" y="-9" width="1.6" height="4" rx="0.8" fill="#f7f2e6" opacity=".7"/></g>`;
-    [[3.2, 9.9], [4.3, 9.9]].forEach(([tx, ty]) => {
-      const [px, py] = P(tx, ty, 0);
-      s += `<g transform="translate(${px.toFixed(1)},${py.toFixed(1)})"><ellipse cx="1" cy="0" rx="6" ry="2.4" fill="#08101f" opacity=".18"/>`
-        + `<rect x="-4" y="-4" width="8" height="4" rx="1.5" fill="#d9b28a"/><rect x="-1" y="-14" width="2" height="10" fill="#9aa7b8"/>`
-        + `<ellipse cx="0" cy="-15" rx="9" ry="4.5" fill="#f2c94c"/><polygon points="-9,-15 9,-15 0,-21" fill="#f7d977"/></g>`;
-    });
-    if (lvl >= 3) {
-      const [sx, sy] = P(3.95, 8.45, h + 24);
-      s += `<g transform="translate(${sx.toFixed(1)},${sy.toFixed(1)})"><circle r="9" fill="#ffd166"/><text y="4" text-anchor="middle" font-size="11" font-weight="800" fill="#0f1e3d">\u2605</text></g>`;
-    }
-    return s;
+  // prekyvietės prekystaliai
+  [[1.9, 13.8], [3.1, 13.8], [2.5, 14.7]].forEach(([sx, sy]) => {
+    solid(sx, sy, 0, 0, () => stall(sx, sy));
   });
-  put(14.4, () => label(3.95, 8.8, 26 + lvl * 13 + 34, 'Kavos baras \u00b7 ' + Math.round(st.business || 0) + ' \u20ac'));
 
-  // arena: betoninis žiedas, dviejų pakopų tribūnos, bėgimo takas, veja, vartai, prožektoriai
-  solid(7.35, 7.35, 3.5, 3.5, () => {
-    let s = shadow(7.5, 7.5, 3.2, 3.2, 7, 8, '.16');
-    s += disc(9.1, 9.1, 1.85, '#b9c2cf');
-    s += disc(9.1, 9.1, 1.72, '#cdd6e1');
-    s += disc(9.1, 9.1, 1.62, '#9aa6b6');
-    s += disc(9.1, 9.1, 1.5, '#c2ccd8');
-    s += disc(9.1, 9.1, 1.38, '#a7b3c1');
-    for (let i = 0; i < 26; i++) {   // sėdimos vietos
-      const t = (i / 26) * Math.PI * 2;
-      const p0 = P(9.1 + Math.cos(t) * 1.12, 9.1 + Math.sin(t) * 1.12, 6);
-      const p1 = P(9.1 + Math.cos(t) * 1.62, 9.1 + Math.sin(t) * 1.62, 6);
+  // arena su tribūnomis (centras 11.5,11.5)
+  solid(9.5, 9.5, 4.0, 4.0, () => {
+    let s = shadow(9.7, 9.7, 3.6, 3.6, 7, 8, '.16');
+    s += disc(11.5, 11.5, 2.0, '#b9c2cf');
+    s += disc(11.5, 11.5, 1.86, '#cdd6e1');
+    s += disc(11.5, 11.5, 1.72, '#9aa6b6');
+    s += disc(11.5, 11.5, 1.58, '#c2ccd8');
+    s += disc(11.5, 11.5, 1.44, '#a7b3c1');
+    for (let i = 0; i < 28; i++) {
+      const t = (i / 28) * Math.PI * 2;
+      const p0 = P(11.5 + Math.cos(t) * 1.16, 11.5 + Math.sin(t) * 1.16, 6);
+      const p1 = P(11.5 + Math.cos(t) * 1.7, 11.5 + Math.sin(t) * 1.7, 6);
       s += `<line x1="${p0[0].toFixed(1)}" y1="${p0[1].toFixed(1)}" x2="${p1[0].toFixed(1)}" y2="${p1[1].toFixed(1)}" stroke="#7f8b9a" stroke-width=".8" opacity=".5"/>`;
     }
-    s += disc(9.1, 9.1, 1.22, '#d9665c');
-    s += disc(9.1, 9.1, 1.05, '#e07a70');
-    s += disc(9.1, 9.1, 0.92, '#5fbf72');
-    s += disc(9.1, 9.1, 0.72, '#6ecd80');
-    const c0 = P(9.1, 9.1, 0.2);
-    s += `<ellipse cx="${c0[0].toFixed(1)}" cy="${c0[1].toFixed(1)}" rx="${(0.44 * TW).toFixed(1)}" ry="${(0.44 * TH).toFixed(1)}" fill="none" stroke="#ffffff" stroke-width="1.2" opacity=".75"/>`;
-    const h0 = P(9.1, 9.1 - 0.7, 0.2), h1 = P(9.1, 9.1 + 0.7, 0.2);
+    s += disc(11.5, 11.5, 1.28, '#d9665c');
+    s += disc(11.5, 11.5, 1.1, '#e07a70');
+    s += disc(11.5, 11.5, 0.96, '#5fbf72');
+    s += disc(11.5, 11.5, 0.76, '#6ecd80');
+    const c0 = P(11.5, 11.5, 0.2);
+    s += `<ellipse cx="${c0[0].toFixed(1)}" cy="${c0[1].toFixed(1)}" rx="${(0.46 * TW).toFixed(1)}" ry="${(0.46 * TH).toFixed(1)}" fill="none" stroke="#ffffff" stroke-width="1.2" opacity=".75"/>`;
+    const h0 = P(11.5, 10.8, 0.2), h1 = P(11.5, 12.2, 0.2);
     s += `<line x1="${h0[0].toFixed(1)}" y1="${h0[1].toFixed(1)}" x2="${h1[0].toFixed(1)}" y2="${h1[1].toFixed(1)}" stroke="#ffffff" stroke-width="1.2" opacity=".75"/>`;
-    const gl = P(8.32, 9.1, 9), gl2 = P(8.32, 9.1, 14);
-    const gr = P(9.88, 9.1, 9), gr2 = P(9.88, 9.1, 14);
+    const gl = P(10.6, 11.5, 9), gl2 = P(10.6, 11.5, 14);
+    const gr = P(12.4, 11.5, 9), gr2 = P(12.4, 11.5, 14);
     s += `<line x1="${gl[0].toFixed(1)}" y1="${gl[1].toFixed(1)}" x2="${gl2[0].toFixed(1)}" y2="${gl2[1].toFixed(1)}" stroke="#f4f7fb" stroke-width="2.4"/>`;
     s += `<line x1="${gr[0].toFixed(1)}" y1="${gr[1].toFixed(1)}" x2="${gr2[0].toFixed(1)}" y2="${gr2[1].toFixed(1)}" stroke="#f4f7fb" stroke-width="2.4"/>`;
-    for (const [fx2, fy2] of [[7.85, 7.85], [10.35, 7.85], [7.85, 10.35], [10.35, 10.35]]) {
-      const [px, py] = P(fx2, fy2, 0);
-      s += `<g transform="translate(${px.toFixed(1)},${py.toFixed(1)})"><ellipse cx="1" cy="0" rx="4" ry="1.8" fill="#08101f" opacity=".2"/>`
-        + `<rect x="-1.4" y="-26" width="2.8" height="26" fill="#8b98a8" rx="1.2"/>`
-        + `<rect x="-6" y="-30" width="12" height="5" rx="2" fill="#d9e2ec"/></g>`;
+    for (const [px2, py2] of [[9.8, 9.8], [13.2, 9.8], [9.8, 13.2], [13.2, 13.2]]) {
+      const [px3, py3] = P(px2, py2, 0);
+      s += `<g transform="translate(${px3.toFixed(1)},${py3.toFixed(1)})"><ellipse cx="1" cy="0" rx="4" ry="1.8" fill="#08101f" opacity=".2"/>`
+        + `<rect x="-1.4" y="-28" width="2.8" height="28" fill="#8b98a8" rx="1.2"/>`
+        + `<rect x="-6" y="-32" width="12" height="5" rx="2" fill="#d9e2ec"/></g>`;
     }
     return s;
   });
-  put(22.0, () => label(9.1, 9.1, 26 + 36, 'Arena'));
-  solid(9.4, 11.2, 0, 0, () => tree(9.4, 11.2, 0.95));
-  solid(11.0, 10.9, 0, 0, () => tree(11.0, 10.9, 0.9));
-  solid(10.9, 7.5, 0, 0, () => bush(10.9, 7.5, 0.95));
 
-  // smulkus pastatai
-  solid(0.6, 5.0, 1.4, 1.2, () => box(0.6, 5.0, 1.4, 1.2, 26, '#e7d3bd', { windows: true, pitch: true, lit }));
-  solid(2.4, 5.1, 1.5, 1.1, () => box(2.4, 5.1, 1.5, 1.1, 22, '#f0dcc6', { windows: true, parapet: true, lit }));
-  solid(4.4, 5.0, 1.2, 1.3, () => box(4.4, 5.0, 1.2, 1.3, 30, '#dce8f4', { windows: true, parapet: true, lit, floors: 3 }));
-  solid(4.5, 10.4, 1.6, 1.4, () => box(4.5, 10.4, 1.6, 1.4, 24, '#e9d8c4', { windows: true, pitch: true, lit }));
-  solid(7.0, 10.6, 1.4, 1.2, () => box(7.0, 10.6, 1.4, 1.2, 28, '#dbe7f5', { windows: true, parapet: true, lit, floors: 3 }));
+  // prieplauka prie tvenkinio
+  solid(12.1, 3.7, 0.6, 0.5, () => {
+    const a = P(12.1, 3.7, 4), b = P(12.7, 3.7, 4), c = P(12.7, 4.2, 4), d = P(12.1, 4.2, 4);
+    let s = poly([a, b, c, d], '#c39a6b');
+    for (let i = 0; i < 3; i++) {
+      const p0 = P(12.18 + i * 0.24, 3.7, 4), p1 = P(12.18 + i * 0.24, 4.2, 4);
+      s += `<line x1="${p0[0].toFixed(1)}" y1="${p0[1].toFixed(1)}" x2="${p1[0].toFixed(1)}" y2="${p1[1].toFixed(1)}" stroke="#a97f52" stroke-width="1"/>`;
+    }
+    return s;
+  });
+
+  // augmenija
+  const TREES = [
+    ['tree', 3.0, 5.5, 0.9],
+    ['tree', 1.0, 5.5, 0.9],
+    ['tree', 5.0, 5.5, 0.95],
+    ['pine', 5.6, 4.9, 0.9],
+    ['tree', 9.4, 3.6, 0.95],
+    ['tree', 11.2, 3.6, 0.9],
+    ['bush', 12.4, 2.4, 0.9],
+    ['tree', 14.6, 2.4, 0.9],
+    ['tree', 14.6, 4.2, 0.9],
+    ['tree', 3.4, 10.9, 0.9],
+    ['tree', 5.6, 11.2, 0.95],
+    ['bush', 5.6, 13.4, 0.9],
+    ['tree', 0.6, 14.4, 0.9],
+    ['tree', 0.6, 11.9, 0.9],
+    ['tree', 9.0, 9.4, 0.9],
+    ['tree', 12.4, 9.2, 0.9],
+    ['tree', 14.6, 11.0, 0.9],
+    ['tree', 9.0, 12.4, 0.9],
+    ['pine', 14.6, 13.4, 0.9],
+  ];
+  TREES.forEach(([kind, x, y, s]) => {
+    solid(x, y, 0, 0, () => (kind === 'tree' ? tree(x, y, s) : kind === 'pine' ? pine(x, y, s) : bush(x, y, s)));
+  });
+
+  // miesto baldai
+  const LAMPS = [[6.5, 2.6], [6.5, 5.4], [6.5, 10.6], [6.5, 13.4], [8.5, 2.6], [8.5, 5.4], [8.5, 10.6], [8.5, 13.4], [2.6, 6.5], [5.0, 6.5], [10.0, 6.5], [13.0, 6.5], [2.6, 8.5], [5.0, 8.5], [10.0, 8.5], [13.0, 8.5]];
+  LAMPS.forEach(([x, y]) => solid(x, y, 0, 0, () => lamp(x, y)));
+  [[6.3, 6.3], [8.7, 8.7]].forEach(([x, y]) => solid(x, y, 0, 0, () => trafficLight(x, y)));
+  [[5.6, 6.4], [9.4, 8.6]].forEach(([x, y]) => solid(x, y, 0, 0, () => hydrant(x, y)));
+  [[6.4, 4.6], [8.6, 4.6], [6.4, 10.4], [8.6, 10.4]].forEach(([x, y]) => solid(x, y, 0, 0, () => planter(x, y)));
+  [[6.4, 3.6], [6.4, 12.4], [3.2, 6.4], [10.2, 6.4], [9.2, 12.0], [14.6, 13.2]].forEach(([x, y]) => solid(x, y, 0, 0, () => bench(x, y)));
 
   // transportas
-  solid(1.2, 6.35, 0, 0, () => car(1.2, 6.35, '#e05a4f'));
-  solid(4.0, 6.75, 0, 0, () => car(4.0, 6.75, '#3b82f6', true));
-  solid(8.2, 6.35, 0, 0, () => car(8.2, 6.35, '#f5a524'));
-  solid(6.35, 2.2, 0, 0, () => bus(6.35, 2.2));
-  solid(6.35, 9.6, 0, 0, () => car(6.35, 9.6, '#8b5cf6'));
-  solid(6.75, 4.6, 0, 0, () => car(6.75, 4.6, '#12b48c', true));
-
-  // zibintai, sviesoforai, hidrantai, sodai
-  for (const [lx, ly] of [[5.6, 2.4], [5.6, 4.7], [5.6, 9.2], [2.4, 4.85], [8.4, 5.6], [5.6, 9.9], [10.6, 5.6], [2.6, 10.4]]) {
-    solid(lx, ly, 0, 0, () => lamp(lx, ly));
-  }
-  solid(5.4, 4.6, 0, 0, () => trafficLight(5.4, 4.6));
-  solid(7.6, 7.6, 0, 0, () => trafficLight(7.6, 7.6));
-  solid(5.5, 7.6, 0, 0, () => hydrant(5.5, 7.6));
-  solid(9.2, 5.5, 0, 0, () => hydrant(9.2, 5.5));
-  solid(5.5, 4.4, 0, 0, () => planter(5.5, 4.4));
-  solid(7.4, 5.5, 0, 0, () => planter(7.4, 5.5));
-  solid(2.0, 4.8, 0, 0, () => flowers(2.0, 4.8, 0.9));
+  solid(1.4, 7.35, 0, 0, () => car(1.4, 7.35, '#e05a4f'));
+  solid(4.6, 7.75, 0, 0, () => car(4.6, 7.75, '#3b82f6', true));
+  solid(10.4, 7.35, 0, 0, () => car(10.4, 7.35, '#f5a524'));
+  solid(13.4, 7.75, 0, 0, () => car(13.4, 7.75, '#8b5cf6', true));
+  solid(7.35, 1.6, 0, 0, () => bus(7.35, 1.6));
+  solid(7.35, 10.6, 0, 0, () => car(7.35, 10.6, '#12b48c'));
+  solid(7.75, 4.4, 0, 0, () => car(7.75, 4.4, '#e05a4f', true));
+  solid(7.75, 13.4, 0, 0, () => car(7.75, 13.4, '#3b82f6'));
 
   if (st.debt > 0) {
-    put(40, () => {
-      const [bx, by] = P(6.5, 6.5, 9);
+    put(60, () => {
+      const [bx, by] = P(7.5, 7.5, 10);
       return `<g transform="translate(${bx.toFixed(1)},${by.toFixed(1)})"><rect x="-48" y="-15" width="96" height="26" rx="13" fill="#e63946"/>`
         + `<text y="3.5" text-anchor="middle" font-size="12" font-weight="800" fill="#fff" font-family="system-ui,sans-serif">Skola ${Math.round(st.debt)} \u20ac</text></g>`;
     });
@@ -506,9 +539,10 @@ export function citySVG(st) {
   g += items.map((i) => i[1]()).join('');
 
   if (mood === 'down') {
-    g += disc(3.4, 9.4, 0.5, '#7f8ea6', 'opacity=".35"') + disc(8.2, 2.2, 0.4, '#7f8ea6', 'opacity=".3"');
+    g += disc(3.4, 9.4, 0.5, '#7f8ea6', 'opacity=".35"') + disc(10.2, 2.4, 0.4, '#7f8ea6', 'opacity=".3"')
+      + disc(13.6, 12.4, 0.45, '#7f8ea6', 'opacity=".32"');
     let rain = '';
-    for (let i = 0; i < 55; i++) {
+    for (let i = 0; i < 70; i++) {
       const x = (i * 47) % W, y = (i * 89) % (H - 40);
       rain += `<line x1="${x}" y1="${y}" x2="${x - 6}" y2="${y + 16}"/>`;
     }
@@ -516,5 +550,5 @@ export function citySVG(st) {
   }
   g += `<rect width="${W}" height="${H}" fill="url(#vig)" pointer-events="none"/>`;
 
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Izometrinis miesto žemėlapis: namai, biurų pastatas, bankas, birža, kavos baras, arena, parkas su tvenkiniu, aikštė su fontanu, bulvarai su perėjomis ir transportu" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Izometrinis miesto žemėlapis: gyvenamieji namai, biurų pastatas, banko bokštas, birža su kupolu, kavos baras, arena, parkas su tvenkiniu, aikštė su fontanu, prekyvietė, sporto aikštė, bulvarai su perėjomis ir transportu" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
 }
