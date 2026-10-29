@@ -15,9 +15,6 @@
 .hero::before{content:"";position:absolute;inset:0;z-index:-1;
   background:radial-gradient(680px 420px at 78% 8%,rgba(18,180,140,.34),transparent 62%),
              radial-gradient(620px 380px at 8% 92%,rgba(124,92,255,.30),transparent 62%)}
-.hero::after{content:"";position:absolute;inset:0;z-index:-1;opacity:.16;
-  background-image:linear-gradient(rgba(255,255,255,.35) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.35) 1px,transparent 1px);
-  background-size:46px 46px;mask-image:radial-gradient(circle at 60% 30%,#000 0%,transparent 72%)}
 .hero h1{color:#fff;font-size:clamp(2.05rem,5.2vw,3.4rem);max-width:16em;letter-spacing:-.03em}
 .hero p.lead{font-size:clamp(1.05rem,2.2vw,1.2rem);max-width:36em;opacity:.9;color:#dbe6f6}
 .hero .cols{display:grid;grid-template-columns:1.08fr 1fr;gap:38px;align-items:center}
@@ -30,7 +27,8 @@
 .trust{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;list-style:none;padding:0}
 .trust li{display:inline-flex;align-items:center;gap:8px;font-size:.86rem;color:#cfe0f5;
   background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);padding:8px 13px;border-radius:var(--r-pill)}
-.trust b{color:#7ff0cc}
+.trust .ck{display:inline-block;width:5px;height:9px;margin-right:7px;
+  border-right:2px solid #7ff0cc;border-bottom:2px solid #7ff0cc;transform:rotate(45deg) translateY(-1px)}
 .nav{display:flex;align-items:center;gap:16px;padding:14px 0;flex-wrap:wrap}
 .nav .logo{color:#fff}
 .nav a:not(.logo):not(.btn){color:#e8f0fb;text-decoration:none;font-weight:650;opacity:.88;transition:opacity .18s var(--ease)}
@@ -42,29 +40,34 @@
   .nav a:not(.logo):not(.btn){font-size:.88rem}
   .nav .btn{padding:11px 16px;min-height:42px;font-size:.88rem}
 }
+section{padding:72px 0}
+@media(max-width:760px){section{padding:48px 0}}
 section.alt{background:#fff}
 .sec-h{text-align:center;max-width:42em;margin:0 auto 38px}
 .sec-h h2{font-size:clamp(1.6rem,3.6vw,2.35rem);letter-spacing:-.03em}
 .sec-h p{font-size:1.03rem}
-.kicker{display:inline-block;font-size:.74rem;letter-spacing:.16em;font-weight:900;color:var(--teal-d);margin-bottom:12px}
 .feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px}
 .feat .card{padding:24px}
 .feat .card:hover{transform:translateY(-3px);box-shadow:var(--sh-3)}
-.feat .ic{display:grid;place-items:center;width:50px;height:50px;border-radius:15px;font-size:1.5rem;
-  background:linear-gradient(140deg,#e9f6ff,#e4f8f0);border:1px solid var(--line-soft);margin-bottom:14px}
-.feat h3{margin-top:4px}
+.feat-head{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+.feat-head h3{margin:0}
+.feat .ic{flex:0 0 auto;display:grid;place-items:center;width:30px;height:30px;color:var(--teal-d)}
+.feat .ic svg{width:24px;height:24px;display:block}
 .aud{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:20px}
-.aud .card{border-top:5px solid var(--teal);padding:24px;position:relative;overflow:hidden}
+.aud .card{padding:24px;position:relative;overflow:hidden}
 .aud .card::after{content:"";position:absolute;right:-40px;top:-40px;width:130px;height:130px;border-radius:50%;
   background:radial-gradient(circle,rgba(18,180,140,.13),transparent 70%)}
-.aud .card:nth-child(2){border-color:var(--purple)}
+.aud .card:nth-child(2) h3::before{background:var(--purple)}
 .aud .card:nth-child(2)::after{background:radial-gradient(circle,rgba(124,92,255,.13),transparent 70%)}
-.aud .card:nth-child(3){border-color:var(--amber)}
+.aud .card:nth-child(3) h3::before{background:var(--amber)}
 .aud .card:nth-child(3)::after{background:radial-gradient(circle,rgba(245,165,36,.14),transparent 70%)}
-.aud h3{font-size:1.1rem}
+.aud h3{font-size:1.1rem;position:relative;padding-left:20px}
+.aud h3::before{content:"\2014";position:absolute;left:0;top:0;width:9px;height:9px;border-radius:50%;
+  background:var(--teal);font-size:0;line-height:0;margin-top:.42em}
 .aud ul{padding-left:0;list-style:none;margin:14px 0 0}
 .aud li{margin:.62em 0;padding-left:26px;position:relative;font-size:.95rem}
-.aud li::before{content:"✓";position:absolute;left:0;top:0;color:var(--teal-d);font-weight:900}
+.aud li::before{content:"";position:absolute;left:2px;top:.34em;width:5px;height:9px;
+  border-right:2px solid var(--teal-d);border-bottom:2px solid var(--teal-d);transform:rotate(45deg)}
 .week{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;counter-reset:w}
 .week div{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:20px;box-shadow:var(--sh-1);
   counter-increment:w;position:relative;transition:transform .2s var(--ease),box-shadow .2s var(--ease)}
@@ -103,7 +106,8 @@ section.alt{background:#fff}
 .plan .price small{display:block;font-size:.82rem;font-weight:650;color:var(--muted);letter-spacing:0;margin-top:6px}
 .plan ul{list-style:none;padding:0;margin:18px 0 22px;flex:1}
 .plan li{padding-left:25px;position:relative;margin:.55em 0;font-size:.94rem;color:var(--muted)}
-.plan li::before{content:"\2713";position:absolute;left:0;color:var(--teal-d);font-weight:900}
+.plan li::before{content:"";position:absolute;left:2px;top:.34em;width:5px;height:9px;
+  border-right:2px solid var(--teal-d);border-bottom:2px solid var(--teal-d);transform:rotate(45deg)}
 .plan .btn{width:100%}
 .plan-note{text-align:center;font-size:.85rem;color:var(--muted);margin:20px auto 0;max-width:46em}
 footer{background:linear-gradient(160deg,var(--navy-2),var(--navy));color:#c8d3e6;padding:44px 0}
@@ -129,9 +133,9 @@ footer .note{color:#9fb0cc}
         <div class="row" style="margin-top:24px;gap:12px"><a class="btn alt" href="/play">Mokinems</a><a class="btn" href="/teacher?register=1">Registruoti paskyrą</a></div>
         <p class="muted" style="margin-top:18px;font-size:.88rem">Mokiniai prisijungia su klasės kodu ir slapyvardžiu — be el. pašto.</p>
         <ul class="trust">
-          <li><b>✓</b> Veikia naršyklėje, be diegimo</li>
-          <li><b>✓</b> Mokiniams nereikia el. pašto</li>
-          <li><b>✓</b> Tik virtualūs pinigai</li>
+          <li><i class="ck"></i>Veikia naršyklėje, be diegimo</li>
+          <li><i class="ck"></i>Mokiniams nereikia el. pašto</li>
+          <li><i class="ck"></i>Tik virtualūs pinigai</li>
         </ul>
         </div>
       </div>
@@ -142,12 +146,12 @@ footer .note{color:#9fb0cc}
 
 <main>
 <section id="demo"><div class="wrap">
-  <div class="sec-h"><span class="kicker">DEMO</span><h2>Išbandyk dabar. Prisijungti nereikia.</h2><p class="muted">Penkių savaičių scenarijus su kintančiomis investicijų, verslo ir santaupų prognozėmis.</p></div>
+  <div class="sec-h"><h2>Išbandyk dabar. Prisijungti nereikia.</h2><p class="muted">Penkių savaičių scenarijus su kintančiomis investicijų, verslo ir santaupų prognozėmis.</p></div>
   <div class="demo" id="demoBox" aria-live="polite"></div>
 </div></section>
 
 <section class="alt" id="ritmas"><div class="wrap">
-  <div class="sec-h"><span class="kicker">SAVAITĖS RITMAS</span><h2>Kaip atrodo viena savaitė</h2><p class="muted">Aiškus ritmas, kuris telpia į vieną pamoką ar namų darbą.</p></div>
+  <div class="sec-h"><h2>Kaip atrodo viena savaitė</h2><p class="muted">Aiškus ritmas, kuris telpia į vieną pamoką ar namų darbą.</p></div>
   <div class="week">
     <div><b>Pirmadienis</b>Įvykis: kainos kyla, rinkos krenta arba kyla pigūs pagundų pasiūlymai.</div>
     <div><b>Antradienis–trečiadienis</b>Mokiniai sprendžia ir mokosi iš jų pasirinkimo pasekmių.</div>
@@ -157,7 +161,7 @@ footer .note{color:#9fb0cc}
 </div></section>
 
 <section id="nauda"><div class="wrap">
-  <div class="sec-h"><span class="kicker">NAUDA</span><h2>Naudinga visiems klasės dalyviams</h2></div>
+  <div class="sec-h"><h2>Naudinga visiems klasės dalyviams</h2></div>
   <div class="aud">
     <article class="card"><h3>Mokytojams: pamoka paruošta už jus</h3><ul>
       <li>Penkių savaičių žaidimo scenarijai su tikslais ir diskusijos klausimais</li>
@@ -181,17 +185,17 @@ footer .note{color:#9fb0cc}
 </div></section>
 
 <section class="alt" id="kodel"><div class="wrap">
-  <div class="sec-h"><span class="kicker">KODĖL TAI VEIKIA</span><h2>Mokymasis per pasekmes</h2></div>
+  <div class="sec-h"><h2>Mokymasis per pasekmes</h2></div>
   <div class="feat">
-    <div class="card"><div class="ic">🎯</div><h3>Vienodos sąlygos</h3><p>Visa klasė patiria tuos pačius įvykius ir kainas, todėl rezultatus galima palyginti, o nusirašinėjimas naudos neduoda.</p></div>
-    <div class="card"><div class="ic">⚖️</div><h3>Žaidime yra strateginių sprendimų</h3><p>Stebėk kainų, fondų ir verslo prognozes; kai perspektyvos keičiasi, gali pakeisti savo pasirinktą paskirstymą.</p></div>
-    <div class="card"><div class="ic">🧭</div><h3>Mentorius be išgalvotų faktų</h3><p>Skaičius ir patarimus sudaro taisyklės, todėl jie nėra „haliucinacijos“. Tai mokomoji pagalba, ne finansinė rekomendacija.</p></div>
-    <div class="card"><div class="ic">📱</div><h3>Veikia bet kur</h3><p>Telefone, planšetėje ar mokyklos kompiuteryje. Lengvas, be sunkios 3D grafikos.</p></div>
+    <div class="card"><div class="feat-head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="3.9"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></span><h3>Vienodos sąlygos</h3></div><p>Visa klasė patiria tuos pačius įvykius ir kainas, todėl rezultatus galima palyginti, o nusirašinėjimas naudos neduoda.</p></div>
+    <div class="card"><div class="feat-head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.2 19 6v5.2c0 4.3-2.8 7.7-7 9.6-4.2-1.9-7-5.3-7-9.6V6z"/></svg></span><h3>Žaidime yra strateginių sprendimų</h3></div><p>Stebėk kainų, fondų ir verslo prognozes; kai perspektyvos keičiasi, gali pakeisti savo pasirinktą paskirstymą.</p></div>
+    <div class="card"><div class="feat-head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M15 9 13.2 13.2 9 15l1.8-4.2z"/></svg></span><h3>Mentorius be išgalvotų faktų</h3></div><p>Skaičius ir patarimus sudaro taisyklės, todėl jie nėra „haliucinacijos“. Tai mokomoji pagalba, ne finansinė rekomendacija.</p></div>
+    <div class="card"><div class="feat-head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="7" y="2.9" width="10" height="18.2" rx="2.4"/><path d="M10.7 18.5h2.6"/></svg></span><h3>Veikia bet kur</h3></div><p>Telefone, planšetėje ar mokyklos kompiuteryje. Lengvas, be sunkios 3D grafikos.</p></div>
   </div>
 </div></section>
 
 <section id="planai"><div class="wrap">
-  <div class="sec-h"><span class="kicker">PLANAI</span><h2>Pasirink, kaip žaisi</h2><p class="muted">Tas pats penkių savaičių žaidimas – vienam žaidėjui arba visai klasei.</p></div>
+  <div class="sec-h"><h2>Pasirink, kaip žaisi</h2><p class="muted">Tas pats penkių savaičių žaidimas – vienam žaidėjui arba visai klasei.</p></div>
   <div class="plans">
     <article class="plan">
       <h3>Asmeninis</h3>
@@ -237,7 +241,7 @@ footer .note{color:#9fb0cc}
 </div></section>
 
 <section id="pilotas"><div class="wrap">
-  <div class="sec-h"><span class="kicker">PILOTAS</span><h2>Prašyti vienkartinio bandymo klasei</h2><p class="muted">Pasakyk, kas esi, ir susisieksime dėl vienos klasės bandymo.</p></div>
+  <div class="sec-h"><h2>Prašyti vienkartinio bandymo klasei</h2><p class="muted">Pasakyk, kas esi, ir susisieksime dėl vienos klasės bandymo.</p></div>
   <form class="card pilot-card" id="pf">
     <label for="pn">Vardas, pavardė</label><input id="pn" required maxlength="80">
     <label for="pe">El. paštas</label><input id="pe" type="email" required maxlength="120">
@@ -250,7 +254,7 @@ footer .note{color:#9fb0cc}
 </div></section>
 
 <section class="faq" id="duk"><div class="wrap" style="max-width:780px">
-  <div class="sec-h"><span class="kicker">DUK</span><h2>Dažni klausimai</h2></div>
+  <div class="sec-h"><h2>Dažni klausimai</h2></div>
   <details><summary>Ar mokiniai naudoja tikrus pinigus?</summary><p>Ne. Visi pinigai yra virtualūs: nėra mokėjimų, brokerio ar prizų.</p></details>
   <details><summary>Kokius duomenis renkate apie mokinius?</summary><p>Tik slapyvardį ir žaidimo sprendimus. El. pašto ar tikro vardo nereikia.</p></details>
   <details><summary>Ar tai atitinka Bendrąsias programas?</summary><p>Pamokų planus rengiame pagal temas (biudžetas, taupymas, investavimas, rizika). Konkretų atitikimą programos pasiekimams patvirtinsime atskirai, kol kas to netvirtiname.</p></details>
