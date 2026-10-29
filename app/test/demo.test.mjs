@@ -129,7 +129,15 @@ t('marketplace sale is shown separately from earned income', () => {
   assert.ok(result.steps.some((step) => /Turto pavert/.test(step.text)));
 });
 
-// ---- „Pamoka": žingsnis po žingsnio paaiškinama, kas įvyko ----
+import fs from 'node:fs';
+import path from 'node:path';
+const landingSource = fs.readFileSync(path.join(process.cwd(), 'public/landing.js'), 'utf8');
+t('demo analytics includes an idea box connected to the mentor', () => {
+  assert.match(landingSource, /askBlock\(/);
+  assert.match(landingSource, /wireAsk\(/);
+  assert.match(landingSource, /demoAskContext/);
+});
+
 t('demo lesson explains the result step by step', () => {
   const result = simulateDemo('business', balanced);
   assert.ok(Array.isArray(result.steps) && result.steps.length >= 6, `${result.steps && result.steps.length} steps`);

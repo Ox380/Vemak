@@ -53,6 +53,13 @@ const rows = (steps || []).map((s) => `<li><span class="lesson-step-copy"><span>
 }
 
 // Suriša klausimų laukelį. getContext() grąžina savaitės skaičius atsakymui.
+export function wireTheme(root) {
+  const btn = (root || document).querySelector('#themeToggle');
+  if (!btn || btn.dataset.wired) return;
+  btn.dataset.wired = '1';
+  btn.addEventListener('click', () => import('./theme.js').then((m) => m.toggleTheme()));
+}
+
 export function wireAsk(getContext, suggestions = []) {
   const q = $('#ask-q'); const go = $('#ask-go'); const out = $('#ask-answer');
   if (!q || !go || !out) return;
