@@ -31,7 +31,7 @@ let n = 0; const ok = (m) => console.log('ok  ', m, ++n && '');
   assert.ok(![...d.querySelectorAll('.hero .row a')].some((a) => a.getAttribute('href') === '#demo')); ok('duplicate hero demo button removed');
   assert.ok([...d.querySelectorAll('.nav a')].some((a) => a.textContent.trim() === 'Demo')); ok('demo navigation link remains available');
   assert.ok(d.querySelector('#heroCity svg')); ok('hero city renders');
-  assert.match(d.querySelector('#demoBox').textContent, /Sveikas atvykęs į VEMAK/); ok('demo starts with introduction');
+  assert.match(d.querySelector('#demoBox').textContent, /Sveikas atvykęs į VEMAK/); assert.ok(d.querySelector('.money-art')); assert.ok(!d.querySelector('.demo-intro-art')?.textContent.includes('🏙️')); ok('demo starts with money illustration');
   await click(d.querySelector('#start-demo'));
   await click(d.querySelector('#demoBox [data-choice]'));
   await click(d.querySelector('#to-strategy'));
