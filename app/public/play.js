@@ -66,14 +66,20 @@ function renderJoin(msg = '') {
 
 // ---------- quiz ----------
 function renderQuiz(kind) {
-  const title = kind === 'pre' ? 'Pradinis testas (4 klausimai)' : 'Baigiamasis testas (4 klausimai)';
-  const intro = kind === 'pre' ? 'Tai ne pažymys. Tai padeda pamatyti, kiek išmoksi per sezoną.' : 'Sezonas baigtas. Atsakyk dar kartą ir pamatysi, kiek išmokai.';
-  app.innerHTML = `<div class="center card" style="max-width:640px"><h1>${title}</h1><p class="muted">${intro}</p>
-    <form id="q" class="quiz">${me.quiz.map((q, i) => `<fieldset><legend>${i + 1}. ${esc(q.q)}</legend>${q.o.map((o, j) => `<label><input type="radio" name="q${i}" value="${j}" required> ${esc(o)}</label>`).join('')}</fieldset>`).join('')}
-    <p class="err" id="err" role="alert"></p><button class="btn" style="width:100%">Pateikti</button></form></div>`;
+  const questions = me.quiz;
+  const title = kind === 'pre' ? 'Pradėk savo finansinę misiją' : 'Finalinis iššūkis: ką išmokai?';
+  const intro = kind === 'pre' ? '8 greiti scenarijai. Čia nėra pažymio — tik tavo starto taškas prieš žaidimą.' : '8 nauji scenarijai parodys, kaip pasikeitė tavo finansinis mąstymas.';
+  const topicMeta = { budget: ['💶', 'Biudžetas'], saving: ['🛡️', 'Rezervas'], invest: ['📈', 'Investavimas'], risk: ['⚡', 'Rizika'] };
+  app.innerHTML = `<div class="quiz-shell"><div class="quiz-hero"><span class="pill amber">${kind === 'pre' ? 'STARTO MISIJA' : 'FINALINĖ MISIJA'}</span><h1>${title}</h1><p>${intro}</p><div class="quiz-progress"><span style="width:0%"></span></div><small id="quiz-progress-label">Pasirink atsakymą į visus klausimus</small></div><form id="q" class="quiz">${questions.map((q, i) => { const [icon, topic] = topicMeta[q.topic] || ['🧭', 'Iššūkis']; return `<fieldset class="quiz-card"><div class="quiz-card-top"><span class="quiz-number">${String(i + 1).padStart(2, '0')}</span><span class="quiz-topic">${icon} ${topic}</span></div><legend>${esc(q.q)}</legend><div class="quiz-options">${q.o.map((o, j) => `<label><input type="radio" name="q${i}" value="${j}" required><span class="option-letter">${String.fromCharCode(65 + j)}</span><span>${esc(o)}</span></label>`).join('')}</div></fieldset>`; }).join('')}<p class="err" id="err" role="alert"></p><button class="btn quiz-submit" style="width:100%">${kind === 'pre' ? 'Pradėti žaidimą →' : 'Pamatyti savo pažangą →'}</button></form></div>`;
+  const updateProgress = () => {
+    const answered = questions.filter((_, i) => $('#q input[name=q' + i + ']:checked')).length;
+    $('.quiz-progress span').style.width = `${Math.round((answered / questions.length) * 100)}%`;
+    $('#quiz-progress-label').textContent = answered === questions.length ? 'Visi atsakymai paruošti ✓' : `${answered} iš ${questions.length} atsakyta`;
+  };
+  $('#q').addEventListener('change', updateProgress);
   $('#q').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const answers = me.quiz.map((_, i) => Number((new FormData(e.target)).get('q' + i)));
+    const answers = questions.map((_, i) => Number((new FormData(e.target)).get('q' + i)));
     try { await api('POST', '/api/me/quiz', { kind, answers }, token); boot(); } catch (er) { $('#err').textContent = er.message; }
   });
 }

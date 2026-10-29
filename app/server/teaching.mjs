@@ -30,15 +30,23 @@ export const LESSONS = [
 // Quiz: 2 questions per topic. Set A = pre-test, set B = post-test. answer = index of the correct option.
 export const QUIZ = {
   pre: [
-    { topic: 'budget', q: 'Kuris iš šių dalykų yra poreikis, o ne noras?', o: ['Naujas žaidimas', 'Mėnesinis transporto bilietas į mokyklą', 'Vakarienė restorane'], a: 1 },
-    { topic: 'saving', q: 'Kam labiausiai skirtas atsarginis fondas (rezervas)?', o: ['Netikėtoms išlaidoms', 'Atostogoms', 'Brangiems pirkiniams su nuolaida'], a: 0 },
-    { topic: 'invest', q: 'Kas yra diversifikacija?', o: ['Visi pinigai vienoje geriausioje akcijoje', 'Investicijų paskirstymas į skirtingus turtus', 'Pinigų laikymas tik grynaisiais'], a: 1 },
-    { topic: 'risk',   q: 'Kuo didesnė galima grąža, tuo paprastai…', o: ['Mažesnė rizika', 'Nėra rizikos', 'Didesnė rizika'], a: 2 },
+    { topic: 'budget', q: 'Tavo mėnesio pajamos yra 100 €. Ką verta padaryti pirmiausia?', o: ['Išleisti viską, kol dar turi', 'Atskirti būtinus poreikius ir suplanuoti likutį', 'Pirkti tai, kam taikoma didžiausia nuolaida', 'Pasiskolinti dar 100 €'], a: 1 },
+    { topic: 'budget', q: 'Turi 60 €, o iki savaitės pabaigos reikia 25 € transportui. Kiek gali skirti pramogai nepalikdamas skolos?', o: ['35 €', '60 €', '85 €', '0 €, nes pramogos visada blogos'], a: 0 },
+    { topic: 'saving', q: 'Kam labiausiai skirtas atsarginis fondas?', o: ['Netikėtoms išlaidoms', 'Atostogoms', 'Brangiems pirkiniams su nuolaida', 'Kasdieniams saldumynams'], a: 0 },
+    { topic: 'saving', q: 'Telefonui netikėtai sugedus, kuris sprendimas paprastai saugiausias?', o: ['Panaudoti rezervą, jei jis tam skirtas', 'Parduoti visą ilgalaikį turtą iš karto', 'Ignoruoti išlaidą', 'Skolintis didžiausią įmanomą sumą'], a: 0 },
+    { topic: 'invest', q: 'Kas yra diversifikacija?', o: ['Visi pinigai vienoje akcijoje', 'Investicijų paskirstymas į skirtingus turtus', 'Pinigų laikymas tik grynaisiais', 'Investavimas be jokio plano'], a: 1 },
+    { topic: 'invest', q: 'Kodėl verta prieš investuojant pasilikti dalį pinigų rezerve?', o: ['Kad nereikėtų parduoti investicijų per netikėtą išlaidą', 'Kad investicijos niekada nekristų', 'Kad gautum garantuotą pelną', 'Kad nereikėtų sekti savo biudžeto'], a: 0 },
+    { topic: 'risk', q: 'Kuo didesnė galima grąža, tuo paprastai…', o: ['Mažesnė rizika', 'Nėra rizikos', 'Didesnė rizika', 'Pelno garantija didesnė'], a: 2 },
+    { topic: 'risk', q: 'Rinka nukrito 10 %. Koks klausimas padeda priimti ramų sprendimą?', o: ['Ar mano ilgalaikis planas pasikeitė?', 'Ką visi kiti parduoda?', 'Kaip greitai galiu pasiskolinti?', 'Ar galiu susigrąžinti nuostolį per dieną?'], a: 0 },
   ],
   post: [
-    { topic: 'budget', q: 'Kuri taisyklė padeda geriausiai planuoti biudžetą?', o: ['Pirmiausia išleisti, tada žiūrėti, kiek liko', 'Pirmiausia suplanuoti poreikius ir taupymą, tada išleisti likusius pinigus', 'Pirkti viską, kas atrodo pigu'], a: 1 },
-    { topic: 'saving', q: 'Kainos kyla 10 % per metus, o santaupos auga 2 %. Santaupų perkamoji galia…', o: ['Didėja', 'Nesikeičia', 'Mažėja'], a: 2 },
-    { topic: 'invest', q: 'Kodėl investuoti vienai savaitei yra rizikingiau nei ilgam laikui?', o: ['Nes trumpuoju laikotarpiu kainos svyruoja labiau', 'Nes trumpalaikės investicijos visada nuostolingos', 'Nes mokesčiai didesni'], a: 0 },
-    { topic: 'risk',   q: 'Rinka nukrito 10 %, o tu investavai ilgam laikui. Kas geriausia?', o: ['Panikuoti ir parduoti viską', 'Pasiskolinti ir pirkti dar daugiau', 'Peržiūrėti planą ir nepriimti sprendimų iš panikos'], a: 2 },
+    { topic: 'budget', q: 'Kuri taisyklė geriausiai padeda planuoti biudžetą?', o: ['Pirmiausia išleisti, tada žiūrėti, kiek liko', 'Pirmiausia suplanuoti poreikius ir taupymą, tada išleisti likutį', 'Pirkti viską, kas atrodo pigu', 'Neskaičiuoti mažų pirkinių'], a: 1 },
+    { topic: 'budget', q: 'Produktas su 20 % nuolaida nėra automatiškai geriausias, nes verta palyginti…', o: ['Vieneto kainą ir tikrą poreikį', 'Tik pakuotės spalvą', 'Kiek draugų jį perka', 'Ar reklama garsiai skamba'], a: 0 },
+    { topic: 'saving', q: 'Kainos kyla 10 % per metus, o santaupos auga 2 %. Santaupų perkamoji galia…', o: ['Didėja', 'Nesikeičia', 'Mažėja', 'Tampa garantuota'], a: 2 },
+    { topic: 'saving', q: 'Kodėl rezervas nėra tas pats, kas pinigai pramogoms?', o: ['Rezervas skirtas neplanuotoms būtinosioms išlaidoms', 'Rezervas visada uždirba daugiausia', 'Rezervą reikia išleisti iki mėnesio pabaigos', 'Pramogoms negalima planuoti biudžeto'], a: 0 },
+    { topic: 'invest', q: 'Kodėl investuoti vienai savaitei rizikingiau nei ilgam laikui?', o: ['Nes trumpuoju laikotarpiu kainos gali smarkiai svyruoti', 'Nes trumpalaikės investicijos visada nuostolingos', 'Nes ilgas laikotarpis garantuoja pelną', 'Nes investicijos neturi jokios rizikos'], a: 0 },
+    { topic: 'invest', q: 'Jei vienas turtas krenta, diversifikuotas portfelis gali būti atsparesnis, nes…', o: ['Kitas turtas gali kristi mažiau arba augti', 'Nuostolis automatiškai išnyksta', 'Visi turtai tampa be rizikos', 'Pelnas tampa garantuotas'], a: 0 },
+    { topic: 'risk', q: 'Rinka nukrito 10 %, o tu investavai ilgam laikui. Kas atsakingiausia?', o: ['Peržiūrėti planą ir nepriimti sprendimo iš panikos', 'Parduoti viską vien todėl, kad krito', 'Pasiskolinti ir pirkti dar daugiau', 'Nustoti sekti visas išlaidas'], a: 0 },
+    { topic: 'risk', q: 'Kuris teiginys apie riziką teisingas?', o: ['Didesnė galima grąža dažnai reiškia ir didesnę galimo nuostolio riziką', 'Didelė grąža visada garantuota', 'Riziką galima panaikinti reklama', 'Jei draugas uždirbo, uždirbsi ir tu'], a: 0 },
   ],
 };

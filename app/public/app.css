@@ -408,14 +408,7 @@ tr.me:hover td{background:#d9f5ec}
 
 /* ----------------------------------------------------------------------- testas */
 .quiz fieldset{border:0;padding:0;margin:0 0 20px}
-.quiz legend{font-weight:800;margin-bottom:9px;color:var(--navy);font-size:1rem}
-.quiz label{
-  display:flex;gap:11px;align-items:center;font-weight:500;border:1.5px solid var(--line);
-  padding:12px 13px;border-radius:var(--r-sm);margin:7px 0;cursor:pointer;
-  transition:border-color .16s var(--ease),background .16s var(--ease)
-}
-.quiz label:hover{border-color:#b9cadd;background:#fbfdff}
-.quiz input{width:auto;accent-color:var(--teal-d)}
+.quiz-shell{max-width:820px;margin:0 auto;padding-bottom:40px}.quiz-hero{background:linear-gradient(135deg,#102b52,#174d72);color:#fff;border-radius:var(--r);padding:30px;margin-bottom:22px;box-shadow:var(--shadow)}.quiz-hero h1{color:#fff;margin:12px 0 8px}.quiz-hero p{color:#d9e9f5;margin:0 0 20px}.quiz-hero small{color:#c7deea;font-weight:700}.quiz-progress{height:9px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden;margin:18px 0 8px}.quiz-progress span{display:block;height:100%;background:#f5b942;border-radius:inherit;transition:width .25s ease}.quiz-card{background:#fff;border:1px solid var(--line-soft);border-radius:var(--r);padding:20px 22px;margin:0 0 16px;box-shadow:0 5px 18px rgba(16,43,82,.05)}.quiz-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.quiz-number{font-size:.78rem;font-weight:900;color:var(--teal-d);letter-spacing:.1em}.quiz-topic{font-size:.78rem;font-weight:800;color:var(--muted);background:#f3f7fb;padding:5px 9px;border-radius:99px}.quiz-card legend{font-size:1.08rem;line-height:1.4;margin-bottom:14px}.quiz-options{display:grid;gap:9px}.quiz label{margin:0;align-items:flex-start;min-height:48px}.quiz label:has(input:checked){border-color:var(--teal);background:#effbf8;box-shadow:0 0 0 2px rgba(25,179,148,.1)}.quiz input{position:absolute;opacity:0}.option-letter{flex:0 0 25px;height:25px;border:1px solid #cbd9e5;border-radius:50%;display:grid;place-items:center;font-size:.75rem;font-weight:900;color:var(--muted);margin-top:1px}.quiz label:has(input:checked) .option-letter{background:var(--teal-d);border-color:var(--teal-d);color:#fff}.quiz-submit{margin-top:8px}
 
 /* ---------------------------------------------------------------------- finišas */
 .hero-end{text-align:center;padding:30px}

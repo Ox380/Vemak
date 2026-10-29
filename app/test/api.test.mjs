@@ -38,9 +38,10 @@ assert.equal((await join('<b>x')).status, 200); ok('html chars stripped from nic
 
 // pre quiz
 r = await call('GET', '/api/me', null, sA);
-assert.equal(r.body.needsPre, true); assert.equal(r.body.quiz.length, 4);
-assert.ok(!JSON.stringify(r.body.quiz).includes('"a":'), 'quiz answers must not leak'); ok('pre-quiz served without answers');
-for (const tok of [sA, sB, sC]) assert.equal((await call('POST', '/api/me/quiz', { kind: 'pre', answers: [1, 0, 1, 2] }, tok)).body.pct, 100);
+assert.equal(r.body.needsPre, true); assert.equal(r.body.quiz.length, 8);
+assert.ok(r.body.quiz.every((q) => q.topic && q.q && q.o.length === 4));
+assert.ok(!JSON.stringify(r.body.quiz).includes('"a":'), 'quiz answers must not leak'); ok('pre-quiz serves eight varied questions without answers');
+for (const tok of [sA, sB, sC]) assert.equal((await call('POST', '/api/me/quiz', { kind: 'pre', answers: [1, 0, 0, 0, 1, 0, 2, 0] }, tok)).body.pct, 100);
 assert.equal((await call('POST', '/api/me/quiz', { kind: 'pre', answers: [0, 0, 0, 0] }, sA)).status, 400); ok('quiz can only be taken once');
 
 // before start
@@ -84,8 +85,8 @@ ok('6 weeks revealed');
 assert.equal((await call('POST', `/api/teacher/classes/${CID}/next`, null, T)).status, 400); ok('cannot go beyond week 6');
 r = await call('GET', '/api/me', null, sA);
 assert.equal(r.body.needsPost, true); assert.equal(r.body.cls.status, 'done');
-assert.equal((await call('POST', '/api/me/quiz', { kind: 'post', answers: [1, 2, 0, 2] }, sA)).body.pct, 100); ok('post-test works');
-await call('POST', '/api/me/quiz', { kind: 'post', answers: [0, 0, 1, 0] }, sB);
+assert.equal((await call('POST', '/api/me/quiz', { kind: 'post', answers: [1, 0, 2, 0, 0, 0, 0, 0] }, sA)).body.pct, 100); ok('post-test works');
+await call('POST', '/api/me/quiz', { kind: 'post', answers: [0, 0, 1, 0, 0, 0, 0, 0] }, sB);
 
 r = await call('GET', `/api/teacher/classes/${CID}`, null, T);
 assert.equal(r.body.stats.students, 4); assert.equal(r.body.stats.completion, 100);
