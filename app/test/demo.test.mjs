@@ -1,6 +1,6 @@
 // Deterministic one-week anonymous demo tests.
 import assert from 'node:assert/strict';
-import { DEMO_CAPITAL, DEMO_MARKET_ASSETS, DEMO_MARKET_STORIES, getDemoMarketStory, getDemoMarketWinner, scoreDemoMarketGuess, DEMO_CHOICES, DEMO_STEPS, DEMO_FLOW, createDemoSession, getDemoStepChoices, buildDemoReveal, compareDemoChoice, simulateDemo, simulateDemoStep, validateDemoAllocation } from '../public/demo.js';
+import { DEMO_CAPITAL, DEMO_MARKET_ASSETS, DEMO_MARKET_STORIES, getDemoMarketStory, getDemoMarketWinner, scoreDemoMarketGuess, DEMO_CHOICES, DEMO_STEPS, DEMO_FLOW, createDemoSession, getDemoStepChoices, buildDemoReveal, compareDemoChoice, simulateDemo, simulateDemoStep, validateDemoAllocation, getDemoGamification } from '../public/demo.js';
 
 let passed = 0;
 const t = (name, fn) => { fn(); passed++; console.log('ok  ', name); };
@@ -20,6 +20,15 @@ t('market stories provide valid predictions and awards', () => {
   assert.equal(leaders.size, 4);
 });
 
+t('gamification rewards learning actions without changing money outcomes', () => {
+  const result = getDemoGamification({ week: 2, predictionCorrect: true, decisions: 10, explanationViewed: true, netWorth: 1080, startingCapital: 1000 });
+  assert.equal(result.xp, 245);
+  assert.equal(result.level, 2);
+  assert.equal(result.streak, 2);
+  assert.equal(result.mission.done, true);
+  assert.deepEqual(result.unlocks, ['market-kiosk', 'tree']);
+  assert.equal(getDemoGamification({ week: 1, predictionCorrect: false, decisions: 3, explanationViewed: false, netWorth: 900, startingCapital: 1000 }).xp, 30);
+});
 t('randomized demo sessions are reproducible but vary by seed', () => {
   const first = createDemoSession('session-a');
   assert.deepEqual(first, createDemoSession('session-a'));
@@ -32,6 +41,7 @@ t('randomized demo sessions are reproducible but vary by seed', () => {
   assert.equal(first.legacyChoices.length, DEMO_CHOICES.length);
   assert.notDeepEqual(first.legacyChoices, createDemoSession('session-b').legacyChoices);
 });
+
 t('randomized session keeps each question and option valid', () => {
   const session = createDemoSession('validation');
   for (const [index, step] of session.steps.entries()) {

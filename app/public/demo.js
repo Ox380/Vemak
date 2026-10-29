@@ -52,6 +52,17 @@ export function scoreDemoMarketGuess(weekNo, predictedAsset) {
   return { correct: predictedAsset === winner.key, winner: winner.key, winnerLabel: winner.label, bonus: predictedAsset === winner.key ? 25 : 0 };
 }
 
+export function getDemoGamification({ week = 1, predictionCorrect = false, decisions = 0, explanationViewed = false, netWorth = DEMO_CAPITAL, startingCapital = DEMO_CAPITAL } = {}) {
+  const completedDecisions = Math.max(0, Math.min(10, Number(decisions) || 0));
+  const profitBonus = Number(netWorth) > Number(startingCapital) ? 15 : 0;
+  const missionBonus = completedDecisions >= 10 ? 30 : 0;
+  const xp = completedDecisions * 10 + (predictionCorrect ? 50 : 0) + (explanationViewed ? 50 : 0) + profitBonus + missionBonus;
+  const weekNo = Math.max(1, Number(week) || 1);
+  const mission = { title: 'Sąmoningas sprendėjas', target: 10, progress: completedDecisions, done: completedDecisions >= 10 };
+  const unlocks = weekNo >= 2 ? ['market-kiosk', 'tree'] : ['market-kiosk'];
+  return { xp, level: Math.floor(xp / 200) + 1, streak: weekNo, mission, unlocks };
+}
+
 export const DEMO_SCENARIO_EVENTS = Object.freeze([
   { title: 'Pasirink savaitės rinkos scenarijų', body: 'Perskaityk naujieną ir įvertink, kurioms rinkoms ji gali padėti ar pakenkti.' },
   ...DEMO_SCENARIOS.map(({ title, body }) => ({ title, body })),
