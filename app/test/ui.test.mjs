@@ -67,6 +67,42 @@ let n = 0; const ok = (m) => console.log('ok  ', m, ++n && '');
   assert.deepEqual(errors, [], 'landing errors: ' + errors.join('|'));
 }
 
+// ---- landing: asmeninė (individuali) versija ----
+{
+  const { d, w, errors } = await page('/', 'landing.js', BASE + '/#asmeniui');
+  assert.ok([...d.querySelectorAll('.aud-btn')].some((b) => b.dataset.aud === 'individual' && b.getAttribute('aria-selected') === 'true')); ok('individual audience is preselected from the URL');
+  assert.match(d.querySelector('#heroCopy').textContent, /nekainuoja tikrų pinigų/); ok('individual hero copy replaces the school headline');
+  assert.match(d.querySelector('#nauda').textContent, /Ką gausi tu, o ne klasė/); ok('individual benefits heading replaces the school one');
+  assert.ok(!d.querySelector('#nauda').textContent.includes('Mokytojams: pamoka paruošta už jus'), 'school benefit leaked'); ok('school benefit copy is gone in the individual version');
+  assert.ok(!d.querySelector('#nauda').textContent.includes('Mokyklos vadovybei'), 'school benefit leaked'); ok('no school-governance benefit in the individual version');
+  assert.match(d.querySelector('#nauda').textContent, /Klasės kodo nereikia/); ok('individual benefit explains there is no class code');
+  assert.ok(!d.querySelector('#pf #ps'), 'individual form must not ask for a school'); ok('individual signup form drops the school field');
+  assert.match(d.querySelector('#pf button').textContent, /Rezervuoti sezoną/); ok('individual form CTA reserves a personal season');
+  assert.match(d.querySelector('#planai').textContent, /Asmeninis/); assert.match(d.querySelector('#planai').textContent, /9,99/); ok('plans section lists the individual offer with its price');
+  assert.match(d.querySelector('#planai').textContent, /149/); ok('plans section still lists the school offer');
+  assert.ok(![...d.querySelectorAll('#nav a')].some((a) => a.textContent.includes('Mokytojo prisijungimas'))); ok('individual navigation drops the teacher-only links');
+  assert.match(d.title, /sau pačiam/); ok('page title follows the audience');
+  await click(d.querySelector('.aud-btn[data-aud=school]'));
+  assert.match(d.querySelector('#nauda').textContent, /Naudinga visiems klasės dalyviams/); ok('switching back restores the school version');
+  assert.ok(d.querySelector('#pf #ps'), 'school form must ask for the school again'); ok('school form returns with its school field');
+  await click(d.querySelector('[data-plan=individual]'));
+  assert.match(d.querySelector('#nauda').textContent, /Ką gausi tu, o ne klasė/); ok('plan button switches to the individual version');
+  assert.deepEqual(errors, [], 'individual landing errors: ' + errors.join('|'));
+}
+
+// ---- individuali registracija veikia be mokyklos lauko ----
+{
+  const { d, w, errors } = await page('/', 'landing.js', BASE + '/#asmeniui');
+  d.querySelector('#pn').value = 'Tomas';
+  d.querySelector('#pe').value = 'tomas@asmeninis.lt';
+  d.querySelector('#pc').checked = true;
+  d.querySelector('#pf').dispatchEvent(new d.defaultView.Event('submit', { cancelable: true, bubbles: true }));
+  await sleep(400);
+  assert.match(d.querySelector('#pf').textContent, /Ačiū/); ok('individual signup submits without a school');
+  assert.match(d.querySelector('#pf').textContent, /asmeninio sezono/); ok('individual confirmation mentions the personal season');
+  assert.deepEqual(errors, [], 'individual signup errors: ' + errors.join('|'));
+}
+
 // ---- teacher + student flow ----
 const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 const tr = await api('POST', '/api/teacher/register', { email: `ui-${suffix}@test.lt`, password: 'longenough1', name: 'UI Mokytojas' });

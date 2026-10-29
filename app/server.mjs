@@ -274,19 +274,22 @@ route('GET', '/api/teacher/classes/:id/export.csv', (req, _b, p) => {
   return { __raw: '\ufeff' + rows.join('\r\n'), type: 'text/csv; charset=utf-8', filename: `vemak-${c.name}.csv` };
 });
 
-// ----- pilot requests from the landing page -----
+// ----- pilot / individual requests from the landing page -----
 route('POST', '/api/pilot', (req, body) => {
   limit('pilot:' + req.ip, 5, 3600e3);
   const clean = (v, n) => String(v || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, n);
   const email = clean(body.email, 120).toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw bad('Neteisingas el. paštas.');
-  const name = clean(body.name, 80), school = clean(body.school, 120);
-  if (!name || !school) throw bad('Įvesk vardą ir mokyklą.');
+  const plan = body.plan === 'individual' ? 'individual' : 'school';
+  const name = clean(body.name, 80);
+  const school = clean(body.school, 120);
+  if (!name) throw bad('Įvesk vardą.');
+  if (plan === 'school' && !school) throw bad('Įvesk vardą ir mokyklą.');
   if (body.consent !== true) throw bad('Reikia sutikimo, kad galėtume susisiekti.');
   db.pilots = db.pilots || [];
-  db.pilots.push({ at: new Date().toISOString(), name, email, school, role: clean(body.role, 40), classes: clean(body.classes, 10), message: clean(body.message, 500) });
+  db.pilots.push({ at: new Date().toISOString(), plan, name, email, school, role: clean(body.role, 40), classes: clean(body.classes, 10), message: clean(body.message, 500) });
   save();
-  return { ok: true };
+  return { ok: true, plan };
 });
 
 // ----- student -----
