@@ -4,10 +4,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { buildSeason, newState, playWeek, validateAlloc, validateGoal, defaultAlloc, netWorth, strategyScore, mentorFacts, mentorNote, CONFIG } from './public/engine.js';
+import { buildSeason, newState, playWeek, validateAlloc, validateGoal, defaultAlloc, netWorth, strategyScore, mentorFacts, mentorNote, situationPublic, CONFIG } from './public/engine.js';
 import { createRewards, awardOnce, weeklyXp, trophyEligibility, levelForXp } from './public/rewards.js';
 import { WEEKS as CONTENT } from './public/content.js';
 import { LESSONS, QUIZ } from './server/teaching.mjs';
+import { askAnswer, SUGGESTED as ASK_SUGGESTED } from './server/ask.mjs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(ROOT, 'public');
@@ -87,15 +88,24 @@ function cleanNick(raw) {
 }
 
 // ---------- game logic ----------
-function neutralChoice(week) { return CONTENT[week - 1].options[1].key; }
+// Neutralus pasirinkimas imamas iš TOS klasės sezono situacijos, ne iš bazinio sąrašo.
+function neutralChoice(cls, week) {
+  const sit = seasonOf(cls).situations[week - 1];
+  return (sit && sit.options && sit.options[1] ? sit.options[1].key : CONTENT[week - 1].options[1].key);
+}
 function ensureState(st) { if (!st.state) st.state = newState(); return st.state; }
 
+// Klasės sezonas visada atkuriamas iš tų pačių situacijų, kad visi mokiniai
+// matytų vienodas sąlygas ir kad situacijos nepasikeistų sezono viduryje.
+function seasonOf(cls) {
+  return buildSeason(cls.seed, { ids: cls.situationIds });
+}
 function revealWeek(cls) {
   if (cls.week < 1) throw bad('Sezonas dar nepradėtas.');
   if (cls.revealed >= cls.week) throw bad('Ši savaitė jau atskleista.');
-  const season = buildSeason(cls.seed);
+  const season = seasonOf(cls);
   for (const st of studentsOf(cls)) {
-    const sub = st.subs[cls.week] || { choice: neutralChoice(cls.week), alloc: defaultAlloc(), auto: true };
+    const sub = st.subs[cls.week] || { choice: neutralChoice(cls, cls.week), alloc: defaultAlloc(), auto: true };
     st.subs[cls.week] = sub;
     const prev = ensureState(st);
     const { state, report } = playWeek(prev, season, cls.week, sub.choice, sub.alloc);
@@ -204,7 +214,12 @@ route('POST', '/api/teacher/classes', (req, body) => {
   const name = String(body.name || '').replace(/[<>]/g, '').trim().slice(0, 30);
   if (!name) throw bad('Įvesk klasės pavadinimą.');
   const grade = Math.max(1, Math.min(12, Number(body.grade) || 10));
-  const c = { id: rid(), teacherId: t.id, name, grade, code: newCode(), seed: rid(8), week: 0, revealed: 0, status: 'draft', createdAt: new Date().toISOString() };
+  // Situacijos nepasikartoja: imame tas, kurių šis mokytojas dar nežaidė.
+  t.usedSituations = Array.isArray(t.usedSituations) ? t.usedSituations : [];
+  const seed = rid(8);
+  const season = buildSeason(seed, { used: t.usedSituations });
+  t.usedSituations = [...t.usedSituations, ...season.situationIds].slice(-200);
+  const c = { id: rid(), teacherId: t.id, name, grade, code: newCode(), seed, week: 0, revealed: 0, status: 'draft', createdAt: new Date().toISOString(), situationIds: season.situationIds };
   db.classes[c.id] = c; audit(t.id, 'class.create', c.id); save();
   return { id: c.id, code: c.code };
 });
@@ -259,6 +274,7 @@ route('GET', '/api/teacher/classes/:id', (req, _b, p) => {
       return { id: s.id, nickname: s.nickname, locked: !!s.subs[c.week], weeksPlayed: h.length, netWorth: last ? last.netWorth : null, score: s.state ? strategyScore(s.state) : null, forcedSales: s.state?.forcedSales || 0, debt: last ? last.state.debt : 0, secondChances: s.state?.secondChances || 0, pre: s.quiz?.pre?.pct ?? null, post: s.quiz?.post?.pct ?? null };
     }).sort((a, b) => a.nickname.localeCompare(b.nickname, 'lt')),
     rankings: rk, lessons: LESSONS,
+    situations: seasonOf(c).situations.map((x) => ({ week: x.week, id: x.id, topic: x.topic, title: x.title })),
   };
 });
 route('GET', '/api/teacher/classes/:id/export.csv', (req, _b, p) => {
@@ -292,6 +308,17 @@ route('POST', '/api/pilot', (req, body) => {
   return { ok: true, plan };
 });
 
+// ----- „Paklausk mentoriaus" – atsakymai tik iš mokinio skaičių -----
+route('POST', '/api/ask', (req, body) => {
+  limit('ask:' + req.ip, 60, 600e3);
+  const question = String(body.question || '').replace(/[\u0000-\u001f]/g, ' ').trim();
+  if (question.length > 240) throw bad('Klausimas per ilgas (iki 240 simbolių).');
+  const ctx = body.context && typeof body.context === 'object' ? body.context : {};
+  return askAnswer({ question, context: ctx });
+});
+
+route('GET', '/api/ask/suggestions', () => ({ suggestions: ASK_SUGGESTED }));
+
 // ----- student -----
 route('POST', '/api/join', (req, body) => {
   limit('join:' + req.ip, 30, 600e3);
@@ -317,7 +344,7 @@ route('GET', '/api/me', (req) => {
   const mySub = st.subs[cw] || null;
   const res = {
     me: { nickname: st.nickname, avatar: st.avatar },
-    cls: { name: c.name, week: cw, revealed, status: c.status, weeks: CONFIG.WEEKS },
+    cls: { name: c.name, week: cw, revealed, status: c.status, weeks: CONFIG.WEEKS, situation: cw >= 1 ? situationPublic(seasonOf(c).situations[cw - 1]) : null },
     needsPre: !st.quiz.pre, needsPost: c.status === 'done' && !st.quiz.post,
     quiz: !st.quiz.pre ? quizPublic('pre') : (c.status === 'done' && !st.quiz.post ? quizPublic('post') : null),
     quizResult: st.quiz.post ? { pre: st.quiz.pre?.pct, post: st.quiz.post.pct, byTopic: { pre: st.quiz.pre?.byTopic, post: st.quiz.post.byTopic } } : null,
@@ -363,7 +390,8 @@ route('POST', '/api/me/lock', (req, body) => {
   if (c.week < 1) throw bad('Sezonas dar nepradėtas.');
   if (c.revealed >= c.week) throw bad('Ši savaitė jau baigta.');
   if (st.subs[c.week]) throw bad('Strategija jau užrakinta.');
-  const opt = CONTENT[c.week - 1].options.find((o) => o.key === body.choice);
+  const sit = seasonOf(c).situations[c.week - 1] || CONTENT[c.week - 1];
+  const opt = sit.options.find((o) => o.key === body.choice);
   if (!opt) throw bad('Nežinomas pasirinkimas.');
   const a = body.alloc || {};
   const alloc = { sav: Number(a.sav), inv: Number(a.inv), bus: Number(a.bus), res: Number(a.res), mix: a.mix && typeof a.mix === 'object' ? Object.fromEntries(['etf', 'tech', 'green', 'reit', 'gold'].map((k) => [k, Number(a.mix[k]) || 0])) : defaultAlloc().mix, upgrade: !!a.upgrade };

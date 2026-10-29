@@ -2,9 +2,12 @@
 import { WEEKS, ASSET_META, TOPICS } from './content.js';
 import { CONFIG, ASSET_KEYS, DEFAULT_MIX, GOAL_TYPES } from './engine.js';
 import { citySVG } from './iso.js';
-import { esc, $, $$, eur, pct, api, toast, lessonBlock, AVATARS, TONE } from './ui.js';
+import { esc, $, $$, eur, pct, api, toast, lessonBlock, wireAsk, AVATARS, TONE } from './ui.js';
 
 const app = $('#app');
+
+// Klausimų laukelio pasiūlymai (atsinaujina iš serverio, jei pasiekiamas).
+let ASK_SUGGESTIONS = ['Kodėl praradau pinigų?', 'Kuris sprendimas davė daugiausiai?', 'Ką reiškia rezervas?', 'Kaip skaičiuojami taškai?'];
 const TOKEN_KEY = 'vemak.student';
 let token = localStorage.getItem(TOKEN_KEY);
 let me = null;
@@ -148,11 +151,17 @@ function viewCity() {
   else if (c.status === 'done') banner = `<div class="card"><h2>Sezonas baigtas 🎉</h2><button class="btn" data-go="results">Žiūrėti rezultatus</button></div>`;
   else if (waiting) banner = `<div class="card"><h2>${c.revealed} savaitė baigta</h2><p class="muted">Palauk, kol mokytojas atvers kitą savaitę. Peržiūrėk rezultatus ir mentoriaus patarimus.</p><button class="btn" data-go="results">Žiūrėti rezultatus</button></div>`;
   else {
-    const w = WEEKS[c.week - 1];
+    const w = weekContent(c);
     banner = `<div class="card">${stepBar()}<span class="pill amber">${c.week} savaitė iš ${c.weeks}</span><h2 style="margin-top:8px">${esc(w.title)}</h2><p>${esc(w.body)}</p>
       <button class="btn" data-go="week">${me.locked ? 'Strategija užrakinta ✓' : 'Priimti sprendimą'}</button></div>`;
   }
   return `${hud()}${goalCard()}${progressionCard()}<div class="city-hero"><div><span class="pill amber">TAVO MIESTAS</span><h2>Augink savo finansinį miestą</h2><p class="muted">Kiekvienas pastatas atveria kitą žaidimo dalį. Pasirink, kur eiti toliau.</p></div><span class="city-status">${c.status === 'live' ? '● Gyvas sezonas' : c.status === 'done' ? '✓ Baigta' : '○ Laukiame starto'}</span></div><div class="city-hub"><div class="city">${citySVG(stateSummary())}</div>${cityActions()}</div><div class="grid">${banner}${me.mentor ? mentorCard(true) : ''}</div>`;
+}
+
+// Šios savaitės situacija ateina iš serverio, todėl kiekvienas sezonas gali
+// turėti kitas situacijas ir jos nepasikartoja.
+function weekContent(c) {
+  return (me && me.cls && me.cls.situation) || WEEKS[c.week - 1];
 }
 
 function mentorCard(short = false) {
@@ -166,7 +175,7 @@ function viewWeek() {
   const c = me.cls;
   if (c.week < 1) return `<div class="card"><h2>Sezonas dar nepradėtas</h2></div>`;
   if (c.revealed >= c.week) return `<div class="card"><h2>Ši savaitė jau baigta</h2><p class="muted">Palauk kitos savaitės.</p></div>`;
-  const w = WEEKS[c.week - 1];
+  const w = weekContent(c);
   const lockedView = me.locked && me.myPending;
   if (!draft) draft = { choice: lockedView ? me.myPending.choice : null, ...(lockedView ? me.myPending.alloc : { sav: 30, inv: 25, bus: 25, res: 20, mix: { ...DEFAULT_MIX }, upgrade: false }) };
   const dis = lockedView ? 'disabled' : '';
@@ -239,7 +248,7 @@ function viewResults() {
       <h3 style="margin-top:14px">Kas nutiko su turtu</h3>
       <div class="cmp">${ASSET_KEYS.filter((a) => r.alloc.inv > 0 && (r.alloc.mix[a] || 0) > 0).map((a) => `<div>${ASSET_META[a].icon}<b class="${r.market[a] >= 0 ? 'pos' : 'neg'}">${pct(r.market[a])}</b><small>${ASSET_META[a].name}</small></div>`).join('') || '<small class="muted">Šią savaitę neinvestavai.</small>'}
         <div>☕<b class="${r.bizReturn >= 0 ? 'pos' : 'neg'}">${pct(r.bizReturn)}</b><small>Kavos baras</small></div></div>
-      ${lessonBlock(r.lesson, r.steps)}
+      ${lessonBlock(r.lesson, r.steps, ASK_SUGGESTIONS)}
       <div class="reveal-rewards"><h3>Penktadienio apdovanojimai</h3><p>+${reward.xp} XP · ${reward.level} lygis</p><p class="muted">Tavo strategijos ir mokymosi pasiekimai saugomi visam sezonui.</p></div>
       ${r.bankrupt ? '<div class="news down">⚠️ Skola per didelė. Kitą savaitę pradėsi iš naujo su antra galimybe.</div>' : ''}
     </div>
@@ -319,6 +328,7 @@ function render() {
   $$('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; if (tab === 'results' && me.reports.length) { revealStage = 0; tab = 'reveal'; } render(); }));
   $$('[data-go]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.go; render(); }));
   if (tab === 'week') bindWeek();
+  if (tab === 'results') bindAsk();
   if (tab === 'reveal') bindReveal();
   $('#save-goal')?.addEventListener('click', async () => {
     try {
@@ -327,6 +337,15 @@ function render() {
     } catch (e) { toast(e.message, 'err'); }
   });
   window.scrollTo(0, 0);
+}
+function bindAsk() {
+  const r = me.reports.at(-1);
+  wireAsk(() => (r ? {
+    week: r.week, lesson: r.lesson, net: r.netWorth, delta: r.delta,
+    alloc: r.alloc, market: r.market, bizReturn: r.bizReturn,
+    expense: r.expense, forced: r.forced, newDebt: r.newDebt, bankrupt: r.bankrupt,
+    steps: (r.steps || []).map((s) => ({ text: s.text, amount: s.amount })),
+  } : {}), ASK_SUGGESTIONS);
 }
 function bindReveal() {
   const advance = () => { if (revealStage < 6) revealStage += 1; else tab = 'results'; render(); };

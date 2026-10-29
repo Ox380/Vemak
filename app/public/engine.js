@@ -1,6 +1,6 @@
 // engine.js — VEMAK economy engine. Pure functions, no I/O. Runs in Node (server) and browser (demo).
 // Everything is deterministic from the class seed, so every student in a class sees the same market.
-import { WEEKS as WEEK_CONTENT, ASSET_META } from './content.js';
+import { WEEKS as WEEK_CONTENT, SITUATIONS, SITUATIONS_BY_TOPIC, ASSET_META } from './content.js';
 
 export const CONFIG = {
   WEEKS: 6,
@@ -70,11 +70,51 @@ function gauss(r) {
 const between = (r, [lo, hi]) => lo + (hi - lo) * r();
 
 // ---------- season (shared by the whole class) ----------
-export function buildSeason(seed) {
+// Temų eilė sezone nesikeičia (mokymosi logika), bet situacija kiekvienoje
+// temoje parenkama kitaip – jau žaistos situacijos nekartojamos.
+export const TOPIC_ORDER = WEEK_CONTENT.map((w) => w.topic);
+
+export function pickSituations(rng, usedIds = []) {
+  const used = new Set(usedIds);
+  const chosen = [];
+  const taken = new Set();
+  for (const topic of TOPIC_ORDER) {
+    const pool = SITUATIONS_BY_TOPIC[topic] || [];
+    if (!pool.length) continue;
+    let fresh = pool.filter((s) => !used.has(s.id) && !taken.has(s.id));
+    if (!fresh.length) fresh = pool.filter((s) => !taken.has(s.id)); // tema išsėmė – imame mažiausiai naudotą
+    if (!fresh.length) fresh = pool;
+    const pick = fresh[Math.floor(rng() * fresh.length) % fresh.length];
+    taken.add(pick.id);
+    chosen.push(pick);
+  }
+  return chosen;
+}
+
+// Tik vieša situacijos dalis: be atsakymų paaiškinimų, kad mokinys nespėliotų iš teksto.
+export function situationPublic(s) {
+  if (!s) return null;
+  return {
+    id: s.id, topic: s.topic, title: s.title, body: s.body, info: s.info, news: s.news,
+    options: (s.options || []).map((o) => ({ key: o.key, label: o.label, desc: o.desc, tone: o.tone })),
+  };
+}
+
+// buildSeason(seed)                        – bazinis sezonas (suderinamumas, testai)
+// buildSeason(seed, { used: [...] })       – parenka dar nežaistas situacijas
+// buildSeason(seed, { ids: [...] })        – atkuria sezoną iš konkrečių situacijų
+export function buildSeason(seed, options = {}) {
+  const opts = Array.isArray(options) ? { used: options } : (options || {});
   const r = makeRng(typeof seed === 'number' ? seed : hashSeed(seed));
+  const fixedIds = Array.isArray(opts.ids) && opts.ids.length === CONFIG.WEEKS ? opts.ids : null;
+  let situations;
+  if (fixedIds) situations = fixedIds.map((id) => SITUATIONS.find((s) => s.id === id)).filter(Boolean);
+  else if (Array.isArray(opts.used)) situations = pickSituations(r, opts.used);
+  else situations = WEEK_CONTENT;
+  const content = situations.length === CONFIG.WEEKS ? situations : WEEK_CONTENT;
   const weeks = [];
   for (let i = 0; i < CONFIG.WEEKS; i++) {
-    const ev = WEEK_CONTENT[i].event;
+    const ev = content[i].event;
     const opportunity = between(r, [0.8, 1.2]);
     const businessDemand = between(r, [0.75, 1.25]);
     const w = { week: i + 1, market: {}, bizNoise: 0, opportunity, businessDemand, expense: 0, shock: 0, priceRise: 0, bizBoom: 0 };
@@ -90,7 +130,7 @@ export function buildSeason(seed) {
     if (ev && ev.type === 'bizBoom') w.bizBoom = 0.04;
     weeks.push(w);
   }
-  return { seed, weeks };
+  return { seed, weeks, situations: content, situationIds: content.map((s) => s.id) };
 }
 
 // ---------- player state ----------
@@ -181,7 +221,7 @@ function payExpense(s, amount, report) {
 export function playWeek(prev, season, weekNo, choiceKey, alloc) {
   const err = validateAlloc(alloc);
   if (err) throw new Error(err);
-  const content = WEEK_CONTENT[weekNo - 1];
+  const content = (season && Array.isArray(season.situations) && season.situations[weekNo - 1]) || WEEK_CONTENT[weekNo - 1];
   const opt = content.options.find((o) => o.key === choiceKey);
   if (!opt) throw new Error('Nežinomas pasirinkimas.');
   const sw = season.weeks[weekNo - 1];

@@ -1,5 +1,5 @@
 // landing.js — anonymous one-week playable demo; no login, no server writes.
-import { DEMO_CAPITAL, DEMO_CHOICES, DEMO_EVENT, DEMO_FLOW, createDemoSession, getDemoStepChoices, buildDemoReveal, compareDemoChoice, simulateDemoStep, validateDemoAllocation } from './demo.js';
+import { DEMO_CAPITAL, DEMO_CHOICES, DEMO_EVENT, DEMO_FLOW, DEMO_SCENARIOS, setDemoScenarioOffset, createDemoSession, getDemoStepChoices, buildDemoReveal, compareDemoChoice, simulateDemoStep, validateDemoAllocation } from './demo.js';
 import { citySVG } from './iso.js';
 import { esc, $, eur, api, lessonBlock } from './ui.js';
 
@@ -39,7 +39,7 @@ function oldHeader(step, label) {
 
 function drawIntro() {
   box.innerHTML = `<div class="demo-intro"><div class="demo-intro-art" aria-label="Pinigų ir turto augimo iliustracija" role="img"><div class="money-art"><span class="money-arrow">↗</span><div class="bill bill-back">€</div><div class="bill bill-front">€</div><div class="coin coin-one">€</div><div class="coin coin-two">€</div></div></div><div><span class="pill blue">VEMAK · finansinė strategija</span><h3>Sveikas atvykęs į VEMAK!</h3><p>Turi <b>1 000 virtualių eurų</b>. Pirmiausia pereisi senąją 3 žingsnių pradžią, tada priimsi 10 papildomų sprendimų, o pabaigoje gausi analitiką.</p><ul><li>1/3: pasirink ekonominę kryptį.</li><li>2/3: paskirstyk pinigus.</li><li>3/3: užrakink strategiją.</li></ul><button class="btn" id="start-demo">Pradėti</button></div></div>`;
-  $('#start-demo').addEventListener('click', () => { demoSession = createDemoSession(Date.now()); phase = 'legacy-event'; draw(); });
+  $('#start-demo').addEventListener('click', () => { setDemoScenarioOffset(pickDemoScenarioOffset()); demoSession = createDemoSession(Date.now()); phase = 'legacy-event'; draw(); });
 }
 function drawLegacyEvent() {
   box.innerHTML = `${oldHeader(1, 'Ekonominis įvykis')}<div class="demo-grid"><div class="city">${city()}</div><div class="card demo-panel"><h3>${esc(DEMO_EVENT.title)}</h3><p>${esc(DEMO_EVENT.body)}</p><div class="choice-grid">${demoSession.legacyChoices.map((item) => `<button class="choice-card" data-legacy-choice="${item.key}"><span class="choice-icon">${item.icon}</span><span><b>${esc(item.label)}</b><small>${esc(item.desc)}</small></span></button>`).join('')}</div></div></div>`;
@@ -120,15 +120,36 @@ const AUD_MARKUP = {
   individual: {
     nav: '<a class="logo" href="/"><i>V</i>VEMAK</a><span class="sp"></span><a href="#demo">Demo</a><a href="#nauda">Nauda</a><a href="#planai">Planai</a><a href="#duk">D.U.K.</a><a class="btn" href="#pilotas">Registracija</a>',
     heroCopy: `
-        <span class="hero-badge"><span></span>5 savaičių investavimo treniruoklis · sau pačiam</span>
-        <h1>Išmok investuoti, kol tai dar nekainuoja tikrų pinigų.</h1>
-        <p class="lead">Penkių savaičių rinkos scenarijus: sek prognozes, paskirstyk virtualų biudžetą ir pamatyk, ką tavo sprendimai duotų augimo ir nuosmukio savaitėmis. Be brokerio, be rizikos, be realių pinigų.</p>
-        <div class="row" style="margin-top:24px"><a class="btn" href="#pilotas">Rezervuoti asmeninį sezoną</a></div>
-        <ul class="trust">
-          <li><i class="ck"></i>Veikia naršyklėje, be diegimo</li>
-          <li><i class="ck"></i>Jokie tikri pinigai</li>
-          <li><i class="ck"></i>15–20 min. per savaitę</li>
-        </ul>`,
+        <div class="sign" style="--drop:34px">
+          <span class="peg-top"></span><span class="peg-top b"></span>
+          <span class="eye l"></span><span class="eye r"></span><span class="str-r"></span>
+          <span class="sign-face"><b>6 savaičių sezonas · sau pačiam</b><h1 data-hand>Išmok investuoti, kol tai dar nekainuoja tikrų pinigų.</h1></span>
+        </div>
+
+        <div class="tag" style="--drop:30px">
+          <span class="peg-top"></span><span class="eye"></span>
+          <p class="lead-text">Šešių savaičių rinkos scenarijus: sek prognozes, paskirstyk virtualų biudžetą ir pamatyk, ką tavo sprendimai duotų augimo ir nuosmukio savaitėmis. Be brokerio, be rizikos, be realių pinigų.</p>
+        </div>
+
+        <div class="tag lead" style="--drop:46px">
+          <span class="peg-top"></span><span class="eye"></span>
+          <div class="row"><a class="btn" href="#pilotas">Rezervuoti asmeninį sezoną</a></div>
+          <ul class="trust">
+            <li><i class="ck"></i>Veikia naršyklėje, be diegimo</li>
+            <li><i class="ck"></i>Jokie tikri pinigai</li>
+            <li><i class="ck"></i>15–20 min. per savaitę</li>
+          </ul>
+        </div>
+
+        <div class="strip" aria-label="Sezono savaitės">
+          <div class="nowmark" id="nowMark"><span>dabar</span></div>
+          <div class="wk done"><b>1 sav.</b><span>Biudžetas</span></div>
+          <div class="wk now"><b>2 sav.</b><span>Taupymas</span></div>
+          <div class="wk"><b>3 sav.</b><span>Rizika</span></div>
+          <div class="wk"><b>4 sav.</b><span>Investicijos</span></div>
+          <div class="wk"><b>5 sav.</b><span>Biudžetas</span></div>
+          <div class="wk"><b>6 sav.</b><span>Sezono pabaiga</span></div>
+        </div>`,
     ritmas: `
   <div class="sec-h"><h2>Viena savaitė – vienas sprendimas</h2><p class="muted">Gali žaisti savo tempu: viena savaitė telpa į 15–20 minučių.</p></div>
   <div class="week">
@@ -139,19 +160,19 @@ const AUD_MARKUP = {
   </div>`,
     nauda: `
   <div class="sec-h"><h2>Ką gausi tu, o ne klasė</h2></div>
-  <div class="aud">
-    <article class="card"><h3>Tau: savas miestas ir savi sprendimai</h3><ul>
-      <li>Penkių savaičių rinkos scenarijus: augimas, nuosmukis ir netikėtos išlaidos</li>
+  <div class="stalls">
+    <article class="stall big"><h3><em>01</em>Tau: savas miestas ir savi sprendimai</h3><ul>
+      <li>Šešių savaičių rinkos scenarijus: augimas, nuosmukis ir netikėtos išlaidos</li>
       <li>Paskirstai virtualius 1 000 € į santaupas, investicijas, verslą ir rezervą</li>
       <li>Kiekvieną savaitę naujas įvykis, tad sprendimą priimi iš naujo, o ne nusirašai</li>
       <li>Po klaidos gauni antrą galimybę – klaida čia nieko nekainuoja</li>
       <li>Klasės kodo nereikia: žaidi vienas, savo tempu</li></ul></article>
-    <article class="card"><h3>Mokaisi iš pasekmių, o ne iš pamokymų</h3><ul>
+    <article class="stall"><h3><em>02</em>Mokaisi iš pasekmių, o ne iš pamokymų</h3><ul>
       <li>Po kiekvieno nuostolio ar prieaugio matai įvykių seką žingsnis po žingsnio</li>
       <li>Mentorius paaiškina, kas nutiko, remdamasis tavo skaičiais</li>
       <li>Paskutinę savaitę palygini savo strategiją su geriausiu modelio rastu variantu</li>
       <li>Skaičius ir patarimus sudaro taisyklės, tad jie nėra išgalvoti</li></ul></article>
-    <article class="card"><h3>Saugu, aišku ir be spaudimo</h3><ul>
+    <article class="stall"><h3><em>03</em>Saugu, aišku ir be spaudimo</h3><ul>
       <li>Jokie tikri pinigai, joks brokeris, jokia rizika</li>
       <li>Demo išbandai iš karto, be registracijos ir be el. pašto</li>
       <li>Žaidimas yra mokomoji priemonė, o ne finansinė rekomendacija</li>
@@ -160,14 +181,14 @@ const AUD_MARKUP = {
     kodel: `
   <div class="sec-h"><h2>Mokymasis per pasekmes</h2></div>
   <div class="feat">
-    <div class="card"><div class="feat-head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="3.9"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></span><h3>Fiksuotas scenarijus</h3></div><p>Kiekvieną sezoną tie patys penki įvykiai, tad rezultatą lemia tavo sprendimai, o ne atsitiktinumas.</p></div>
-    <div class="card"><div class="feat-head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.2 19 6v5.2c0 4.3-2.8 7.7-7 9.6-4.2-1.9-7-5.3-7-9.6V6z"/></svg></span><h3>Rizika be rizikos</h3></div><p>Gali pabandyti agresyvią strategiją ir pamatyti, kiek ji kainuotų nuosmukio savaitę – neprarasdamas nė euro.</p></div>
-    <div class="card"><div class="feat-head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M15 9 13.2 13.2 9 15l1.8-4.2z"/></svg></span><h3>Mentorius be išgalvotų faktų</h3></div><p>Skaičius ir patarimus sudaro taisyklės, todėl jie nėra „haliucinacijos“. Tai mokomoji pagalba, ne finansinė rekomendacija.</p></div>
-    <div class="card"><div class="feat-head"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="7" y="2.9" width="10" height="18.2" rx="2.4"/><path d="M10.7 18.5h2.6"/></svg></span><h3>Veikia bet kur</h3></div><p>Telefone, planšetėje ar kompiuteryje. Lengvas, be sunkios 3D grafikos.</p></div>
+    <div class="card"><div class="feat-head"><span class="ic">${IC.target}</span><h3>Fiksuotas scenarijus</h3></div><p>Kiekvieną sezoną tie patys šeši įvykiai, tad rezultatą lemia tavo sprendimai, o ne atsitiktinumas.</p></div>
+    <div class="card"><div class="feat-head"><span class="ic">${IC.shield}</span><h3>Rizika be rizikos</h3></div><p>Gali pabandyti agresyvią strategiją ir pamatyti, kiek ji kainuotų nuosmukio savaitę – neprarasdamas nė euro.</p></div>
+    <div class="card"><div class="feat-head"><span class="ic">${IC.compass}</span><h3>Mentorius be išgalvotų faktų</h3></div><p>Skaičius ir patarimus sudaro taisyklės, todėl jie nėra „haliucinacijos“. Tai mokomoji pagalba, ne finansinė rekomendacija.</p></div>
+    <div class="card"><div class="feat-head"><span class="ic">${IC.device}</span><h3>Veikia bet kur</h3></div><p>Telefone, planšetėje ar kompiuteryje. Lengvas, be sunkios 3D grafikos.</p></div>
   </div>`,
     pilotas: `
   <div class="sec-h"><h2>Rezervuoti asmeninį sezoną</h2><p class="muted">Vienas žaidėjas, vienas miestas. Palik kontaktus – atidarysime tavo sezoną ir atsiųsime mokėjimo nuorodą.</p></div>
-  <form class="card pilot-card" id="pf">
+  <form class="pilot-card" id="pf">
     <label for="pn">Vardas</label><input id="pn" required maxlength="80">
     <label for="pe">El. paštas</label><input id="pe" type="email" required maxlength="120">
     <label for="pr">Kaip žaisi?</label><select id="pr"><option>Sau asmeniškai</option><option>Šeimai</option><option>Dovanai</option><option>Kita</option></select>
@@ -179,7 +200,7 @@ const AUD_MARKUP = {
   <div class="sec-h"><h2>Dažni klausimai</h2></div>
   <details><summary>Ar man reikia tikrų pinigų?</summary><p>Ne. Viskas vyksta su virtualiais eurais: nėra mokėjimų, brokerio ar prizų.</p></details>
   <details><summary>Ar gausiu investavimo patarimų?</summary><p>Ne. Žaidimas yra mokomoji priemonė ir nesiūlo finansinių ar investavimo rekomendacijų.</p></details>
-  <details><summary>Kiek laiko užtrunka?</summary><p>Vienas sezonas – 5 savaitės, po 15–20 minučių per savaitę. Gali žaisti savo tempu.</p></details>
+  <details><summary>Kiek laiko užtrunka?</summary><p>Vienas sezonas – 6 savaitės, po 15–20 minučių per savaitę. Gali žaisti savo tempu.</p></details>
   <details><summary>Ar galiu žaisti be mokyklos ar klasės kodo?</summary><p>Taip. Asmeninis sezonas skirtas vienam žaidėjui, tad klasės kodo nereikia.</p></details>
   <details><summary>Ką gausiu sezono pabaigoje?</summary><p>Kiekvienos savaitės rezultatą, mentoriaus paaiškinimą ir palyginimą su geriausiu modelio variantu.</p></details>`,
   },
@@ -188,6 +209,61 @@ const AUD_IDS = ['nav', 'heroCopy', 'ritmas', 'nauda', 'kodel', 'pilotas', 'duk'
 const AUD_SNAP = {};
 for (const id of AUD_IDS) { const el = document.getElementById(id); if (el) AUD_SNAP[id] = el.innerHTML; }
 function audText(school, individual) { return audience === 'individual' ? individual : school; }
+
+// Judantis „dabar" žymeklis: rodo, kuri sezono savaitė eina šiuo metu.
+// Ranka surinktos raidės: kiekviena raidė šiek tiek pasukta ir paslinkta,
+// kad užrašas atrodytų rašytas ranka, o ne nulietas šriftu.
+function handSet(el) {
+  if (!el || el.dataset.handDone) return;
+  const text = el.textContent;
+  if (!text) return;
+  el.dataset.handDone = '1';
+  let seed = 20261029;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  const frag = document.createDocumentFragment();
+  for (const word of text.split(' ')) {
+    if (!word) { frag.appendChild(document.createTextNode(' ')); continue; }
+    const w = document.createElement('span'); w.className = 'w';
+    for (const ch of word) {
+      const c = document.createElement('span'); c.className = 'c';
+      c.textContent = ch;
+      c.style.setProperty('--r', (rnd() * 2.4 - 1.2).toFixed(2) + 'deg');
+      c.style.setProperty('--y', (rnd() * 1.8 - 0.9).toFixed(2) + 'px');
+      w.appendChild(c);
+    }
+    frag.appendChild(w); frag.appendChild(document.createTextNode(' '));
+  }
+  el.textContent = ''; el.appendChild(frag);
+}
+
+function handSetAll(root) {
+  (root || document).querySelectorAll('[data-hand]').forEach(handSet);
+}
+
+// Demo scenarijus keiciasi: kiekvienas lankytojas pradeda nuo dar nematyto.
+function pickDemoScenarioOffset() {
+  try {
+    const total = DEMO_SCENARIOS.length;
+    let seen = [];
+    try { seen = JSON.parse(localStorage.getItem('vemak.demo.seen') || '[]'); } catch { seen = []; }
+    if (!Array.isArray(seen)) seen = [];
+    let offset = 0;
+    while (offset < total && seen.includes(offset)) offset += 1;
+    if (offset >= total) { seen = []; offset = 0; }
+    seen.push(offset);
+    localStorage.setItem('vemak.demo.seen', JSON.stringify(seen.slice(-total)));
+    return offset;
+  } catch { return 0; }
+}
+
+function placeNowMark() {
+  const strip = document.querySelector('.strip');
+  const mark = document.getElementById('nowMark');
+  const cell = strip && strip.querySelector('.wk.now');
+  if (!strip || !mark || !cell) return;
+  mark.style.left = (cell.offsetLeft + cell.offsetWidth / 2) + 'px';
+}
+window.addEventListener('resize', placeNowMark);
 function setAudience(kind, opts = {}) {
   audience = kind === 'individual' ? 'individual' : 'school';
   const source = audience === 'individual' ? AUD_MARKUP.individual : AUD_SNAP;
@@ -197,6 +273,8 @@ function setAudience(kind, opts = {}) {
     ? 'VEMAK · Investavimo treniruoklis sau pačiam'
     : 'VEMAK · Finansinis raštingumas, kurį mokiniai nori žaisti';
   try { localStorage.setItem('vemak.audience', audience); } catch { /* privatus režimas */ }
+  placeNowMark();
+  handSetAll();
   if (phase === 'intro') drawIntro();
   if (opts.scroll) { const target = document.getElementById('pilotas'); if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 }
@@ -225,6 +303,7 @@ document.addEventListener('submit', async (e) => {
 let savedAudience = 'school';
 try { savedAudience = localStorage.getItem('vemak.audience') || 'school'; } catch { /* privatus režimas */ }
 setAudience(location.hash.replace('#', '') === 'asmeniui' || savedAudience === 'individual' ? 'individual' : 'school');
+placeNowMark();
 // Nuoroda turi veikti ir tada, kai puslapis jau atidarytas (pvz., paspaudus #asmeniui nuorodą).
 window.addEventListener('hashchange', () => {
   if (location.hash === '#asmeniui') setAudience('individual');

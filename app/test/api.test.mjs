@@ -52,13 +52,17 @@ assert.equal((await call('POST', `/api/teacher/classes/${CID}/start`, null, T)).
 const T2 = (await call('POST', '/api/teacher/register', { email: 'x@school.lt', password: 'longenough1', name: 'Kita' })).body.token;
 assert.equal((await call('GET', `/api/teacher/classes/${CID}`, null, T2)).status, 404); ok("another teacher cannot see this class");
 
-// week 1
+// week 1 — pasirinkimų raktai imami iš klasės sezono situacijos, nes sezonai skiriasi
+const sitOf = async (tok) => (await call('GET', '/api/me', null, tok)).body.cls.situation;
+const s1 = await sitOf(sA);
+assert.ok(s1 && s1.options.length >= 3, 'season situation is served to the student');
+const K1 = s1.options[0].key, K2 = s1.options[1].key;
 const good = { sav: 30, inv: 25, bus: 25, res: 20 };
-assert.equal((await call('POST', '/api/me/lock', { choice: 'buy', alloc: { ...good, res: 10 } }, sA)).status, 400); ok('alloc must total 100');
+assert.equal((await call('POST', '/api/me/lock', { choice: K1, alloc: { ...good, res: 10 } }, sA)).status, 400); ok('alloc must total 100');
 assert.equal((await call('POST', '/api/me/lock', { choice: 'hack', alloc: good }, sA)).status, 400); ok('unknown choice rejected');
-assert.equal((await call('POST', '/api/me/lock', { choice: 'buy', alloc: good }, sA)).status, 200);
-assert.equal((await call('POST', '/api/me/lock', { choice: 'wait', alloc: good }, sA)).status, 400); ok('lock is final');
-assert.equal((await call('POST', '/api/me/lock', { choice: 'wait', alloc: { sav: 0, inv: 0, bus: 0, res: 100 } }, sB)).status, 200);
+assert.equal((await call('POST', '/api/me/lock', { choice: K1, alloc: good }, sA)).status, 200);
+assert.equal((await call('POST', '/api/me/lock', { choice: K2, alloc: good }, sA)).status, 400); ok('lock is final');
+assert.equal((await call('POST', '/api/me/lock', { choice: K2, alloc: { sav: 0, inv: 0, bus: 0, res: 100 } }, sB)).status, 200);
 // student C does not submit -> auto default
 
 r = await call('GET', '/api/me/strategies', null, sA);
@@ -78,7 +82,8 @@ r = await call('GET', '/api/me/strategies', null, sA); assert.equal(r.body[1].le
 // finish season
 for (let w = 2; w <= 6; w++) {
   assert.equal((await call('POST', `/api/teacher/classes/${CID}/next`, null, T)).status, 200);
-  assert.equal((await call('POST', '/api/me/lock', { choice: WEEKS[w - 1].options[0].key, alloc: good }, sA)).status, 200); // Lukas plays; the others fall back to the default
+  const sw = await sitOf(sA);
+  assert.equal((await call('POST', '/api/me/lock', { choice: sw.options[0].key, alloc: good }, sA)).status, 200); // Lukas plays; the others fall back to the default
   assert.equal((await call('POST', `/api/teacher/classes/${CID}/reveal`, null, T)).status, 200);
 }
 ok('6 weeks revealed');

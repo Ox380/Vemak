@@ -24,15 +24,59 @@ export async function api(method, url, body, token) {
 
 // „Pamoka" blokas: mokymo tekstas + žingsnis po žingsnio įvykių seka.
 // Naudoja ir žaidimo rezultatų ekranas (engine.js), ir anoniminis demo (demo.js).
-export function lessonBlock(lesson, steps = []) {
-  const rows = (steps || []).map((s) => `<li><span class="lesson-step-copy"><span>${esc(s.text)}</span>${s.comment ? `<small class="lesson-comment">${esc(s.comment)}</small>` : ''}</span>`
+const BULB = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.2 17.4h5.6M10.2 20.6h3.6"/><path d="M12 3.4a5.6 5.6 0 0 0-3.3 10.1c.5.4.8 1 .8 1.6v.3h5v-.3c0-.6.3-1.2.8-1.6A5.6 5.6 0 0 0 12 3.4Z"/></svg>';
+
+// Klausimų laukelis po pamokos: atsakymus sudaro serveris iš mokinio skaičių.
+export function askBlock(suggestions = []) {
+  const chips = (suggestions || []).slice(0, 4)
+    .map((s) => `<button type="button" class="ask-chip">${esc(s)}</button>`).join('');
+  return `<div class="ask">`
+    + `<div class="ask-head"><b>Neaišku? Paklausk mentoriaus</b>`
+    + `<p class="muted">Atsakymą sudaro taisyklės iš tavo šios savaitės skaičių – jis nėra sugalvotas ir nėra finansinė rekomendacija.</p></div>`
+    + `<div class="ask-row"><input id="ask-q" type="text" maxlength="240" autocomplete="off" placeholder="Pvz., kodėl praradau pinigų?" aria-label="Tavo klausimas mentoriiu">`
+    + `<button class="btn" type="button" id="ask-go">Klausti</button></div>`
+    + (chips ? `<div class="ask-chips">${chips}</div>` : '')
+    + `<div class="ask-answer" id="ask-answer" aria-live="polite" hidden></div>`
+    + `</div>`;
+}
+
+export function lessonBlock(lesson, steps = [], suggestions = []) {
+const rows = (steps || []).map((s) => `<li><span class="lesson-step-copy"><span>${esc(s.text)}</span>${s.comment ? `<small class="lesson-comment">${esc(s.comment)}</small>` : ''}</span>`
     + (s.amount != null ? `<b class="${s.amount > 0 ? 'pos' : s.amount < 0 ? 'neg' : 'muted'}">${eur(s.amount, true)}</b>` : '')
     + '</li>').join('');
   return `<div class="lesson">`
-    + `<div class="lesson-head"><span class="lesson-icon">💡</span><div><b>Pamoka</b>`
+    + `<div class="lesson-head"><span class="lesson-icon">${BULB}</span><div><b>Pamoka</b>`
     + `<p class="muted">${esc(lesson || '')}</p></div></div>`
     + (rows ? `<div class="lesson-title">Kas įvyko žingsnis po žingsnio</div><ol class="lesson-steps">${rows}</ol>` : '')
+    + (suggestions && suggestions.length ? askBlock(suggestions) : '')
     + '</div>';
+}
+
+// Suriša klausimų laukelį. getContext() grąžina savaitės skaičius atsakymui.
+export function wireAsk(getContext, suggestions = []) {
+  const q = $('#ask-q'); const go = $('#ask-go'); const out = $('#ask-answer');
+  if (!q || !go || !out) return;
+  let busy = false;
+  const send = async (text) => {
+    const question = String(text == null ? q.value : text).trim();
+    if (!question || busy) return;
+    q.value = question; busy = true; go.disabled = true;
+    out.hidden = false; out.className = 'ask-answer pending';
+    out.innerHTML = '<span class="muted">Mentorius tikrina tavo skaičius…</span>';
+    try {
+      const ctx = typeof getContext === 'function' ? getContext() : {};
+      const r = await api('POST', '/api/ask', { question, context: ctx });
+      out.className = 'ask-answer';
+      out.innerHTML = `<p>${esc(r.answer || '')}</p>`
+        + (r.grounded ? `<small class="muted">${esc(r.grounded)}</small>` : '');
+    } catch (e) {
+      out.className = 'ask-answer';
+      out.innerHTML = `<p class="neg">${esc(e && e.message ? e.message : 'Nepavyko atsakyti. Bandyk dar kartą.')}</p>`;
+    } finally { busy = false; go.disabled = false; }
+  };
+  go.addEventListener('click', () => send());
+  q.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); send(); } });
+  $$('.ask-chip').forEach((b) => b.addEventListener('click', () => send(b.textContent)));
 }
 
 export function toast(msg, kind = 'info') {

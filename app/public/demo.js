@@ -6,7 +6,21 @@ export const DEMO_SCENARIOS = Object.freeze([
   { id: 'school-tech-contract', title: 'Technologijų bendrovė laimėjo mokyklų sutartį', body: 'Viena technologijų bendrovė pasirašė sutartį su mokyklų tinklu. IT tiekėjai tikisi naujų užsakymų.', signals: { shares: 'steady', technology: 'positive', business: 'steady', savings: 'steady' } },
   { id: 'interest-rate-hike', title: 'Centrinis bankas pakėlė palūkanas', body: 'Kova su infliacija pabrangino paskolas. Taupytojai gali gauti daugiau palūkanų.', signals: { shares: 'negative', technology: 'strong-negative', business: 'negative', savings: 'strong-positive' } },
   { id: 'export-deal', title: 'Atveriamas eksporto kelias', body: 'Prekybos partneriai sumažino muitus vietos gaminiams. Eksporto užsakymai auga.', signals: { shares: 'positive', technology: 'steady', business: 'strong-positive', savings: 'steady' } },
+  { id: 'fuel-prices', title: 'Kuras pabrango', body: 'Degalų kainos pasiekė šių metų aukštumas. Vežėjai kelia kainas, o smulkus verslas mažina maržas.', signals: { shares: 'negative', technology: 'steady', business: 'negative', savings: 'positive' } },
+  { id: 'school-season', title: 'Prasideda mokslo metai', body: 'Rugsėjį šeimos daugiau išleidžia mokyklos reikmenims, drabužiams ir būreliams.', signals: { shares: 'steady', technology: 'positive', business: 'strong-positive', savings: 'negative' } },
+  { id: 'jobs-report', title: 'Nedarbo ataskaita pagerėjo', body: 'Įmonės vėl samdo daugiau žmonių, o atlyginimai auga lėčiau nei kainos.', signals: { shares: 'positive', technology: 'positive', business: 'positive', savings: 'steady' } },
+  { id: 'energy-winter', title: 'Žiema ir šildymo sąskaitos', body: 'Šaltis padidino energijos vartojimą, o šildymo sąskaitos auga. Namų biudžetai mažina kitas išlaidas.', signals: { shares: 'negative', technology: 'steady', business: 'strong-negative', savings: 'positive' } },
+  { id: 'local-festival', title: 'Miesto festivalis', body: 'Savaitgalį vyksta miesto šventė. Maistas, prekyba ir paslaugos sulaukia daugiau klientų.', signals: { shares: 'steady', technology: 'steady', business: 'strong-positive', savings: 'negative' } },
+  { id: 'rate-cut', title: 'Palūkanos mažinamos', body: 'Centrinis bankas sumažino palūkanas. Paskolos pinga, bet taupymas duoda mažiau.', signals: { shares: 'strong-positive', technology: 'positive', business: 'positive', savings: 'negative' } },
+  { id: 'supply-delay', title: 'Tiekimo grandinės vėlavimas', body: 'Uoste stringa kroviniai. Prekių pristatymas vėluoja, o kai kurios kainos kyla.', signals: { shares: 'negative', technology: 'negative', business: 'negative', savings: 'steady' } },
 ]);
+
+// Demo pradeda nuo dar nematyto scenarijaus, kad pasikartojimų nebūtų.
+let scenarioOffset = 0;
+export function setDemoScenarioOffset(n) {
+  const total = DEMO_SCENARIOS.length;
+  scenarioOffset = ((Math.floor(Number(n) || 0) % total) + total) % total;
+}
 export const DEMO_SCENARIO_EVENTS = Object.freeze([
   { title: 'Pasirink savaitės rinkos scenarijų', body: 'Perskaityk naujieną ir įvertink, kurioms rinkoms ji gali padėti ar pakenkti.' },
   ...DEMO_SCENARIOS.map(({ title, body }) => ({ title, body })),
@@ -14,9 +28,12 @@ export const DEMO_SCENARIO_EVENTS = Object.freeze([
 export const DEMO_EVENTS = Object.freeze(DEMO_SCENARIO_EVENTS);
 export const DEMO_EVENT = { title: 'Kainos kyla: kaip paskirstysi 1 000 €?', body: 'Ekonomikoje kyla kainos. Turi 1 000 €. Pasirink kryptį, o tada paskirstyk visus pinigus tarp santaupų, investicijų, verslo ir avarinio rezervo.', emergency: 120 };
 export function getDemoEvent(weekNo = 1) {
-  const index = Math.max(1, Math.min(DEMO_SCENARIOS.length, Number(weekNo) || 1)) - 1;
+  const total = DEMO_SCENARIOS.length;
+  const start = Math.max(1, Math.min(total, Number(weekNo) || 1)) - 1;
+  const index = (start + scenarioOffset) % total;
   const scenario = DEMO_SCENARIOS[index];
-  return { title: scenario.title, body: scenario.body, emergency: [120, 140, 100, 80, 90][index], scenario, outlook: { signals: scenario.signals, body: scenario.body } };
+  const emergency = [120, 140, 100, 80, 90, 110, 130, 90, 100, 120][index] ?? 120;
+  return { title: scenario.title, body: scenario.body, emergency, scenario, outlook: { signals: scenario.signals, body: scenario.body } };
 }
 
 export const DEMO_CHOICES = [
