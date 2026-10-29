@@ -36,7 +36,7 @@ function oldHeader(step, label) {
 }
 
 function drawIntro() {
-  box.innerHTML = `<div class="demo-intro"><div class="demo-intro-art">🏙️</div><div><span class="pill blue">VEMAK · finansinė strategija</span><h3>Sveikas atvykęs į VEMAK!</h3><p>Turi <b>1 000 virtualių eurų</b>. Pirmiausia pereisi senąją 3 žingsnių pradžią, tada priimsi 10 papildomų sprendimų, o pabaigoje gausi analitiką.</p><ul><li>1/3: pasirink ekonominę kryptį.</li><li>2/3: paskirstyk pinigus.</li><li>3/3: užrakink strategiją.</li></ul><button class="btn" id="start-demo">Pradėti</button></div></div>`;
+  box.innerHTML = `<div class="demo-intro"><div class="demo-intro-art" aria-label="Pinigų ir turto augimo iliustracija" role="img"><div class="money-art"><span class="money-arrow">↗</span><span class="bill bill-back">€</span><span class="bill bill-front">€</span><span class="coin coin-one">€</span><span class="coin coin-two">€</span></div></div><div><span class="pill blue">VEMAK · finansinė strategija</span><h3>Sveikas atvykęs į VEMAK!</h3><p>Turi <b>1 000 virtualių eurų</b>. Pirmiausia pereisi senąją 3 žingsnių pradžią, tada priimsi 10 papildomų sprendimų, o pabaigoje gausi analitiką.</p><ul><li>1/3: pasirink ekonominę kryptį.</li><li>2/3: paskirstyk pinigus.</li><li>3/3: užrakink strategiją.</li></ul><button class="btn" id="start-demo">Pradėti</button></div></div>`;
   $('#start-demo').addEventListener('click', () => { phase = 'legacy-event'; draw(); });
 }
 function drawLegacyEvent() {
