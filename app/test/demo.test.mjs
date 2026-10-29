@@ -1,11 +1,29 @@
 // Deterministic one-week anonymous demo tests.
 import assert from 'node:assert/strict';
-import { DEMO_CAPITAL, DEMO_CHOICES, DEMO_STEPS, DEMO_FLOW, getDemoStepChoices, buildDemoReveal, compareDemoChoice, simulateDemo, simulateDemoStep, validateDemoAllocation } from '../public/demo.js';
+import { DEMO_CAPITAL, DEMO_CHOICES, DEMO_STEPS, DEMO_FLOW, createDemoSession, getDemoStepChoices, buildDemoReveal, compareDemoChoice, simulateDemo, simulateDemoStep, validateDemoAllocation } from '../public/demo.js';
 
 let passed = 0;
 const t = (name, fn) => { fn(); passed++; console.log('ok  ', name); };
 const balanced = { sav: 25, inv: 25, bus: 25, res: 25 };
 
+t('randomized demo sessions are reproducible but vary by seed', () => {
+  const first = createDemoSession('session-a');
+  assert.deepEqual(first, createDemoSession('session-a'));
+  assert.notDeepEqual(first, createDemoSession('session-b'));
+  assert.equal(first.steps.length, DEMO_STEPS.length);
+  assert.equal(new Set(first.steps.map((step) => step.id)).size, DEMO_STEPS.length);
+  assert.equal(first.legacyChoices.length, DEMO_CHOICES.length);
+  assert.notDeepEqual(first.legacyChoices, createDemoSession('session-b').legacyChoices);
+});
+t('randomized session keeps each question and option valid', () => {
+  const session = createDemoSession('validation');
+  for (const [index, step] of session.steps.entries()) {
+    assert.equal(step.sourceIndex >= 0 && step.sourceIndex < DEMO_STEPS.length, true);
+    assert.equal(step.choices.every((choice) => choice.key && choice.label && choice.lesson), true);
+    const result = simulateDemoStep(index, step.choices[0].key, DEMO_CAPITAL, session);
+    assert.equal(result.title, step.title);
+  }
+});
 t('demo starts every player with €1,000', () => {
   assert.equal(simulateDemo('business', balanced).startingCapital, DEMO_CAPITAL);
 });

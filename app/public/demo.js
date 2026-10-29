@@ -73,6 +73,26 @@ export const DEMO_STEPS = [
   ] },
 ];
 
+const DEMO_RNG = (seed) => {
+  let state = typeof seed === 'number' ? seed >>> 0 : Array.from(String(seed), (ch) => ch.charCodeAt(0)).reduce((h, c) => Math.imul(h ^ c, 16777619) >>> 0, 2166136261);
+  return () => { state = (Math.imul(state ^ (state >>> 16), 2246822507) + 3266489909) >>> 0; return state / 4294967296; };
+};
+function shuffled(items, random) {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) { const j = Math.floor(random() * (i + 1)); [copy[i], copy[j]] = [copy[j], copy[i]]; }
+  return copy;
+}
+
+export function createDemoSession(seed = Date.now()) {
+  const random = DEMO_RNG(seed);
+  return { seed, legacyChoices: shuffled(DEMO_CHOICES, random), steps: shuffled(DEMO_STEPS.map((step, sourceIndex) => ({
+    ...step,
+    id: `${step.title.toLowerCase().replace(/[^a-z0-9]+/gi, '-')}-${sourceIndex}`,
+    sourceIndex,
+    choices: shuffled(getDemoStepChoices(sourceIndex), random),
+  })), random), randomization: 'seeded-fisher-yates' };
+}
+
 export const DEMO_FLOW = ['legacy-event', 'legacy-strategy', 'legacy-lock', 'expanded-steps', 'analytics'];
 
 export function getDemoStepChoices(index) {
@@ -101,13 +121,16 @@ export function getDemoStepChoices(index) {
   return [...step.choices, extra, legacyChoice];
 }
 
-export function simulateDemoStep(index, choiceKey, capital = DEMO_CAPITAL) {
-  const step = DEMO_STEPS[index];
+export function simulateDemoStep(index, choiceKey, capital = DEMO_CAPITAL, session = null) {
+  const sessionStep = session?.steps?.[index];
+  const sourceIndex = sessionStep?.sourceIndex ?? index;
+  const step = DEMO_STEPS[sourceIndex];
   if (!step) throw new Error('Nežinomas demo žingsnis.');
-  const selected = getDemoStepChoices(index).find((item) => item.key === choiceKey) || (choiceKey === 'balanced' ? getDemoStepChoices(index)[0] : null);
+  const choices = sessionStep?.choices || getDemoStepChoices(sourceIndex);
+  const selected = choices.find((item) => item.key === choiceKey) || (choiceKey === 'balanced' ? choices[0] : null);
   if (!selected) throw new Error('Nežinomas demo pasirinkimas.');
   const nextCapital = Math.max(0, Math.round((capital + selected.delta) * 100) / 100);
-  return { step: index + 1, totalSteps: DEMO_STEPS.length, progress: `${index + 1}/${DEMO_STEPS.length} · Ekonominis įvykis`, title: step.title, prompt: step.prompt, choices: getDemoStepChoices(index), choice: selected.key, legacyKey: selected.legacyKey || null, delta: selected.delta, capital, nextCapital, complete: index === DEMO_STEPS.length - 1 };
+  return { step: index + 1, totalSteps: session?.steps?.length || DEMO_STEPS.length, progress: `${index + 1}/${session?.steps?.length || DEMO_STEPS.length} · Ekonominis įvykis`, title: sessionStep?.title || step.title, prompt: sessionStep?.prompt || step.prompt, choices, choice: selected.key, legacyKey: selected.legacyKey || null, delta: selected.delta, capital, nextCapital, complete: index === (session?.steps?.length || DEMO_STEPS.length) - 1 };
 }
 
 const PEERS = [

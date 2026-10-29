@@ -1,5 +1,5 @@
 // landing.js — anonymous one-week playable demo; no login, no server writes.
-import { DEMO_CAPITAL, DEMO_CHOICES, DEMO_EVENT, DEMO_STEPS, DEMO_FLOW, getDemoStepChoices, buildDemoReveal, compareDemoChoice, simulateDemoStep, validateDemoAllocation } from './demo.js';
+import { DEMO_CAPITAL, DEMO_CHOICES, DEMO_EVENT, DEMO_FLOW, createDemoSession, getDemoStepChoices, buildDemoReveal, compareDemoChoice, simulateDemoStep, validateDemoAllocation } from './demo.js';
 import { citySVG } from './iso.js';
 import { esc, $, eur, api, lessonBlock } from './ui.js';
 
@@ -21,6 +21,7 @@ let weekNo = 1;
 let stepIndex = 0;
 let stepCapital = DEMO_CAPITAL;
 let stepHistory = [];
+let demoSession = null;
 let audience = 'school';   // 'school' | 'individual'
 
 function total() { return Object.values(alloc).reduce((sum, value) => sum + value, 0); }
@@ -38,17 +39,17 @@ function oldHeader(step, label) {
 
 function drawIntro() {
   box.innerHTML = `<div class="demo-intro"><div class="demo-intro-art" aria-label="Pinigų ir turto augimo iliustracija" role="img"><div class="money-art"><span class="money-arrow">↗</span><div class="bill bill-back">€</div><div class="bill bill-front">€</div><div class="coin coin-one">€</div><div class="coin coin-two">€</div></div></div><div><span class="pill blue">VEMAK · finansinė strategija</span><h3>Sveikas atvykęs į VEMAK!</h3><p>Turi <b>1 000 virtualių eurų</b>. Pirmiausia pereisi senąją 3 žingsnių pradžią, tada priimsi 10 papildomų sprendimų, o pabaigoje gausi analitiką.</p><ul><li>1/3: pasirink ekonominę kryptį.</li><li>2/3: paskirstyk pinigus.</li><li>3/3: užrakink strategiją.</li></ul><button class="btn" id="start-demo">Pradėti</button></div></div>`;
-  $('#start-demo').addEventListener('click', () => { phase = 'legacy-event'; draw(); });
+  $('#start-demo').addEventListener('click', () => { demoSession = createDemoSession(Date.now()); phase = 'legacy-event'; draw(); });
 }
 function drawLegacyEvent() {
-  box.innerHTML = `${oldHeader(1, 'Ekonominis įvykis')}<div class="demo-grid"><div class="city">${city()}</div><div class="card demo-panel"><p class="eyebrow">PIRMADIENIS · SENAS 1/3</p><h3>${esc(DEMO_EVENT.title)}</h3><p>${esc(DEMO_EVENT.body)}</p><div class="choice-grid">${DEMO_CHOICES.map((item) => `<button class="choice-card" data-legacy-choice="${item.key}"><span class="choice-icon">${item.icon}</span><span><b>${esc(item.label)}</b><small>${esc(item.desc)}</small></span></button>`).join('')}</div></div></div>`;
+  box.innerHTML = `${oldHeader(1, 'Ekonominis įvykis')}<div class="demo-grid"><div class="city">${city()}</div><div class="card demo-panel"><p class="eyebrow">PIRMADIENIS · SENAS 1/3</p><h3>${esc(DEMO_EVENT.title)}</h3><p>${esc(DEMO_EVENT.body)}</p><div class="choice-grid">${demoSession.legacyChoices.map((item) => `<button class="choice-card" data-legacy-choice="${item.key}"><span class="choice-icon">${item.icon}</span><span><b>${esc(item.label)}</b><small>${esc(item.desc)}</small></span></button>`).join('')}</div></div></div>`;
   box.querySelectorAll('[data-legacy-choice]').forEach((button) => button.addEventListener('click', () => { choice = button.dataset.legacyChoice; phase = 'legacy-strategy'; draw(); }));
 }
 function drawEvent() {
-  const step = DEMO_STEPS[stepIndex];
-  box.innerHTML = `${header(stepIndex + 1, 'Ekonominis įvykis')}<div class="demo-grid"><div class="city">${city()}</div><div class="card demo-panel"><p class="eyebrow">${stepIndex === 0 ? 'PRADŽIA' : 'TĘSINYS'} · ${step.title.toUpperCase()}</p><h3>${esc(step.prompt)}</h3><p>Pasirink vieną veiksmą. Pasekmė bus įtraukta į tavo balansą ir paaiškinta iškart.</p><div class="choice-grid">${getDemoStepChoices(stepIndex).map((item) => `<button class="choice-card" data-step-choice="${item.key}"><span class="choice-icon">${item.legacyKey ? '↩️' : item.delta >= 0 ? '📈' : '⚠️'}</span><span><b>${esc(item.label)}</b><small>${esc(item.lesson)}</small></span></button>`).join('')}</div><p class="note">Po 10/10 pereisi į senosios strategijos rezultatų analizę.</p></div></div>`;
+  const step = demoSession.steps[stepIndex];
+  box.innerHTML = `${header(stepIndex + 1, 'Ekonominis įvykis')}<div class="demo-grid"><div class="city">${city()}</div><div class="card demo-panel"><p class="eyebrow">${stepIndex === 0 ? 'PRADŽIA' : 'TĘSINYS'} · ${step.title.toUpperCase()}</p><h3>${esc(step.prompt)}</h3><p>Pasirink vieną veiksmą. Pasekmė bus įtraukta į tavo balansą ir paaiškinta iškart.</p><div class="choice-grid">${step.choices.map((item) => `<button class="choice-card" data-step-choice="${item.key}"><span class="choice-icon">${item.legacyKey ? '↩️' : item.delta >= 0 ? '📈' : '⚠️'}</span><span><b>${esc(item.label)}</b><small>${esc(item.lesson)}</small></span></button>`).join('')}</div><p class="note">Po 10/10 pereisi į senosios strategijos rezultatų analizę.</p></div></div>`;
   box.querySelectorAll('[data-step-choice]').forEach((button) => button.addEventListener('click', () => {
-    const result = simulateDemoStep(stepIndex, button.dataset.stepChoice, stepCapital);
+    const result = simulateDemoStep(stepIndex, button.dataset.stepChoice, stepCapital, demoSession);
     stepCapital = result.nextCapital; stepHistory.push(result); stepIndex += 1;
     if (result.complete) { phase = 'analytics'; draw(); } else draw();
   }));
@@ -75,7 +76,7 @@ function drawStrategy() {
 }
 function drawLocked() {
   box.innerHTML = `${oldHeader(3, 'Strategija užrakinta')}<div class="card locked-card"><div class="lock-icon">🔒</div><h3>Strategija užrakinta</h3><p>Tavo sprendimas ir paskirstymas saugiai paslėpti. Dabar prasideda 10 papildomų ekonominių sprendimų.</p><div class="allocation-summary">${BUCKETS.map((bucket) => `<div><span>${bucket.name}</span><b>${eur(startingCapital * alloc[bucket.key] / 100)}</b><small>${alloc[bucket.key]}%</small></div>`).join('')}</div><div class="news">⏳ Senoji 3 žingsnių pradžia baigta. Toliau laukia išplėstas ekonomikos žaidimas.</div><button class="btn" id="reveal-demo" style="width:100%">Pradėti 10 ekonominių sprendimų →</button></div>`;
-  $('#reveal-demo').addEventListener('click', () => { phase = 'event'; stepIndex = 0; stepCapital = startingCapital; stepHistory = []; draw(); });
+  $('#reveal-demo').addEventListener('click', () => { phase = 'event'; if (!demoSession) demoSession = createDemoSession(Date.now()); stepIndex = 0; stepCapital = startingCapital; stepHistory = []; draw(); });
 }
 function resultRow(row) {
   const isPlayer = row.name === 'Tu';
@@ -95,7 +96,7 @@ function drawComparison() {
 }
 function drawTransition() { box.innerHTML = `${header(3, 'Savaitė vyksta')}<div class="transition-card"><div class="spinner">↻</div><h3>Ekonominiai įvykiai vyksta…</h3><p>Kainos, rinkos ir tavo pasirinkimai keičia miesto finansus.</p></div>`; }
 function draw() { if (phase === 'intro') drawIntro(); else if (phase === 'legacy-event') drawLegacyEvent(); else if (phase === 'legacy-strategy') drawStrategy(); else if (phase === 'event') drawEvent(); else if (phase === 'analytics') drawAnalytics(); else if (phase === 'step-finish') drawStepFinish(); else if (phase === 'strategy') drawStrategy(); else if (phase === 'locked') drawLocked(); else if (phase === 'transition') drawTransition(); else if (phase === 'reveal') drawReveal(); }
-function reset() {  phase = 'intro'; choice = null; alloc = { sav: 25, inv: 25, bus: 25, res: 25 }; reveal = null; comparison = null; startingCapital = DEMO_CAPITAL; weekNo = 1; stepIndex = 0; stepCapital = DEMO_CAPITAL; stepHistory = []; draw(); }
+function reset() {  phase = 'intro'; choice = null; alloc = { sav: 25, inv: 25, bus: 25, res: 25 }; reveal = null; comparison = null; startingCapital = DEMO_CAPITAL; weekNo = 1; stepIndex = 0; stepCapital = DEMO_CAPITAL; stepHistory = []; demoSession = null; draw(); }
 reset();
 
 // ---------- auditorijos versijos: mokyklai / asmeniui ----------
