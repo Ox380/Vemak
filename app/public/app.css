@@ -505,12 +505,6 @@ tr.me:hover td{background:#d9f5ec}
   border:1px solid rgba(60,44,20,.34);border-radius:2px;
   box-shadow:none;
 }
-.ask::before{
-  content:"";position:absolute;left:50%;top:-11px;width:14px;height:14px;border-radius:50%;
-  transform:translateX(-50%);
-  background:radial-gradient(circle at 40% 34%,#fdfaf1,#cdc0a2 70%,#a99a78);
-  box-shadow:none;
-}
 .ask-head b{display:block;font-size:1rem;color:var(--ink)}
 .ask-head p{margin:5px 0 0;font-size:.84rem}
 .ask-row{display:flex;gap:8px;margin:14px 0 0;flex-wrap:wrap}
