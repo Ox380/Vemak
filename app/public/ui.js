@@ -27,20 +27,20 @@ export async function api(method, url, body, token) {
 const BULB = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.2 17.4h5.6M10.2 20.6h3.6"/><path d="M12 3.4a5.6 5.6 0 0 0-3.3 10.1c.5.4.8 1 .8 1.6v.3h5v-.3c0-.6.3-1.2.8-1.6A5.6 5.6 0 0 0 12 3.4Z"/></svg>';
 
 // Klausimų laukelis po pamokos: atsakymus sudaro serveris iš mokinio skaičių.
-export function askBlock(suggestions = []) {
+export function askBlock(suggestions = [], endpoint = '/api/ask') {
   const chips = (suggestions || []).slice(0, 4)
     .map((s) => `<button type="button" class="ask-chip">${esc(s)}</button>`).join('');
-  return `<div class="ask">`
+  return `<div class="ask"${endpoint !== '/api/ask' ? ` data-ask-endpoint="${esc(endpoint)}"` : ''}>`
     + `<div class="ask-head"><b>Neaišku? Paklausk mentoriaus</b>`
-    + `<p class="muted">Atsakymą sudaro taisyklės iš tavo šios savaitės skaičių – jis nėra sugalvotas ir nėra finansinė rekomendacija.</p></div>`
-    + `<div class="ask-row"><input id="ask-q" type="text" maxlength="240" autocomplete="off" placeholder="Pvz., kodėl praradau pinigų?" aria-label="Tavo klausimas mentoriiu">`
+    + `<p class="muted">AI paaiškina tavo žaidimo rezultatus ir taisykles. Atsakymus tikrink pagal žaidime rodomus skaičius; tai mokomasis paaiškinimas, ne finansinė rekomendacija.</p></div>`
+    + `<div class="ask-row"><input id="ask-q" type="text" maxlength="240" autocomplete="off" placeholder="Pvz., kodėl praradau pinigų?" aria-label="Tavo klausimas mentoriui">`
     + `<button class="btn" type="button" id="ask-go">Klausti</button></div>`
     + (chips ? `<div class="ask-chips">${chips}</div>` : '')
     + `<div class="ask-answer" id="ask-answer" aria-live="polite" hidden></div>`
     + `</div>`;
 }
 
-export function lessonBlock(lesson, steps = [], suggestions = []) {
+export function lessonBlock(lesson, steps = [], suggestions = [], endpoint = '/api/ask') {
 const rows = (steps || []).map((s) => `<li><span class="lesson-step-copy"><span>${esc(s.text)}</span>${s.comment ? `<small class="lesson-comment">${esc(s.comment)}</small>` : ''}</span>`
     + (s.amount != null ? `<b class="${s.amount > 0 ? 'pos' : s.amount < 0 ? 'neg' : 'muted'}">${eur(s.amount, true)}</b>` : '')
     + '</li>').join('');
@@ -48,7 +48,7 @@ const rows = (steps || []).map((s) => `<li><span class="lesson-step-copy"><span>
     + `<div class="lesson-head"><span class="lesson-icon">${BULB}</span><div><b>Pamoka</b>`
     + `<p class="muted">${esc(lesson || '')}</p></div></div>`
     + (rows ? `<div class="lesson-title">Kas įvyko žingsnis po žingsnio</div><ol class="lesson-steps">${rows}</ol>` : '')
-    + (suggestions && suggestions.length ? askBlock(suggestions) : '')
+    + (suggestions && suggestions.length ? askBlock(suggestions, endpoint) : '')
     + '</div>';
 }
 
@@ -60,7 +60,7 @@ export function wireTheme(root) {
   btn.addEventListener('click', () => import('./theme.js').then((m) => m.toggleTheme()));
 }
 
-export function wireAsk(getContext, suggestions = []) {
+export function wireAsk(getContext, suggestions = [], getToken = null) {
   const q = $('#ask-q'); const go = $('#ask-go'); const out = $('#ask-answer');
   if (!q || !go || !out) return;
   let busy = false;
@@ -72,7 +72,9 @@ export function wireAsk(getContext, suggestions = []) {
     out.innerHTML = '<span class="muted">Mentorius tikrina tavo skaičius…</span>';
     try {
       const ctx = typeof getContext === 'function' ? getContext() : {};
-      const r = await api('POST', '/api/ask', { question, context: ctx });
+      const accessToken = typeof getToken === 'function' ? await getToken() : null;
+      const endpoint = q.closest('.ask')?.dataset.askEndpoint || '/api/ask';
+      const r = await api('POST', endpoint, { question, context: ctx }, accessToken);
       out.className = 'ask-answer';
       out.innerHTML = `<p>${esc(r.answer || '')}</p>`
         + (r.grounded ? `<small class="muted">${esc(r.grounded)}</small>` : '');

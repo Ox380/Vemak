@@ -318,7 +318,8 @@ function retint(svg, theme) {
   const hi = dark ? 0.44 : 0.98;
   // Kiekvienas atspalvis nukreipiamas į savo vietą spalvų rate, todėl miestas
   // tampa daugiaspalvis: pastatai violetiniai, stogai žydri, akcentai gintariniai.
-  const PAL = dark ? [268, 222, 196, 168, 300, 340] : [258, 214, 188, 164, 292, 336];
+  // tamsiame režime – tik žalios šeimos atspalviai; šviesiame – kelių spalvų
+  const PAL = dark ? [152, 138, 168, 122, 160, 132] : [258, 214, 188, 164, 292, 336];
   return svg.replace(/#[0-9a-fA-F]{6}/g, (hex) => {
     const r = parseInt(hex.slice(1, 3), 16) / 255;
     const g = parseInt(hex.slice(3, 5), 16) / 255;
@@ -326,7 +327,7 @@ function retint(svg, theme) {
     const h = rgb2hsl(r, g, b);
     // neutralios spalvos (etikečių baltas fonas, juodas tekstas) neperdažomos
     if (h.s < 0.14) {
-      const gray = dark ? 1 - h.l * 0.85 : h.l;
+      const gray = dark ? 1 - h.l * 0.88 : h.l;
       const v = Math.round(gray * 255);
       return '#' + [v, v, v].map((x) => x.toString(16).padStart(2, '0')).join('');
     }
