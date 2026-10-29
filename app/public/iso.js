@@ -224,6 +224,7 @@ function label(x, y, z, name, price, anchorZ = 0) {
   const [px, py] = P(x, y, z);
   const [ax, ay] = P(x, y, anchorZ);
   const hasPrice = price != null && price !== '';
+<<<<<<< HEAD
   const nw = String(name).length * 6.5;
   const pw = hasPrice ? String(price).length * 6.2 + 16 : 0;
   const w = nw + pw + 24;
@@ -236,6 +237,20 @@ function label(x, y, z, name, price, anchorZ = 0) {
     + (hasPrice
       ? `<rect x="${(w / 2 - pw - 5).toFixed(1)}" y="-9" width="${pw.toFixed(1)}" height="18" rx="6" fill="#d9f0e2"/>`
         + `<text x="${(w / 2 - pw / 2 - 5).toFixed(1)}" y="3.4" text-anchor="middle" font-size="11" font-weight="800" fill="#0b5c34" font-family="system-ui,sans-serif">${price}</text>`
+=======
+  const nw = String(name).length * 7.6;
+  const pw = hasPrice ? String(price).length * 7.4 + 18 : 0;
+  const w = nw + pw + 28;
+  const h = 29;
+  return `<g transform="translate(${px.toFixed(1)},${py.toFixed(1)})">`
+    + `<rect x="${(-w / 2).toFixed(1)}" y="${(-h / 2 + 5).toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="9" fill="#0a1a11" opacity=".12"/>`
+    + `<rect x="${(-w / 2).toFixed(1)}" y="${(-h / 2).toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="9" fill="#ffffff" stroke="rgba(10,45,28,.14)"/>`
+    + `<circle cx="${(-w / 2 + 11).toFixed(1)}" cy="0" r="3.9" fill="#1fbf63"/>`
+    + `<text x="${(-w / 2 + 23).toFixed(1)}" y="4.4" font-size="13.5" font-weight="600" fill="#0a1a11" font-family="system-ui,sans-serif">${name}</text>`
+    + (hasPrice
+      ? `<rect x="${(w / 2 - pw - 5).toFixed(1)}" y="-11" width="${pw.toFixed(1)}" height="22" rx="7" fill="#d9f0e2"/>`
+        + `<text x="${(w / 2 - pw / 2 - 5).toFixed(1)}" y="4.4" text-anchor="middle" font-size="13" font-weight="700" fill="#0b5c34" font-family="system-ui,sans-serif">${price}</text>`
+>>>>>>> 488360d (Dizainas: daugiaspalvė sistema, tamsi ir šviesi tema su perjungikliu)
       : '')
     + '</g>';
 }
@@ -306,6 +321,55 @@ const BUILDINGS = [
   { gx: 13.2, gy: 12.9, w: 1.4, d: 1.3, h: 28, c: '#6f9f83', o: { windows: true, parapet: true, floors: 3 } },
   { gx: 8.5, gy: 8.5, w: 1.5, d: 1.5, h: 32, c: '#6f9f83', o: { windows: true, parapet: true, floors: 4 } },
 ];
+
+// ================= TEMOS PERDAŽYMAS =================
+// Miesto scena perdažoma pagal aktyvią temą:
+//   dark  – žali atspalviai, balta, juoda
+//   light – balta ir mėlyna
+function retint(svg, theme) {
+  const dark = theme === 'dark';
+  const lo = dark ? 0.06 : 0.56;
+  const hi = dark ? 0.44 : 0.98;
+  // Kiekvienas atspalvis nukreipiamas į savo vietą spalvų rate, todėl miestas
+  // tampa daugiaspalvis: pastatai violetiniai, stogai žydri, akcentai gintariniai.
+  const spread = dark ? 1.55 : 1.35;
+  const shift = dark ? 210 : 250;
+  return svg.replace(/#[0-9a-fA-F]{6}/g, (hex) => {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const h = rgb2hsl(r, g, b);
+    const l = lo + h.l * (hi - lo);
+    const sat = dark ? Math.min(h.s * 1.1 + 0.08, 0.85) : Math.min(h.s * 0.9 + 0.08, 0.8);
+    const hue = ((h.h * 360 * spread + shift) % 360) / 360;
+    const [nr, ng, nb] = hsl2rgb(hue, l, sat);
+    return '#' + [nr, ng, nb].map((v) => Math.max(0, Math.min(255, Math.round(v * 255))).toString(16).padStart(2, '0')).join('');
+  });
+}
+function rgb2hsl(r, g, b) {
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  let h = 0;
+  if (d) {
+    if (mx === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+    else if (mx === g) h = ((b - r) / d + 2) / 6;
+    else h = ((r - g) / d + 4) / 6;
+  }
+  const l = (mx + mn) / 2;
+  const s = d ? d / (1 - Math.abs(2 * l - 1)) : 0;
+  return { h, s, l };
+}
+function hsl2rgb(h, l, s) {
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h * 6) % 2) - 1));
+  const m = l - c / 2;
+  const seg = Math.floor(h * 6) % 6;
+  const t = [[c, x, 0], [x, c, 0], [0, c, x], [0, x, c], [x, 0, c], [c, 0, x]][seg];
+  return [t[0] + m, t[1] + m, t[2] + m];
+}
+
+export function activeTheme() {
+  try { return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; } catch { return 'light'; }
+}
 
 export function citySVG(st) {
   const lvl = st.level || 1, mood = st.mood || 'neutral';
@@ -415,11 +479,19 @@ export function citySVG(st) {
   addLabel(4.9, 9.9, 26 + lvl * 13 + 34, 4.9, 9.9, 26 + lvl * 13, 'Kavos baras', eur(st.business));
   addLabel(11.5, 11.5, 62, 11.5, 11.5, 14, 'Arena', '', 'arena');
   // papildomi miesto objektai (kaip prototipe)
+<<<<<<< HEAD
   addLabel(1.6, 3.2, 54, 1.25, 3.0, 34, 'Ligonin\u0117', '640 \u20ac');
   addLabel(11.7, 1.1, 70, 12.35, 1.95, 42, 'Mokykla', '480 \u20ac');
   addLabel(12.4, 5.2, 48, 13.25, 5.9, 22, 'Gamykla', '520 \u20ac');
   addLabel(8.6, 5.2, 48, 9.45, 5.9, 24, 'Parduotuv\u0117', '380 \u20ac');
   addLabel(2.4, 11.6, 48, 3.2, 12.3, 24, 'Policija', '460 \u20ac');
+=======
+  put(10.2, () => label(1.6, 3.2, 54, 'Ligonin\u0117', '640 \u20ac'));
+  put(11.2, () => label(11.7, 1.1, 70, 'Mokykla', '480 \u20ac'));
+  put(9.6, () => label(12.4, 5.2, 48, 'Gamykla', '520 \u20ac'));
+  put(12.2, () => label(8.6, 5.2, 48, 'Parduotuv\u0117', '380 \u20ac'));
+  put(18.0, () => label(3.2, 12.6, 48, 'Policija', '460 \u20ac'));
+>>>>>>> 488360d (Dizainas: daugiaspalvė sistema, tamsi ir šviesi tema su perjungikliu)
 
   // gyvatvorės
   solid(0.3, 5.05, 5.4, 0.15, () => hedge(0.3, 5.05, 5.4, 0.15));
@@ -595,5 +667,5 @@ export function citySVG(st) {
   }
   g += `<rect width="${W}" height="${H}" fill="url(#vig)" pointer-events="none"/>`;
 
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Izometrinis miesto žemėlapis: gyvenamieji namai, biurų pastatas, banko bokštas, birža su kupolu, kavos baras, arena, parkas su tvenkiniu, aikštė su fontanu, prekyvietė, sporto aikštė, bulvarai su perėjomis ir transportu" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Izometrinis miesto žemėlapis: gyvenamieji namai, biurų pastatas, banko bokštas, birža su kupolu, kavos baras, arena, parkas su tvenkiniu, aikštė su fontanu, prekyvietė, sporto aikštė, bulvarai su perėjomis ir transportu" xmlns="http://www.w3.org/2000/svg">${retint(g, st.theme || activeTheme())}</svg>`;
 }

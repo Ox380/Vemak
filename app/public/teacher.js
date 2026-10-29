@@ -1,5 +1,6 @@
 // teacher.js — teacher dashboard: login, classes, season control, live stats, lesson plans, CSV + PDF (print) export.
-import { esc, $, $$, eur, api, toast, AVATARS, ICO } from './ui.js';
+import { esc, $, $$, eur, api, toast, wireTheme, AVATARS, ICO } from './ui.js';
+import { wireThemeToggle } from './theme.js';
 import { WEEKS, TOPICS } from './content.js';
 
 const app = $('#app');
@@ -10,9 +11,11 @@ let tabName = 'overview';
 
 const shell = (inner, name = '') => {
   app.innerHTML = `<header class="top"><div class="wrap"><a class="logo" href="/"><i>V</i>VEMAK</a><span class="pill blue">Mokytojo skydelis</span><span style="flex:1"></span>
+    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Perjungti šviesią ir tamsią temą"><span class="tt-icon" aria-hidden="true"><svg class="tt-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4 17 7M7 17l-1.6 1.6"/></svg><svg class="tt-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8.4 8.4 0 0 1 9.6 4 8.4 8.4 0 1 0 20 14.4Z"/></svg></span><span class="tt-label">Tema</span></button>
     ${name ? `<span class="muted">${esc(name)}</span><button class="btn alt" id="out" style="min-height:38px;padding:6px 12px">Atsijungti</button>` : ''}</div></header>
     <main class="main"><div class="wrap" id="view">${inner}</div></main>`;
   $('#out')?.addEventListener('click', () => { localStorage.removeItem(KEY); token = null; boot(); });
+  wireTheme();
 };
 
 function viewLogin(mode = 'login', msg = '') {

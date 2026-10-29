@@ -1,3 +1,4 @@
+import { wireThemeToggle, themeFromURL } from './theme.js';
 // landing.js — anonymous one-week playable demo; no login, no server writes.
 import { DEMO_CAPITAL, DEMO_CHOICES, DEMO_EVENT, DEMO_FLOW, DEMO_MARKET_ASSETS, createDemoSession, getDemoMarketStory, getDemoMarketWinner, scoreDemoMarketGuess, getDemoStepChoices, buildDemoReveal, compareDemoChoice, simulateDemoStep, validateDemoAllocation, getDemoGamification } from './demo.js';
 import { citySVG } from './iso.js';
@@ -6,10 +7,10 @@ import { esc, $, eur, api, lessonBlock } from './ui.js';
 $('#heroCity').innerHTML = citySVG({ level: 2, savings: 420, reserve: 300, business: 640, invest: 520, mood: 'up' });
 const box = $('#demoBox');
 const BUCKETS = [
-  { key: 'sav', name: 'Santaupos', color: '#3b82f6', hint: 'lėtai auga, maža rizika' },
-  { key: 'inv', name: 'Investicijos', color: '#8b5cf6', hint: 'didesnė grąža, bet svyravimai' },
-  { key: 'bus', name: 'Verslas', color: '#f5a524', hint: 'augina tavo mokyklos mugę' },
-  { key: 'res', name: 'Avarinis rezervas', color: '#19b394', hint: 'apsaugo nuo netikėtumų' },
+  { key: 'sav', name: 'Santaupos', color: 'var(--b-sav)', hint: 'lėtai auga, maža rizika' },
+  { key: 'inv', name: 'Investicijos', color: 'var(--b-inv)', hint: 'didesnė grąža, bet svyravimai' },
+  { key: 'bus', name: 'Verslas', color: 'var(--b-bus)', hint: 'augina tavo mokyklos mugę' },
+  { key: 'res', name: 'Avarinis rezervas', color: 'var(--b-res)', hint: 'apsaugo nuo netikėtumų' },
 ];
 let phase = 'intro';
 let choice = null;
@@ -313,6 +314,9 @@ function setAudience(kind, opts = {}) {
     : 'VEMAK · Finansinis raštingumas, kurį mokiniai nori žaisti';
   try { localStorage.setItem('vemak.audience', audience); } catch { /* privatus režimas */ }
   placeNowMark();
+themeFromURL();
+wireThemeToggle();
+window.addEventListener('vemak:theme', () => { const c = document.getElementById('heroCity'); if (c) c.innerHTML = citySVG({ mood: 'neutral' }); });
   if (phase === 'intro') drawIntro();
   if (opts.scroll) { const target = document.getElementById('pilotas'); if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 }

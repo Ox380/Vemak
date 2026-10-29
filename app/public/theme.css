@@ -1,0 +1,185 @@
+/* ==========================================================================
+   VEMAK · SPALVŲ SISTEMA v2 — daug spalvų ir jų atspalvių
+   --------------------------------------------------------------------------
+   Šešios spalvų šeimos, kiekviena su 10 atspalvių (50–900).
+   Du režimai:
+     dark  – tamsus violetinis pagrindas, ryškūs kelių spalvų akcentai
+     light – baltas pagrindas, violetinis pirminis, kelių spalvų akcentai
+
+   Režimas keičiamas TIK vartotojui pasirinkus (mygtukas), ne pagal sistemą.
+   ========================================================================== */
+
+/* ---------- SPALVŲ KODONAI ---------- */
+:root{
+  /* indigo – pirminė */
+  --indigo-50:#eef2ff; --indigo-100:#e0e7ff; --indigo-200:#c7d2fe; --indigo-300:#a5b4fc;
+  --indigo-400:#818cf8; --indigo-500:#6366f1; --indigo-600:#4f46e5; --indigo-700:#4338ca;
+  --indigo-800:#3730a3; --indigo-900:#312e81;
+  /* violetinė */
+  --violet-50:#f5f3ff;
+  --violet-50:#f5f3ff; --violet-100:#ede9fe; --violet-200:#ddd6fe; --violet-300:#c4b5fd;
+  --violet-400:#a78bfa; --violet-500:#8b5cf6; --violet-600:#7c3aed; --violet-700:#6d28d9;
+  --violet-800:#5b21b6; --violet-900:#4c1d95;
+  /* teal */
+  --teal-50:#f0fdfa; --teal-100:#ccfbf1; --teal-200:#99f6e4; --teal-300:#5eead4;
+  --teal-400:#2dd4bf; --teal-500:#14b8a6; --teal-600:#0d9488; --teal-700:#0f766e;
+  --teal-800:#115e59; --teal-900:#134e4a;
+  /* žydra */
+  --cyan-50:#ecfeff; --cyan-100:#cffafe; --cyan-200:#a5f3fc; --cyan-300:#67e8f9;
+  --cyan-400:#22d3ee; --cyan-500:#06b6d4; --cyan-600:#0891b2; --cyan-700:#0e7490;
+  --cyan-800:#155e75; --cyan-900:#164e63;
+  /* emerald */
+  --emerald-50:#ecfdf5; --emerald-100:#d1fae5; --emerald-200:#a7f3d0; --emerald-300:#6ee7b7;
+  --emerald-400:#34d399; --emerald-500:#10b981; --emerald-600:#059669; --emerald-700:#047857;
+  --emerald-800:#065f46; --emerald-900:#064e3b;
+  /* žalia */
+  --green-50:#ecfdf5; --green-100:#d1fae5; --green-200:#a7f3d0; --green-300:#6ee7b7;
+  --green-400:#34d399; --green-500:#10b981; --green-600:#059669; --green-700:#047857;
+  --green-800:#065f46; --green-900:#064e3b;
+  /* orange */
+  --orange-50:#fff7ed; --orange-100:#ffedd5; --orange-200:#fed7aa; --orange-300:#fdba74;
+  --orange-400:#fb923c; --orange-500:#f97316; --orange-600:#ea580c; --orange-700:#c2410c;
+  --orange-800:#9a3412; --orange-900:#7c2d12;
+  /* gintarinė */
+  --amber-50:#fffbeb; --amber-100:#fef3c7; --amber-200:#fde68a; --amber-300:#fcd34d;
+  --amber-400:#fbbf24; --amber-500:#f59e0b; --amber-600:#d97706; --amber-700:#b45309;
+  --amber-800:#92400e; --amber-900:#78350f;
+  /* rausva */
+  --rose-50:#fff1f2; --rose-100:#ffe4e6; --rose-200:#fecdd3; --rose-300:#fda4af;
+  --rose-400:#fb7185; --rose-500:#f43f5e; --rose-600:#e11d48; --rose-700:#be123c;
+  --rose-800:#9f1239; --rose-900:#881337;
+  /* mėlyna */
+  --blue-50:#eff6ff; --blue-100:#dbeafe; --blue-200:#bfdbfe; --blue-300:#93c5fd;
+  --blue-400:#60a5fa; --blue-500:#3b82f6; --blue-600:#2563eb; --blue-700:#1d4ed8;
+  --blue-800:#1e40af; --blue-900:#1e3a8a;
+  /* neutrali */
+  --slate-50:#f8fafc; --slate-100:#f1f5f9; --slate-200:#e2e8f0; --slate-300:#cbd5e1;
+  --slate-400:#94a3b8; --slate-500:#5a6577; --slate-600:#475569; --slate-700:#334155;
+  --slate-800:#1e293b; --slate-900:#0f172a;
+}
+
+/* ---------- ŠVIESUSIS REŽIMAS ---------- */
+:root{
+  --bg:var(--slate-50);
+  --surface:#ffffff;
+  --surface-2:#f7f8fc;
+  --band:#ffffff;
+
+  --text:var(--slate-900);
+  --text-2:var(--slate-700);
+  --text-3:#556072;
+
+  --line:rgba(15,23,42,.14);
+  --line-2:rgba(15,23,42,.07);
+
+  --accent:var(--indigo-600);
+  --accent-hover:var(--indigo-700);
+  --accent-ink:#ffffff;
+  --accent-text:var(--indigo-700);
+  --accent-soft:var(--indigo-100);
+
+  --danger:var(--rose-700);
+  --warn:var(--amber-700);
+  --ok:var(--green-700);
+
+  --c-hero:var(--indigo-600);    --c-hero-soft:var(--indigo-100);
+  --c-benefit:var(--teal-700);   --c-benefit-soft:var(--teal-100);
+  --c-why:var(--emerald-700);    --c-why-soft:var(--emerald-100);
+  --c-plans:var(--orange-700);   --c-plans-soft:var(--orange-100);
+  --c-pilot:var(--rose-700);     --c-pilot-soft:var(--rose-100);
+
+  --b-sav:var(--teal-700); --b-inv:var(--indigo-600); --b-bus:var(--orange-700); --b-res:var(--emerald-700);
+
+  --n0:#ffffff; --n50:var(--slate-50); --n100:var(--slate-100); --n200:var(--slate-200);
+  --n300:var(--slate-300); --n400:var(--slate-400); --n500:var(--slate-500);
+  --n600:var(--slate-600); --n700:var(--slate-700); --n800:var(--slate-800); --n900:var(--slate-900);
+  --g50:var(--slate-50); --g100:var(--violet-100); --g300:var(--violet-300);
+  --g500:var(--violet-500); --g600:var(--violet-600); --g700:var(--violet-700);
+  --g800:var(--violet-800); --g900:var(--violet-900); --g950:#2e1065;
+  --ink:var(--slate-900); --ink-2:var(--slate-700); --ink-3:#556072;
+  --on-dark:#ffffff; --on-dark-2:var(--slate-300);
+  --navy:var(--slate-900); --navy-2:var(--slate-800); --muted:var(--slate-700);
+  --card:#ffffff; --card-2:var(--slate-50); --card-3:var(--slate-100);
+  --board:var(--slate-50); --board-2:#ffffff; --board-3:#f7f8fc;
+  --teal:var(--cyan-600); --teal-d:var(--cyan-700); --teal-l:var(--cyan-100);
+  --blue:var(--blue-600); --blue-d:var(--blue-700); --blue-l:var(--blue-100);
+  --purple:var(--violet-600); --purple-l:var(--violet-100);
+  --amber:var(--amber-700); --amber-l:var(--amber-100);
+  --red:var(--rose-700); --red-d:var(--rose-800); --red-l:var(--rose-100);
+  --green:var(--green-600); --green-ink:#ffffff;
+  --grad-brand:linear-gradient(135deg,var(--violet-500),var(--violet-700));
+  --grad-hero:linear-gradient(160deg,var(--violet-600),var(--cyan-600) 55%,var(--green-500));
+}
+
+/* ---------- TAMSUSIS REŽIMAS ---------- */
+[data-theme="dark"]{
+  --bg:#0b0a14;
+  --surface:#151322;
+  --surface-2:#1d1a2e;
+  --band:#080711;
+
+  --text:#f4f3fb;
+  --text-2:#c3c0d6;
+  --text-3:#9a96b4;
+
+  --line:rgba(255,255,255,.16);
+  --line-2:rgba(255,255,255,.08);
+
+  --accent:var(--indigo-500);
+  --accent-hover:var(--indigo-400);
+  --accent-ink:#120c24;
+  --accent-text:var(--indigo-300);
+  --accent-soft:rgba(99,102,241,.20);
+
+  --danger:var(--rose-300);
+  --warn:var(--amber-300);
+  --ok:var(--green-300);
+
+  --c-hero:var(--indigo-300);    --c-hero-soft:rgba(99,102,241,.18);
+  --c-benefit:var(--teal-300);   --c-benefit-soft:rgba(45,212,191,.16);
+  --c-why:var(--emerald-300);    --c-why-soft:rgba(52,211,153,.16);
+  --c-plans:var(--orange-300);   --c-plans-soft:rgba(251,146,60,.16);
+  --c-pilot:var(--rose-300);     --c-pilot-soft:rgba(251,113,133,.14);
+
+  --b-sav:var(--teal-300); --b-inv:var(--indigo-300); --b-bus:var(--orange-300); --b-res:var(--emerald-300);
+
+  --n0:#ffffff; --n50:#f4f3fb; --n100:#e4e1f2; --n200:#c3c0d6;
+  --n300:#9a96b4; --n400:#6f6b8a; --n500:#4b4763; --n600:#332f47;
+  --n700:#1d1a2e; --n800:#151322; --n900:#0b0a14;
+  --g50:#0b0a14; --g100:rgba(139,92,246,.18); --g300:var(--violet-300);
+  --g500:var(--violet-500); --g600:var(--violet-400); --g700:var(--violet-300);
+  --g800:var(--violet-200); --g900:var(--violet-800); --g950:#2e1065;
+  --ink:#f4f3fb; --ink-2:#c3c0d6; --ink-3:#9a96b4;
+  --on-dark:#f4f3fb; --on-dark-2:var(--violet-200);
+  --navy:#f4f3fb; --navy-2:#1d1a2e; --muted:#c3c0d6;
+  --card:#151322; --card-2:#1d1a2e; --card-3:#1d1a2e;
+  --board:#0b0a14; --board-2:#151322; --board-3:#1d1a2e;
+  --teal:var(--cyan-400); --teal-d:var(--cyan-300); --teal-l:rgba(34,211,238,.14);
+  --blue:var(--blue-400); --blue-d:var(--blue-300); --blue-l:rgba(96,165,250,.14);
+  --purple:var(--violet-400); --purple-l:rgba(139,92,246,.16);
+  --amber:var(--amber-300); --amber-l:rgba(251,191,36,.14);
+  --red:var(--rose-300); --red-d:var(--rose-400); --red-l:rgba(251,113,133,.14);
+  --green:var(--green-400); --green-ink:#04160f;
+  --grad-brand:linear-gradient(135deg,var(--violet-400),var(--violet-600));
+  --grad-hero:linear-gradient(160deg,#2a1a5e,#0e3f4a 55%,#0d3b2c);
+}
+
+/* ---------- PAGRINDAS ---------- */
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--text)}
+
+/* ---------- TEMA: PERJUNGIKLIS ---------- */
+.theme-toggle{
+  display:inline-flex;align-items:center;gap:8px;
+  font:inherit;font-size:.86rem;font-weight:600;cursor:pointer;
+  color:var(--text-2);background:transparent;
+  border:1px solid var(--line);border-radius:9px;padding:8px 12px;
+  transition:background .15s ease,color .15s ease,border-color .15s ease;
+}
+.theme-toggle:hover{color:var(--accent-text);border-color:var(--accent);background:var(--accent-soft)}
+.theme-toggle .tt-icon{display:grid;place-items:center;width:17px;height:17px;flex:none}
+.theme-toggle svg{width:17px;height:17px;display:block}
+.theme-toggle .tt-moon{display:none}
+[data-theme="dark"] .theme-toggle .tt-sun{display:none}
+[data-theme="dark"] .theme-toggle .tt-moon{display:block}
+@media(max-width:640px){.theme-toggle .tt-label{display:none}}
