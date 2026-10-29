@@ -349,6 +349,20 @@ tr.me:hover td{background:#d9f5ec}
 @keyframes gem-float{0%,100%{transform:rotate(45deg) translateY(0)}50%{transform:rotate(45deg) translateY(-3px)}}
 @media(max-width:600px){.game-loop-top,.model-collection{align-items:flex-start}.tiny-model{width:76px;height:76px}}
 
+.market-demo-panel{background:linear-gradient(145deg,#ecfdf5,#d1fae5);border-color:#a7f3d0;color:#14532d}
+.market-demo-panel h3,.market-demo-panel h4,.market-demo-panel p,.market-demo-panel small{color:#14532d}
+.market-demo-panel .market-news{background:linear-gradient(145deg,#f0fdf4,#dcfce7);border-color:#bbf7d0}
+.market-demo-panel .pill.blue{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+.market-demo-panel .market-news>small,.market-demo-panel .market-prediction>p,.market-demo-panel .market-guess small{color:#334155}
+.market-demo-panel .market-guess{background:#fff;border-color:#cbd5e1;color:#0f172a}
+.market-demo-panel .market-guess.selected{background:#d1fae5;border-color:#047857}
+.market-demo-panel .market-guess.selected b{color:#064e3b}
+.market-demo-panel .market-guess.selected small{color:#14532d}
+.market-demo-panel .market-reveal{background:#f8fafc;color:#0f172a;border-color:#cbd5e1}
+.market-demo-panel .market-reveal.hit{background:#ecfdf5;border-color:#86efac}
+.market-demo-panel .market-reveal.miss{background:#fff7ed;border-color:#fdba74}
+.market-demo-panel .market-reveal p,.market-demo-panel .market-reveal small{color:#334155}
+
 .demo-panel{min-width:0}
 .choice-grid{display:grid;gap:11px;margin:16px 0}
 .choice-card{
