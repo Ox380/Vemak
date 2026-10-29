@@ -68,7 +68,9 @@ assert.equal((await call('POST', `/api/teacher/classes/${CID}/reveal`, null, T))
 
 r = await call('GET', '/api/me', null, sA);
 assert.equal(r.body.reports.length, 1); assert.ok(r.body.mentor.points.length > 0); assert.ok(r.body.rankings.byWealth.length === 4);
-ok('student sees result, mentor note and ranking');
+assert.equal(r.body.rewards.xp, 300); assert.equal(r.body.rewards.level, 2); assert.ok(r.body.rewards.cosmetics.includes('Pradžios ženklelis')); assert.ok(Array.isArray(r.body.rewards.trophies));
+assert.deepEqual(r.body.revealProgress, { locked: 2, total: 4, revealed: true });
+assert.ok(!JSON.stringify(r.body.revealProgress).includes('alloc')); ok('persistent XP, level, trophies, cosmetic and reveal progress');
 const c = await call('GET', '/api/me', null, sC); assert.equal(c.body.reports[0].auto, true); ok('non-submitter gets default strategy (auto)');
 r = await call('GET', '/api/me/strategies', null, sA); assert.equal(r.body[1].length, 4); ok('strategies visible after reveal');
 

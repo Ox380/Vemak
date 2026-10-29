@@ -11,6 +11,7 @@ let me = null;
 let tab = 'city';
 let draft = null; // { choice, sav, inv, bus, res, mix, upgrade }
 let poll = null;
+let revealStage = 0; // 0: start, 1: results, 2: leaderboard, 3: trophies, 4: XP, 5: mentor, 6: teaser/final
 
 const BUCKET_META = [
   { k: 'sav', name: 'Santaupos', color: '#3b82f6', hint: '+0,3 % per savaitę, be rizikos' },
@@ -33,7 +34,7 @@ function shell(inner, active) {
     <button class="btn alt" id="out" style="min-height:38px;padding:6px 12px">Atsijungti</button>
   </div></header>
   <main class="main"><div class="wrap" id="view">${inner}</div></main>`;
-  $$('.tab').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; render(); }));
+  $$('.tab').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; if (tab === 'results' && me.reports.length) { revealStage = 0; tab = 'reveal'; } render(); }));
   $('#out').addEventListener('click', () => { if (confirm('Atsijungti? Prisijungsi vėl tik su nauju slapyvardžiu.')) { localStorage.removeItem(TOKEN_KEY); location.reload(); } });
 }
 
@@ -111,18 +112,14 @@ function goalCard() {
 }
 
 function progressionCard() {
-  const played = me.reports.length;
-  const locked = me.cls.revealed < me.cls.week && me.locked ? 1 : 0;
-  const xp = played * 120 + locked * 30 + (me.cls.revealed >= 1 ? 80 : 0);
-  const level = Math.max(1, Math.floor(xp / 200) + 1);
+  const rewards = me.rewards || { xp: 0, level: 1, trophies: [], cosmetics: [] };
+  const xp = rewards.xp || 0;
+  const level = rewards.level || 1;
   const next = level * 200;
-  const progress = Math.min(100, Math.round((xp / next) * 100));
-  const achievements = [];
-  if (locked) achievements.push(['🔒', 'Strategas', 'Užrakinai savaitės planą']);
-  if (played) achievements.push(['📊', 'Pirmas rezultatas', 'Pamatėi savo sprendimo pasekmes']);
-  if ((me.state.reserve || 0) >= 100) achievements.push(['🛡️', 'Atsargus', 'Sukaupei bent 100 € rezervą']);
-  if (!achievements.length) achievements.push(['🌱', 'Pradžia', 'Priimk pirmą finansinį sprendimą']);
-  return `<div class="progress-card card"><div class="progress-top"><div class="avatar-badge">${AVATARS[me.me.avatar]}</div><div><span class="eyebrow">TAVO PAŽANGA</span><h3 style="margin:0">${esc(me.me.nickname)} · ${level} lygis</h3><p class="muted" style="margin:.2em 0 0">${xp} XP iki kito lygio</p></div><strong class="xp-pill">${progress}%</strong></div><div class="xp-track"><span style="width:${progress}%"></span></div><div class="achievement"><span class="achievement-icon">${achievements[0][0]}</span><div><b>${esc(achievements[0][1])}</b><small>${esc(achievements[0][2])}</small></div></div></div>`;
+  const progress = Math.min(100, Math.round((xp % 200) / 2));
+  const trophyNames = { 'financial-genius': 'Finansinis genijus', 'best-saver': 'Geriausias taupytojas', 'risk-master': 'Rizikos meistras', 'comeback-king': 'Sugrįžimo karalius', 'business-tycoon': 'Verslo magnatas', 'smart-investor': 'Sumanus investuotojas', 'most-improved': 'Didžiausia pažanga' };
+  const trophies = rewards.trophies?.map((key) => trophyNames[key] || key) || [];
+  return `<div class="progress-card card"><div class="progress-top"><div class="avatar-badge">${AVATARS[me.me.avatar]}</div><div><span class="eyebrow">TAVO PAŽANGA</span><h3 style="margin:0">${esc(me.me.nickname)} · ${level} lygis</h3><p class="muted" style="margin:.2em 0 0">${xp} XP · dar ${Math.max(0, next - xp)} XP iki kito lygio</p></div><strong class="xp-pill">${progress}%</strong></div><div class="xp-track"><span style="width:${progress}%"></span></div><div class="achievement"><span class="achievement-icon">🏆</span><div><b>${trophies[0] || 'Pradžia'}</b><small>${trophies.length ? 'Savaitės apdovanojimas atrakintas' : 'Pirmas apdovanojimas laukia po atskleidimo'}</small></div></div><div class="rewards-cabinet"><h4>Apdovanojimų kabinetas</h4><p class="muted">${trophies.length ? trophies.join(' · ') : 'Kol kas apdovanojimų nėra'}</p><h4>Savaitės kelias</h4><div class="reward-pass">${Array.from({ length: 6 }, (_, i) => `<span class="reward-week ${i < me.reports.length ? 'unlocked' : ''}" title="${i < me.reports.length ? 'Atrakinta' : 'Užrakinta'}">${i + 1}</span>`).join('')}</div><p class="muted">${rewards.cosmetics?.length ? `Atrakinta: ${esc(rewards.cosmetics.join(' · '))}` : 'Kiekviena savaitė atrakina naują kosmetinį daiktą.'}</p></div></div>`;
 }
 function cityActions() {
   const buildings = [
@@ -180,8 +177,9 @@ function viewWeek() {
       <p class="muted" style="font-size:.85rem">${esc(w.info)}</p></div>
   </div>
   <div class="card"><h2>Ketvirtadienis: paskirstyk pinigus</h2>
-    <p class="muted">Laisvus pinigus padalink į 4 krepšelius. Suma turi būti 100 %.</p>
-    <div class="bar" aria-hidden="true">${BUCKET_META.map((b) => `<span style="width:${draft[b.k]}%;background:${b.color}"></span>`).join('')}</div>
+  <p class="muted">Laisvus pinigus padalink į 4 krepšelius. Suma turi būti 100 %.</p>
+  ${me.revealProgress ? `<div class="reveal-progress" role="status">🔒 ${me.revealProgress.locked} iš ${me.revealProgress.total} bendraklasių jau pasirinko strategiją!<small>Pasirinkimai lieka slapti iki penktadienio atskleidimo.</small></div>` : ''}
+  <div class="bar" aria-hidden="true">${BUCKET_META.map((b) => `<span style="width:${draft[b.k]}%;background:${b.color}"></span>`).join('')}</div>
     <div class="alloc" style="margin-top:12px">${BUCKET_META.map((b) => `<div><div class="slider"><label for="s_${b.k}" style="margin:0">${b.name}</label>
       <input type="range" id="s_${b.k}" data-k="${b.k}" min="0" max="100" step="5" value="${draft[b.k]}" ${dis}><b id="v_${b.k}">${draft[b.k]} %</b></div><small class="muted">${b.hint}</small></div>`).join('')}</div>
     <p id="tot" class="${tot === 100 ? 'pos' : 'neg'}" role="status">Iš viso: ${tot} % ${tot === 100 ? '✓' : '(turi būti 100 %)'}</p>
@@ -192,10 +190,28 @@ function viewWeek() {
   </div></div>`;
 }
 
+function revealStep(title, body, nextLabel = 'Tęsti →') {
+  return `<div class="reveal-step card"><p class="eyebrow">PENKTADIENIO ATSKLEIDIMAS · ${revealStage + 1}/7</p><h2>${title}</h2>${body}<div class="row"><button class="btn" id="reveal-next">${nextLabel}</button><button class="btn alt" id="reveal-skip">Praleisti animaciją</button></div></div>`;
+}
+function viewReveal() {
+  const rs = me.reports, r = rs[rs.length - 1], reward = me.rewards || { xp: 0, level: 1, trophies: [], cosmetics: [] }, rk = me.rankings;
+  const mine = rk?.byStrategy.find((row) => row.nickname === me.me.nickname);
+  const trophyLabels = { 'financial-genius': 'Finansinis genijus', 'best-saver': 'Geriausias taupytojas', 'risk-master': 'Rizikos meistras', 'comeback-king': 'Sugrįžimo karalius', 'business-tycoon': 'Verslo magnatas', 'smart-investor': 'Sumanus investuotojas', 'most-improved': 'Didžiausia pažanga' };
+  const earned = (reward.trophies || []).map((key) => trophyLabels[key] || key);
+  const nextScenario = ['Kitą savaitę rinksiesi tarp atsargaus augimo ir drąsesnio verslo plėtros plano.', 'Kitą savaitę mokysiesi, kaip pasiruošti rinkos svyravimams.'][r.week % 2];
+  if (revealStage === 0) return revealStep('Atskleidimas prasideda!', '<div class="countdown" aria-live="polite">3 · 2 · 1</div><p>Visų žaidėjų sprendimai jau užrakinti. Dabar pamatysi savaitės pasekmes.</p>');
+  if (revealStage === 1) return revealStep('Tavo finansiniai rezultatai', `<div class="reveal-metrics"><div><small>Pradinis balansas</small><b>${eur(r.state?.netWorth ?? (r.netWorth - r.delta))}</b></div><div><small>Grynoji vertė</small><b>${eur(r.netWorth)}</b></div><div><small>Pelnas / nuostolis</small><b class="${r.delta >= 0 ? 'pos' : 'neg'}">${eur(r.delta, true)}</b></div><div><small>Atsparumas</small><b>${r.forced ? 'Reikėjo parduoti turtą' : 'Atspari strategija'}</b></div></div>`);
+  if (revealStage === 2) return revealStep('Lyderių lentelės atskleidimas', `<p>Tavo galutinė vieta: <strong>${mine?.rank || '–'}</strong>${mine?.progress ? ` · ${mine.progress > 0 ? '▲' : '▼'} ${Math.abs(mine.progress)} vietos nuo praėjusios savaitės` : ''}</p><div class="podium">${(rk?.byStrategy || []).slice(0, 3).map((row, i) => `<div class="podium-place p${i + 1}"><b>${['🥇', '🥈', '🥉'][i]}</b><span>${esc(row.nickname)}</span><strong>${eur(row.score)}</strong></div>`).join('')}</div>`);
+  if (revealStage === 3) return revealStep('Trofėjų ceremonija', `<div class="trophy-ceremony">${earned.length ? earned.map((name) => `<div class="ceremony-trophy">🏆<b>${esc(name)}</b><small>Sąlygos įvykdytos pagal savaitės rezultatus</small></div>`).join('') : '<p>Šią savaitę trofėjaus nelaimėjai, bet kiekvienas rezultatas padeda mokytis.</p>'}</div>`);
+  if (revealStage === 4) return revealStep('XP ir apdovanojimai', `<div class="xp-reward"><strong>+${reward.xp} XP</strong><span>${reward.level} lygis</span><div class="xp-track"><span style="width:${Math.min(100, (reward.xp % 200) / 2)}%"></span></div><p>${reward.cosmetics?.length ? `Atrakinta: ${esc(reward.cosmetics.at(-1))}` : 'Tęsk žaisti, kad atrakintum kosmetinius daiktus.'}</p></div>`);
+  if (revealStage === 5) return revealStep('Mentoriaus paaiškinimas', `<div class="mentor">${mentorCard()}</div><p class="muted">Mentoriaus patarimas paremtas taisyklėmis ir tavo sprendimo pasekmėmis.</p>`);
+  return revealStep('Kita savaitė', `<div class="next-week-teaser">🔭<h3>Kas laukia toliau?</h3><p>${nextScenario}</p><p class="muted">Tai tik mokomasis scenarijaus anonsas — sprendimą priimsi prasidėjus kitai savaitei.</p></div>`, 'Peržiūrėti pilnus rezultatus');
+}
 function viewResults() {
   const rs = me.reports;
   if (!rs.length) return `<div class="card"><h2>Rezultatų dar nėra</h2><p class="muted">Pirmos savaitės rezultatai bus atskleisti penktadienį.</p></div>`;
   const r = rs[rs.length - 1];
+  const reward = me.rewards || { xp: 0, level: 1, trophies: [], cosmetics: [] };
   const posn = (v) => `<span class="${v >= 0 ? 'pos' : 'neg'}">${eur(v, true)}</span>`;
   const ev = r.events.map((e) => ({ priceRise: '📈 Kainos kilo 12 %', marketDown: '📉 Rinkos krito', marketUp: '📈 Rinkos atsigavo', bizBoom: '🎪 Verslo mugė' }[e.kind])).filter(Boolean);
   return `${hud()}<div class="two"><div class="grid">
@@ -218,6 +234,7 @@ function viewResults() {
       <div class="cmp">${ASSET_KEYS.filter((a) => r.alloc.inv > 0 && (r.alloc.mix[a] || 0) > 0).map((a) => `<div>${ASSET_META[a].icon}<b class="${r.market[a] >= 0 ? 'pos' : 'neg'}">${pct(r.market[a])}</b><small>${ASSET_META[a].name}</small></div>`).join('') || '<small class="muted">Šią savaitę neinvestavai.</small>'}
         <div>☕<b class="${r.bizReturn >= 0 ? 'pos' : 'neg'}">${pct(r.bizReturn)}</b><small>Kavos baras</small></div></div>
       ${lessonBlock(r.lesson, r.steps)}
+      <div class="reveal-rewards"><h3>Penktadienio apdovanojimai</h3><p>+${reward.xp} XP · ${reward.level} lygis</p><p class="muted">Tavo strategijos ir mokymosi pasiekimai saugomi visam sezonui.</p></div>
       ${r.bankrupt ? '<div class="news down">⚠️ Skola per didelė. Kitą savaitę pradėsi iš naujo su antra galimybe.</div>' : ''}
     </div>
   </div><div class="grid">${mentorCard()}<div class="card"><h3>Grynosios vertės kelias</h3>${chart(rs)}</div></div></div>`;
@@ -291,10 +308,12 @@ function viewFinish() {
 function render() {
   if (!me) return;
   if (me.cls.status === 'done' && tab === 'city' && me.reports.length) tab = 'finish';
-  const views = { city: viewCity, week: viewWeek, results: viewResults, board: viewBoard, invest: viewInvest, budget: viewBudget, mentor: viewMentor, finish: viewFinish };
+  const views = { city: viewCity, week: viewWeek, results: viewResults, reveal: viewReveal, board: viewBoard, invest: viewInvest, budget: viewBudget, mentor: viewMentor, finish: viewFinish };
   shell(views[tab](), tab === 'finish' ? 'results' : tab);
+  $$('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; if (tab === 'results' && me.reports.length) { revealStage = 0; tab = 'reveal'; } render(); }));
   $$('[data-go]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.go; render(); }));
   if (tab === 'week') bindWeek();
+  if (tab === 'reveal') bindReveal();
   $('#save-goal')?.addEventListener('click', async () => {
     try {
       await api('POST', '/api/me/goal', { type: $('#goal-type').value, target: Number($('#goal-target').value) }, token);
@@ -302,6 +321,11 @@ function render() {
     } catch (e) { toast(e.message, 'err'); }
   });
   window.scrollTo(0, 0);
+}
+function bindReveal() {
+  const advance = () => { if (revealStage < 6) revealStage += 1; else tab = 'results'; render(); };
+  $('#reveal-next')?.addEventListener('click', advance);
+  $('#reveal-skip')?.addEventListener('click', () => { revealStage = 6; render(); });
 }
 function refreshTotals() {
   const tot = draft.sav + draft.inv + draft.bus + draft.res;

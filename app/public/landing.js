@@ -30,7 +30,7 @@ function header(step, label) {
   return `<div class="demo-head"><div><span class="pill amber">${step}/3 · Savaitė ${weekNo}/${DEMO_WEEKS} · ${label}</span></div><strong>Šios savaitės kapitalas: ${eur(startingCapital)}</strong></div>`;
 }
 function drawIntro() {
-  box.innerHTML = `<div class="demo-intro"><div class="demo-intro-art">🏙️</div><div><span class="pill blue">VEMAK · finansinė strategija</span><h3>Sveikas atvykęs į VEMAK!</h3><p>Turi <b>1 000 virtualių eurų</b>. Tavo tikslas – per ${DEMO_WEEKS} savaites užauginti savo turtą, priimant protingus finansinius sprendimus.</p><ul><li>Pasirink kryptį pagal ekonominį įvykį.</li><li>Paskirstyk visus pinigus ir užrakink slaptą strategiją.</li><li>Penktadienį palygink rezultatą su klasės draugais.</li></ul><button class="btn" id="start-demo">Pradėti</button></div></div>`;
+  box.innerHTML = `<div class="demo-intro"><div class="demo-intro-art" aria-label="Pinigų ir turto augimo iliustracija" role="img"><div class="money-art"><span class="money-arrow">↗</span><span class="bill bill-back">€</span><span class="bill bill-front">€</span><span class="coin coin-one">€</span><span class="coin coin-two">€</span></div></div><div><span class="pill blue">VEMAK · finansinė strategija</span><h3>Sveikas atvykęs į VEMAK!</h3><p>Turi <b>1 000 virtualių eurų</b>. Tavo tikslas – per ${DEMO_WEEKS} savaites užauginti savo turtą, priimant protingus finansinius sprendimus.</p><ul><li>Pasirink kryptį pagal ekonominį įvykį.</li><li>Paskirstyk visus pinigus ir užrakink slaptą strategiją.</li><li>Penktadienį palygink rezultatą su klasės draugiais.</li></ul><button class="btn" id="start-demo">Pradėti</button></div></div>`;
   $('#start-demo').addEventListener('click', () => { phase = 'event'; draw(); });
 }
 function drawEvent() {
