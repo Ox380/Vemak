@@ -78,6 +78,30 @@ t('earning choices create distinct income paths and progression', () => {
   assert.ok(freelance.state.skills.digital > 0);
   assert.ok(business.state.reputation > 0);
 });
+t('weekly job opportunity is seed-dependent and remains shared by a class', () => {
+  const a = buildSeason('opportunity-a');
+  const b = buildSeason('opportunity-b');
+  assert.deepEqual(a, buildSeason('opportunity-a'));
+  assert.notEqual(a.weeks[4].opportunity, b.weeks[4].opportunity);
+  assert.ok(a.weeks.every((week) => week.opportunity >= 0.8 && week.opportunity <= 1.2));
+  assert.ok(a.weeks.every((week) => week.businessDemand >= 0.75 && week.businessDemand <= 1.25));
+});
+t('work and digital skills improve the seeded payout, not just the displayed skill count', () => {
+  const season = buildSeason('skilled-gigs');
+  const job = playWeek(newState(), season, 5, 'job', STRATS.balanced);
+  const freelance = playWeek(newState(), season, 5, 'freelance', STRATS.balanced);
+  assert.equal(job.report.earned, Math.round(80 * season.weeks[4].opportunity * 1.05 * 100) / 100);
+  assert.equal(freelance.report.earned, Math.round(120 * season.weeks[4].opportunity * 1.05 * 100) / 100);
+  assert.ok(job.report.earnedMultiplier > season.weeks[4].opportunity);
+});
+t('business planning and skill points improve later business returns', () => {
+  const season = buildSeason('skilled-business');
+  const early = playWeek(newState(), season, 1, 'wait', STRATS.balanced).state;
+  const baseline = playWeek({ ...early, business: 100 }, season, 3, 'none', STRATS.balanced);
+  const skilled = playWeek({ ...early, business: 100 }, season, 3, 'bizup', STRATS.balanced);
+  assert.ok(skilled.report.bizReturn > baseline.report.bizReturn);
+  assert.equal(skilled.state.skills.business, 2);
+});
 t('income accounting excludes transfers and tracks goal progress', () => {
   const season = buildSeason('accounting');
   const result = playWeek(newState(), season, 5, 'job', STRATS.balanced);

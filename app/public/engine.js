@@ -14,6 +14,10 @@ export const CONFIG = {
   BIZ_SD: 0.08,
   BIZ_CAP_PER_LEVEL: 500, // capital above this earns only the savings rate
   BIZ_LEVEL_BONUS: 0.005,
+  BIZ_SKILL_BONUS: 0.025,
+  WORK_SKILL_BONUS: 0.05,
+  DIGITAL_SKILL_BONUS: 0.05,
+  BUSINESS_DEMAND_REPUTATION_BONUS: 0.025,
   BIZ_UPGRADE_COST: 200,  // sunk equipment cost, paid from business capital
   BIZ_MAX_LEVEL: 3,
   DEBT_RATE: 0.05,
@@ -71,7 +75,9 @@ export function buildSeason(seed) {
   const weeks = [];
   for (let i = 0; i < CONFIG.WEEKS; i++) {
     const ev = WEEK_CONTENT[i].event;
-    const w = { week: i + 1, market: {}, bizNoise: 0, expense: 0, shock: 0, priceRise: 0, bizBoom: 0 };
+    const opportunity = between(r, [0.8, 1.2]);
+    const businessDemand = between(r, [0.75, 1.25]);
+    const w = { week: i + 1, market: {}, bizNoise: 0, opportunity, businessDemand, expense: 0, shock: 0, priceRise: 0, bizBoom: 0 };
     w.shock = ev && (ev.type === 'marketShock' || ev.type === 'rebound') ? between(r, ev.range) : 0;
     for (const a of ASSET_KEYS) {
       const [mu, sd] = ASSETS[a];
@@ -201,13 +207,23 @@ export function playWeek(prev, season, weekNo, choiceKey, alloc) {
   if (opt.shield) s.shield = true;
   if (opt.wantsDelta) s.wantsDelta += opt.wantsDelta;
   if (opt.bizBoost) s.bizBoost += opt.bizBoost;
-  // 1 žingsnis — pasirinkimas ir jo tiesioginis poveikis
+  // Explicit skill choices improve matching future opportunities; the class-wide economy remains deterministic.
   for (const [skill, points] of Object.entries(opt.skill || {})) s.skills[skill] = (s.skills[skill] || 0) + points;
   s.reputation += opt.reputation || 0;
+  const skillBase = opt.earned || 0;
+  const skillType = choiceKey === 'job' || choiceKey === 'half' || choiceKey === 'full' ? 'work'
+    : choiceKey === 'freelance' ? 'digital' : null;
+  const skillBonus = skillType === 'work' ? Math.min(CONFIG.WORK_SKILL_BONUS * s.skills.work, 0.25)
+    : skillType === 'digital' ? Math.min(CONFIG.DIGITAL_SKILL_BONUS * s.skills.digital, 0.25) : 0;
+  const earned = round2(skillBase * (sw.opportunity ?? 1) * (1 + skillBonus));
+  const businessRevenue = round2((opt.businessRevenue || 0) * (sw.businessDemand ?? 1) * (1 + Math.min(CONFIG.BUSINESS_DEMAND_REPUTATION_BONUS * s.reputation, 0.2)));
+  if (skillBase && skillBonus) step(`Darbo įgūdžio premija: +${pctStr(skillBonus)}; galimybės daugiklis ×${(sw.opportunity ?? 1).toFixed(2)}.`, round2(earned - skillBase));
+  if (opt.businessRevenue) step(`Verslo paklausa ×${(sw.businessDemand ?? 1).toFixed(2)}; reputacija įskaičiuota, pajamos ${money(businessRevenue)}.`, round2(businessRevenue - opt.businessRevenue));
+  // 1 žingsnis — pasirinkimas ir jo tiesioginis poveikis
   step(`Pasirinkimas „${opt.label}".`, null);
   if (opt.cash) step(opt.cash > 0 ? `Iš karto gauta ${signed(opt.cash)} (įskaičiuota į biudžetą).` : `Iš karto sumokėta ${money(-opt.cash)} (įskaičiuota į biudžetą).`, opt.cash);
-  if (opt.earned) step(`Papildomos pajamos: ${signed(opt.earned)}.`, opt.earned);
-  if (opt.businessRevenue) step(`Verslo pajamos ${money(opt.businessRevenue)}, išlaidos ${money(opt.businessExpenses || 0)}, pelnas ${signed((opt.businessRevenue || 0) - (opt.businessExpenses || 0))}.`, (opt.businessRevenue || 0) - (opt.businessExpenses || 0));
+  if (earned) step(`Papildomos pajamos: ${signed(earned)}${skillBonus ? ` (įgūdžio premija +${pctStr(skillBonus)}; galimybė ×${(sw.opportunity ?? 1).toFixed(2)}).` : '.'}`, earned);
+  if (businessRevenue) step(`Verslo pajamos ${money(businessRevenue)}, išlaidos ${money(opt.businessExpenses || 0)}, pelnas ${signed(businessRevenue - (opt.businessExpenses || 0))}.`, businessRevenue - (opt.businessExpenses || 0));
   if (opt.assetSale) step(`Parduotas nenaudojamas daiktas: ${money(opt.assetSale)} turto pavertė pinigais; tai nėra naujos pajamos.`, opt.assetSale);
   if (opt.shield) step('Apsauga: kainų kilimas šiam sezonui nebeturi įtakos poreikiams.', null);
   if (opt.wantsDelta) step(`Norai ${opt.wantsDelta > 0 ? 'išaugo' : 'sumažėjo'} ${money(Math.abs(opt.wantsDelta))} per savaitę.`, opt.wantsDelta);
@@ -222,13 +238,11 @@ export function playWeek(prev, season, weekNo, choiceKey, alloc) {
   const rise = s.priceRiseActive && !s.shield ? CONFIG.PRICE_RISE : 0;
   const needs = CONFIG.NEEDS * (1 + rise);
   const wants = Math.max(CONFIG.MIN_WANTS, CONFIG.WANTS + s.wantsDelta);
-  const earned = opt.earned || 0;
-  const businessRevenue = opt.businessRevenue || 0;
   const businessExpenses = opt.businessExpenses || 0;
   const assetSale = opt.assetSale || 0;
   let free = CONFIG.PAY - needs - wants + (opt.cash || 0) + earned + businessRevenue + assetSale - businessExpenses;
   report.needs = round2(needs); report.wants = round2(wants); report.income = CONFIG.PAY + Math.max(0, opt.cash || 0) + businessRevenue;
-  report.earned = round2(earned); report.assetSale = round2(assetSale); report.cashImpact = round2(opt.cash || 0); report.businessRevenue = round2(businessRevenue); report.businessExpenses = round2(businessExpenses);
+  report.earned = round2(earned); report.earnedMultiplier = skillBase ? round2(earned / skillBase) : 0; report.assetSale = round2(assetSale); report.cashImpact = round2(opt.cash || 0); report.businessRevenue = round2(businessRevenue); report.businessExpenses = round2(businessExpenses);
   report.expenses = round2(needs + wants + businessExpenses);
 
   // 2 žingsnis — įvykis ir mėnesio biudžetas
@@ -271,6 +285,7 @@ export function playWeek(prev, season, weekNo, choiceKey, alloc) {
       .map((a) => `${ASSET_META[a].name} ${mix[a]} %`).join(', ');
     if (parts) step(`Investicijų dalis padalinta: ${parts}.`, null);
   }
+  step(`Savaitės galimybės: darbo ×${(sw.opportunity ?? 1).toFixed(2)}, verslo paklausa ×${(sw.businessDemand ?? 1).toFixed(2)}.`, null);
 
   // returns
   const invBefore = Object.fromEntries(ASSET_KEYS.map((a) => [a, s.invest[a]]));
@@ -283,11 +298,12 @@ export function playWeek(prev, season, weekNo, choiceKey, alloc) {
   const overflow = s.business - productive;
   const base = CONFIG.BIZ_BASE + CONFIG.BIZ_LEVEL_BONUS * (s.level - 1) + s.bizBoost + sw.bizBoom;
   const priceDrag = s.priceRiseActive ? CONFIG.PRICE_RISE * 0.2 : 0;
-  const bizRet = base + CONFIG.BIZ_SD * sw.bizNoise - priceDrag;
+  const bizSkillBonus = Math.min(CONFIG.BIZ_SKILL_BONUS * s.skills.business, 0.15);
+  const bizRet = base + bizSkillBonus + CONFIG.BIZ_SD * sw.bizNoise - priceDrag;
   s.business = productive * (1 + bizRet) + overflow * (1 + CONFIG.SAVINGS_RATE);
   s.savings *= 1 + CONFIG.SAVINGS_RATE;
   if (s.debt > 0) s.debt *= 1 + CONFIG.DEBT_RATE;
-  report.market = mkt; report.bizReturn = bizRet;
+  report.market = mkt; report.bizReturn = bizRet; report.bizSkillBonus = bizSkillBonus;
 
   // 4 žingsnis — ką uždirbo ar prarado tavo turtas
   for (const a of ASSET_KEYS) {
@@ -296,7 +312,7 @@ export function playWeek(prev, season, weekNo, choiceKey, alloc) {
       step(`${ASSET_META[a].name} ${pctStr(sw.market[a])}: ${signed(d)} (liko ${money(s.invest[a])}).`, round2(d));
     }
   }
-  step(`Kavos baras ${pctStr(bizRet)}: ${signed(s.business - bizBefore)} (liko ${money(s.business)}).`, round2(s.business - bizBefore));
+  step(`Kavos baras ${pctStr(bizRet)}${bizSkillBonus ? ` (įgūdžių premija +${pctStr(bizSkillBonus)}; paklausa ×${(sw.businessDemand ?? 1).toFixed(2)}).` : ` (paklausa ×${(sw.businessDemand ?? 1).toFixed(2)}).`}: ${signed(s.business - bizBefore)} (liko ${money(s.business)}).`, round2(s.business - bizBefore));
   step(`Santaupos ${pctStr(CONFIG.SAVINGS_RATE)}: ${signed(s.savings - savBefore)} (liko ${money(s.savings)}).`, round2(s.savings - savBefore));
   if (s.debt > 0) step(`Skola auga ${pctStr(CONFIG.DEBT_RATE, 0).replace('+', '')} per savaitę: dabar ${money(s.debt)}.`, null);
 

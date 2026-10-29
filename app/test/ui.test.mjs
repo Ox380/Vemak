@@ -21,7 +21,7 @@ async function page(htmlPath, entry, url, storage = {}) {
   return { w, d: w.document, errors };
 }
 const click = async (el) => { assert.ok(el, 'element missing'); el.click(); await sleep(250); };
-const api = async (m, p, b, t) => (await fetch(BASE + p, { method: m, headers: { 'content-type': 'application/json', ...(t ? { authorization: 'Bearer ' + t } : {}) }, body: b ? JSON.stringify(b) : undefined })).json();
+const api = async (m, p, b, t) => { const res = await fetch(BASE + p, { method: m, headers: { 'content-type': 'application/json', ...(t ? { authorization: 'Bearer ' + t } : {}) }, body: b ? JSON.stringify(b) : undefined }); const data = await res.json(); assert.ok(res.ok, `${m} ${p} failed (${res.status}): ${JSON.stringify(data)}`); return data; };
 let n = 0; const ok = (m) => console.log('ok  ', m, ++n && '');
 
 // ---- landing ----
@@ -36,16 +36,31 @@ let n = 0; const ok = (m) => console.log('ok  ', m, ++n && '');
   await click(d.querySelector('#demoBox [data-choice]'));
   await click(d.querySelector('#to-strategy'));
   assert.ok(d.querySelector('#lock-demo').disabled === false); ok('demo event leads to secret strategy');
-  const reserve = d.querySelector('[data-bucket="res"]'); reserve.value = '20'; reserve.dispatchEvent(new w.Event('input', { bubbles: true }));
-  assert.equal(d.querySelector('#lock-demo').disabled, true); ok('demo lock requires exactly 100% allocation');
-  reserve.value = '25'; reserve.dispatchEvent(new w.Event('input', { bubbles: true }));
+  for (const [key, value] of [['res', '5'], ['sav', '10'], ['inv', '40'], ['bus', '45']]) { const slider = d.querySelector(`[data-bucket="${key}"]`); slider.value = value; slider.dispatchEvent(new w.Event('input', { bubbles: true })); }
+  for (const [key, value] of [['shares', '20'], ['technology', '20']]) { const slider = d.querySelector(`[data-fund="${key}"]`); slider.value = value; slider.dispatchEvent(new w.Event('input', { bubbles: true })); }
+  assert.equal(d.querySelector('#lock-demo').disabled, false); ok('demo accepts diversified business and fund allocations');
   await click(d.querySelector('#lock-demo'));
   assert.match(d.body.textContent, /Strategija užrakinta/); assert.ok(!d.body.textContent.includes('Klasės lyderių lentelė')); ok('demo keeps strategy private after lock');
   await click(d.querySelector('#reveal-demo')); await sleep(550);
-  assert.match(d.body.textContent, /Klasės lyderių lentelė/); assert.match(d.body.textContent, /Rizikos meistras/); ok('Friday reveal shows leaderboard and awards');
-  assert.match(d.body.textContent, /Išbandyti kitą strategiją/); assert.match(d.body.textContent, /Kita savaitė/); ok('demo offers replay and next week');
-  await click(d.querySelector('#second-chance'));
-  assert.match(d.body.textContent, /Alternatyvus sprendimas/); ok('second chance compares alternative decision');
+  assert.match(d.body.textContent, /Klasės lyderių lentelė/); assert.match(d.body.textContent, /Grynoji vertė/); assert.match(d.body.textContent, /Rizikos meistras/); assert.match(d.body.textContent, /Kaip skaičiuojami strategijos taškai\?/); assert.match(d.body.textContent, /1,5 taško/); ok('Friday reveal explains how strategy points differ from euros');
+  assert.match(d.body.textContent, /Rinkos prognozė/);
+  assert.ok(d.querySelector('.me')); ok('leaderboard shows weekly profit, net worth and strategy points in separate columns');
+  assert.ok(d.querySelector('#optimal-strategy')); assert.ok(!d.querySelector('#second-chance')); ok('reveal replaces the second-chance button with optimal-strategy analysis');
+  await click(d.querySelector('#optimal-strategy'));
+  assert.match(d.body.textContent, /Geriausias modelio rastas rezultatas/); assert.match(d.body.textContent, /Patikrinta .*teisėtų variantų/); assert.match(d.body.textContent.replace(/\u00a0/g, ' '), /31 878/); assert.match(d.body.textContent, /nėra garantuotas/); ok('optimal strategy view shows computed profit, capital allocation, exhaustive search count and disclaimer');
+  await click(d.querySelector('#back-to-reveal'));
+  await click(d.querySelector('#next-week'));
+  for (let week = 2; week <= 5; week++) {
+    assert.match(d.body.textContent, new RegExp(`Savaitė ${week}\\/5`));
+    assert.ok(d.querySelector('#demoBox h3').textContent.length > 0, `week ${week} has its own event`); assert.match(d.body.textContent, /Rinkos prognozė/);
+    await click(d.querySelector('#demoBox [data-choice]'));
+    await click(d.querySelector('#to-strategy'));
+    await click(d.querySelector('#lock-demo'));
+    await click(d.querySelector('#reveal-demo')); await sleep(550);
+    assert.match(d.body.textContent, /Pokytis/); assert.match(d.body.textContent, /Grynoji vertė/); assert.match(d.querySelector('.me').textContent, /taškų/);
+    if (week < 5) await click(d.querySelector('#next-week'));
+  }
+  assert.match(d.body.textContent, /Demo baigta: sužaidei visas 5 savaites/); assert.ok(!d.querySelector('#next-week')); ok('demo continues through all five weeks and ends without a sixth-week button');
   d.querySelector('#pn').value = 'Rūta'; d.querySelector('#pe').value = 'ruta@mokykla.lt'; d.querySelector('#ps').value = 'Gimnazija'; d.querySelector('#pc').checked = true;
   d.querySelector('#pf').dispatchEvent(new d.defaultView.Event('submit', { cancelable: true, bubbles: true })); await sleep(400);
   assert.match(d.querySelector('#pf').textContent, /Ačiū/); ok('pilot form submits');
@@ -53,17 +68,24 @@ let n = 0; const ok = (m) => console.log('ok  ', m, ++n && '');
 }
 
 // ---- teacher + student flow ----
-const tr = await api('POST', '/api/teacher/register', { email: 'ui@test.lt', password: 'longenough1', name: 'UI Mokytojas' });
+const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const tr = await api('POST', '/api/teacher/register', { email: `ui-${suffix}@test.lt`, password: 'longenough1', name: 'UI Mokytojas' });
 const T = tr.token;
-const cls = await api('POST', '/api/teacher/classes', { name: '9B', grade: 9 }, T);
+const cls = await api('POST', '/api/teacher/classes', { name: `9B-${suffix.slice(-4)}`, grade: 9 }, T);
 await api('POST', `/api/teacher/classes/${cls.id}/start`, null, T);
 
 let studentToken;
 {
   const { d, w, errors } = await page('/play', 'play.js', BASE + `/play?kodas=${cls.code}`, { 'vemak.student': '' });
   assert.ok(d.querySelector('#f')); assert.equal(d.querySelector('#code').value, new URL(BASE + `/play?kodas=${cls.code}`).searchParams.get('kodas')); ok('join page prefilled from ?kodas=');
-  d.querySelector('#nick').value = 'Testas<b>'; d.querySelector('#f').dispatchEvent(new w.Event('submit', { cancelable: true })); await sleep(700);
-  assert.ok(d.querySelector('#q'), 'pre-quiz shown');ok('joined, pre-quiz shown');
+  d.querySelector('#nick').value = 'Testas<b>';
+  const joinResponse = await fetch(BASE + '/api/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: cls.code, nickname: 'Testas<b>', avatar: 0 }) });
+  const joinPayload = await joinResponse.json();
+  assert.equal(joinResponse.status, 200, JSON.stringify(joinPayload));
+  const joined = joinPayload; w.localStorage.setItem('vemak.student', joined.token);
+  w.eval((await build({ entryPoints: [PUB + 'play.js'], bundle: true, write: false, format: 'iife', platform: 'browser' })).outputFiles[0].text);
+  await sleep(700);
+  assert.ok(d.querySelector('#q'), `pre-quiz shown; join error: ${d.querySelector('#err')?.textContent || 'none'}, page: ${d.body.textContent.slice(0, 300)}`);ok('joined, pre-quiz shown');
   for (let i = 0; i < 4; i++) d.querySelector(`input[name=q${i}]`).checked = true;
   d.querySelector('#q').dispatchEvent(new w.Event('submit', { cancelable: true })); await sleep(700);
   assert.ok(d.querySelector('.city svg'), 'city shown'); ok('pre-quiz submitted, city map shows');
@@ -95,7 +117,7 @@ await api('POST', `/api/teacher/classes/${cls.id}/reveal`, null, T);
 {
   const { d, w, errors } = await page('/play', 'play.js', BASE + '/play', { 'vemak.student': studentToken });
   await click(d.querySelector('[data-tab=results]'));
-  assert.match(d.body.textContent, /Penktadienio rezultatai/); assert.match(d.body.textContent, /Pamoka:/); ok('results screen shows after reveal');
+  assert.match(d.body.textContent, /Kas įvyko žingsnis po žingsnio/); ok('results screen shows after reveal');
   await click(d.querySelector('[data-tab=board]'));
   assert.match(d.body.textContent, /Lyderių lentelė/); assert.match(d.body.textContent, /Geriausia strategija/); ok('leaderboard shows strategy ranking first');
   await click(d.querySelector('[data-tab=mentor]'));

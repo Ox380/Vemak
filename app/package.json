@@ -6,6 +6,6 @@
   "description": "VEMAK - Lithuanian financial-literacy game for school classes",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node test/engine.test.mjs && node test/demo.test.mjs && node test/api.test.mjs"
+    "test": "node test/engine.test.mjs && node test/demo.test.mjs && node test/scenario-news.test.mjs && node test/api.test.mjs"
   }
 }
