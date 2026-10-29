@@ -21,6 +21,37 @@ export function setDemoScenarioOffset(n) {
   const total = DEMO_SCENARIOS.length;
   scenarioOffset = ((Math.floor(Number(n) || 0) % total) + total) % total;
 }
+export const DEMO_MARKET_STORIES = Object.freeze([
+  { id: "sales-fraud-scandal", title: "Skandalas: dingo pardavimų pinigai", body: "Rinkos rytą paaiškėja, kad populiari prekybos platforma galimai slėpė dalį pardavimų. Trūksta pinigų, prekyba sustabdyta, o tyrėjai tikrina įrašus. Kitos įmonės skuba paaiškinti, ar jų sąskaitos tvarkingos.", signals: {"shares": "negative", "technology": "negative", "business": "positive", "savings": "steady"}, outcome: "Tyrėjai randa dalį dingusių pinigų. Platformos akcijos krenta, o patikimesni vietos verslai sulaukia klientų." },
+  { id: "investor-demo", title: "Investuotojai išbando naują technologiją", body: "Į uždarą vietos startuolio demonstraciją atvyksta keli stambūs investuotojai. Jie patys išbando prototipą ir paprašo antro susitikimo. Internete jau kyla spėlionės, bet sandorio dar nėra.", signals: {"shares": "positive", "technology": "strong-positive", "business": "negative", "savings": "steady"}, outcome: "Investuotojai pasirašo ketinimų protokolą po sėkmingo prototipo bandymo. Technologijų įmonės laimi labiausiai." },
+  { id: "credit-crunch", title: "Krizė: bankai pristabdo paskolas", body: "Po netikėtų bankų nuostolių skolintojai pristabdo paskolas. Įmonės atideda plėtrą, šeimos atšaukia didesnius pirkinius, o santaupas norinčių apsaugoti žmonių eilės ilgėja.", signals: {"shares": "negative", "technology": "strong-negative", "business": "negative", "savings": "positive"}, outcome: "Bankai pristabdo paskolas, o įmonės atideda plėtrą. Santaupos išlaiko vertę geriausiai." },
+  { id: "battery-breakthrough", title: "Naujas baterijos bandymas sustabdomas", body: "Vietos laboratorija atšaukia svarbų baterijos bandymą po netikėto perkaitimo. Bendrovė sako, kad niekas nenukentėjo, bet partneriai laukia atsakymų, o konkurentai skelbia savo bandymų rezultatus.", signals: {"shares": "negative", "technology": "positive", "business": "positive", "savings": "steady"}, outcome: "Paaiškėja, kad sugedo jutiklis, o ne baterija. Technologijų bendrovės atgauna pasitikėjimą." },
+  { id: "market-fair-orders", title: "Vietos mugė sulaukia didelio užsakymo", body: "Savaitgalio mugėje keli vietos gamintojai sulaukia bendro užsakymo iš didelio pardavėjo. Komandos skaičiuoja, ar pajėgs laiku pagaminti prekes; kiti prekybininkai stebi, ar pirkėjų entuziazmas išsilaikys.", signals: {"shares": "positive", "technology": "positive", "business": "strong-positive", "savings": "steady"}, outcome: "Didelis pirkėjas patvirtina mugės užsakymą. Vietos verslai ir technologijų tiekėjai gauna postūmį." },
+]);
+export const DEMO_MARKET_ASSETS = Object.freeze([
+  { key: 'shares', label: 'Akcijų fondas' }, { key: 'technology', label: 'Technologijų fondas' },
+  { key: 'business', label: 'Vietos verslas' }, { key: 'savings', label: 'Santaupos' },
+]);
+const MARKET_RETURNS = Object.freeze([
+  { shares: -0.10, technology: -0.07, business: 0.045, savings: 0.02 },
+  { shares: 0.12, technology: 0.24, business: -0.025, savings: 0.012 },
+  { shares: -0.13, technology: -0.16, business: -0.12, savings: 0.045 },
+  { shares: -0.055, technology: 0.18, business: 0.055, savings: 0.014 },
+  { shares: 0.085, technology: 0.055, business: 0.08, savings: 0.014 },
+]);
+export function getDemoMarketStory(weekNo = 1) {
+  const index = Math.max(0, Math.min(DEMO_MARKET_STORIES.length - 1, (Number(weekNo) || 1) - 1));
+  return { ...DEMO_MARKET_STORIES[index], returns: MARKET_RETURNS[index] };
+}
+export function getDemoMarketWinner(weekNo = 1) {
+  const story = getDemoMarketStory(weekNo);
+  return DEMO_MARKET_ASSETS.reduce((best, asset) => story.returns[asset.key] > story.returns[best.key] ? asset : best, DEMO_MARKET_ASSETS[0]);
+}
+export function scoreDemoMarketGuess(weekNo, predictedAsset) {
+  const winner = getDemoMarketWinner(weekNo);
+  return { correct: predictedAsset === winner.key, winner: winner.key, winnerLabel: winner.label, bonus: predictedAsset === winner.key ? 25 : 0 };
+}
+
 export const DEMO_SCENARIO_EVENTS = Object.freeze([
   { title: 'Pasirink savaitės rinkos scenarijų', body: 'Perskaityk naujieną ir įvertink, kurioms rinkoms ji gali padėti ar pakenkti.' },
   ...DEMO_SCENARIOS.map(({ title, body }) => ({ title, body })),
@@ -102,7 +133,7 @@ function shuffled(items, random) {
 
 export function createDemoSession(seed = Date.now()) {
   const random = DEMO_RNG(seed);
-  return { seed, legacyChoices: shuffled(DEMO_CHOICES, random), steps: shuffled(DEMO_STEPS.map((step, sourceIndex) => ({
+  return { seed, marketWeek: Math.floor(random() * 5) + 1, legacyChoices: shuffled(DEMO_CHOICES, random), steps: shuffled(DEMO_STEPS.map((step, sourceIndex) => ({
     ...step,
     id: `${step.title.toLowerCase().replace(/[^a-z0-9]+/gi, '-')}-${sourceIndex}`,
     sourceIndex,

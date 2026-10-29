@@ -1,16 +1,33 @@
 // Deterministic one-week anonymous demo tests.
 import assert from 'node:assert/strict';
-import { DEMO_CAPITAL, DEMO_CHOICES, DEMO_STEPS, DEMO_FLOW, createDemoSession, getDemoStepChoices, buildDemoReveal, compareDemoChoice, simulateDemo, simulateDemoStep, validateDemoAllocation } from '../public/demo.js';
+import { DEMO_CAPITAL, DEMO_MARKET_ASSETS, DEMO_MARKET_STORIES, getDemoMarketStory, getDemoMarketWinner, scoreDemoMarketGuess, DEMO_CHOICES, DEMO_STEPS, DEMO_FLOW, createDemoSession, getDemoStepChoices, buildDemoReveal, compareDemoChoice, simulateDemo, simulateDemoStep, validateDemoAllocation } from '../public/demo.js';
 
 let passed = 0;
 const t = (name, fn) => { fn(); passed++; console.log('ok  ', name); };
 const balanced = { sav: 25, inv: 25, bus: 25, res: 25 };
+
+t('market stories provide valid predictions and awards', () => {
+  assert.equal(DEMO_MARKET_ASSETS.length, 4);
+  assert.equal(DEMO_MARKET_STORIES.length, 5);
+  const leaders = new Set();
+  for (let week = 1; week <= DEMO_MARKET_STORIES.length; week += 1) {
+    const winner = getDemoMarketWinner(week);
+    leaders.add(winner.key);
+    assert.equal(scoreDemoMarketGuess(week, winner.key).bonus, 25);
+    assert.equal(scoreDemoMarketGuess(week, 'wrong-choice').bonus, 0);
+    assert.ok(getDemoMarketStory(week).outcome);
+  }
+  assert.equal(leaders.size, 4);
+});
 
 t('randomized demo sessions are reproducible but vary by seed', () => {
   const first = createDemoSession('session-a');
   assert.deepEqual(first, createDemoSession('session-a'));
   assert.notDeepEqual(first, createDemoSession('session-b'));
   assert.equal(first.steps.length, DEMO_STEPS.length);
+  assert.ok(first.marketWeek >= 1 && first.marketWeek <= DEMO_MARKET_STORIES.length);
+  assert.equal(first.marketWeek, createDemoSession('session-a').marketWeek);
+  assert.notEqual(first.marketWeek, createDemoSession('session-b').marketWeek);
   assert.equal(new Set(first.steps.map((step) => step.id)).size, DEMO_STEPS.length);
   assert.equal(first.legacyChoices.length, DEMO_CHOICES.length);
   assert.notDeepEqual(first.legacyChoices, createDemoSession('session-b').legacyChoices);

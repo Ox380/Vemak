@@ -11,340 +11,265 @@
 <link rel="stylesheet" href="/app.css">
 <style>
 /* ==========================================================================
-   VEMAK · pagrindinis puslapis — TURGAUS LENTA
-   Pasaulis: kraft kartono lenta, rašiklio juodas, raudonas taisymas,
-   virvė, smeigės, žalvarinės ąselės. Jokio išorinio failo — medžiagas
-   piešia CSS gradientai ir SVG.
+   VEMAK · ŠVIESLENTĖ
+   Pasaulis: juodas švieslentės ekranas, ryški žalia, kietos plonos linijos,
+   dideli skaitmenys. Spalvos: juoda + žalia.
    ========================================================================== */
 :root{
-  --kraft:#cdb489; --kraft-2:#c1a678; --kraft-d:#a98c5e;
-  --paper:#f4ecd8; --paper-2:#e8dcc0; --paper-d:#d8c9a6;
-  --ink:#1b1815; --ink-2:#3f382d; --ink-3:#4a4234;
-  --mark:#c0392b; --mark-b:#d5452f; --mark-d:#6b1a12;
-  --brass:#9a7b3a; --string:#8a7657;
-  --good:#0f6b4f; --good-d:#0a5340;
-  --edge:rgba(60,44,20,.28);
+  --board:#0a0d0b; --board-2:#111815; --board-3:#18211c;
+  --line:rgba(255,255,255,.15); --line-2:rgba(255,255,255,.08);
+  --green:#1ae87f; --green-d:#0aa85c; --green-ink:#04180d;
+  --green-soft:rgba(26,232,127,.14);
+  --ink:#f2faf5; --ink-2:#a9bdb2; --ink-3:#8aa094;
+  --amber:#ffd24a; --red:#ff6b5e;
   --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --ease:cubic-bezier(.2,.7,.3,1);
 }
 
-/* ---------- lenta (fonas) ---------- */
+*{box-sizing:border-box}
 body{
   margin:0;font-family:var(--font);font-size:16px;line-height:1.55;color:var(--ink);
-  background:
-    radial-gradient(140px 70px at 14% 18%, rgba(110,82,42,.10), transparent 70%),
-    radial-gradient(200px 100px at 86% 62%, rgba(110,82,42,.08), transparent 70%),
-    radial-gradient(160px 80px at 42% 88%, rgba(255,255,255,.10), transparent 70%),
-    radial-gradient(90px 60px at 68% 26%, rgba(110,82,42,.07), transparent 70%),
-    radial-gradient(120px 70px at 8% 72%, rgba(110,82,42,.06), transparent 70%),
-    linear-gradient(168deg,#d5bd94,var(--kraft-2) 60%,var(--kraft-d));
+  background:var(--board);
+  background-image:
+    radial-gradient(760px 380px at 82% -8%, rgba(26,232,127,.10), transparent 70%),
+    radial-gradient(520px 300px at 6% 30%, rgba(26,232,127,.05), transparent 70%);
+  background-repeat:no-repeat;
 }
-h1,h2,h3{font-family:var(--font);color:var(--ink);letter-spacing:-.025em;line-height:1.08;margin:0 0 .5em;font-weight:900}
+h1,h2,h3{color:var(--ink);letter-spacing:-.028em;line-height:1.05;margin:0 0 .5em;font-weight:900}
 p{margin:0 0 1em}
-a{color:var(--ink)}
-.wrap{max-width:1160px;margin:0 auto;padding:0 22px}
+a{color:var(--green)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 22px}
 .muted{color:var(--ink-2)}
+.num{font-variant-numeric:tabular-nums}
 
-/* ---------- mediena: viršutinė juosta ---------- */
+/* ---------- viršutinė juosta ---------- */
 .rail{
-  position:relative;height:16px;border-radius:3px;margin-top:10px;
-  background:
-    radial-gradient(9px 6px at 12% 40%, rgba(0,0,0,.22), transparent 70%),
-    radial-gradient(14px 5px at 46% 62%, rgba(0,0,0,.16), transparent 70%),
-    radial-gradient(7px 5px at 78% 34%, rgba(0,0,0,.20), transparent 70%),
-    radial-gradient(200px 8px at 30% 80%, rgba(255,255,255,.10), transparent 70%),
-    linear-gradient(180deg,#8f6f43,#6f5430 55%,#5a4326);
-  box-shadow:0 3px 0 rgba(60,44,20,.28), inset 0 1px 0 rgba(255,255,255,.18);
-}
-.rail::after{
-  content:"";position:absolute;left:6%;right:6%;bottom:-3px;height:3px;border-radius:2px;
-  background:linear-gradient(90deg,transparent,rgba(40,28,12,.30),transparent);
+  height:4px;border-radius:0;
+  background:linear-gradient(90deg,var(--green),var(--green-d) 45%,rgba(26,232,127,.25));
 }
 
 /* ---------- navigacija ---------- */
-.nav{display:flex;align-items:center;gap:6px;padding:14px 0 12px;flex-wrap:wrap}
-.logo{
-  display:inline-flex;align-items:center;gap:9px;font-weight:900;font-size:1.16rem;letter-spacing:-.03em;
-  text-decoration:none;color:var(--ink);margin-right:6px;
-}
-.logo i{
-  display:grid;place-items:center;width:30px;height:30px;border-radius:50%;font-style:normal;
-  background:radial-gradient(circle at 38% 32%, #fff8e6, var(--paper-d) 62%, #c3b391);
-  border:1px solid var(--edge);box-shadow:inset 0 -1px 0 rgba(60,44,20,.18);font-size:.9rem;
-}
+.nav{display:flex;align-items:center;gap:4px;padding:16px 0 14px;flex-wrap:wrap;
+  border-bottom:1px solid var(--line-2)}
+.logo{display:inline-flex;align-items:center;gap:10px;font-weight:900;font-size:1.14rem;
+  letter-spacing:-.03em;text-decoration:none;color:var(--ink);margin-right:10px}
+.logo i{display:grid;place-items:center;width:30px;height:30px;border-radius:3px;font-style:normal;
+  background:var(--green);color:var(--green-ink);font-weight:900;font-size:.92rem}
 .nav a:not(.logo):not(.btn){
-  color:var(--ink-2);text-decoration:none;font-weight:750;font-size:.9rem;padding:7px 11px;border-radius:3px;
-  transition:background .16s var(--ease),color .16s var(--ease);
+  color:var(--ink-2);text-decoration:none;font-weight:750;font-size:.9rem;padding:8px 12px;border-radius:2px;
+  transition:background .15s var(--ease),color .15s var(--ease)
 }
-.nav a:not(.logo):not(.btn):hover{background:rgba(244,236,216,.6);color:var(--ink)}
+.nav a:not(.logo):not(.btn):hover{background:var(--green-soft);color:var(--green)}
 .nav .sp{flex:1}
-@media(max-width:760px){
-  .nav{gap:4px 6px;padding:12px 0}
+@media(max-width:820px){
+  .nav{gap:2px 4px;padding:12px 0}
   .nav .sp{display:none}
-  .nav a:not(.logo):not(.btn){font-size:.86rem;padding:6px 9px}
+  .nav a:not(.logo):not(.btn){font-size:.85rem;padding:7px 9px}
 }
 
-/* ---------- mygtukas ---------- */
+/* ---------- mygtukai ---------- */
 .btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:12px 20px;
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:13px 22px;
   font-family:var(--font);font-weight:900;font-size:.95rem;letter-spacing:.01em;text-decoration:none;cursor:pointer;
-  color:#f6f1e2;background:linear-gradient(170deg,var(--good),var(--good-d));
-  border:1px solid rgba(0,0,0,.28);border-radius:3px;
-  box-shadow:0 3px 0 rgba(10,60,45,.55), 0 12px 20px rgba(40,28,12,.24);
-  transition:transform .14s var(--ease),box-shadow .14s var(--ease),background .14s var(--ease);
+  color:var(--green-ink);background:var(--green);border:0;border-radius:3px;
+  transition:background .15s var(--ease),transform .12s var(--ease)
 }
-.btn:hover{transform:translateY(-2px);box-shadow:0 5px 0 rgba(10,60,45,.55), 0 16px 26px rgba(40,28,12,.28)}
-.btn:active{transform:translateY(1px);box-shadow:0 1px 0 rgba(10,60,45,.55)}
-.btn.alt{background:linear-gradient(170deg,#fbf6e7,var(--paper-2));color:var(--ink);border-color:var(--edge);
-  box-shadow:0 3px 0 rgba(60,44,20,.22), 0 10px 18px rgba(40,28,12,.16)}
-.btn.alt:hover{background:linear-gradient(170deg,#fffdf6,#f2e8d2)}
-.btn:disabled,.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none}
+.btn:hover{background:#3af494;transform:translateY(-1px)}
+.btn:active{transform:translateY(1px)}
+.btn.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.alt:hover{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.btn:disabled,.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
 .btn:focus-visible,a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
-  outline:3px solid var(--mark-b);outline-offset:2px;
+  outline:2px solid var(--green);outline-offset:3px
 }
 
-/* ---------- lenta, lentjuostės ir kabantys lipdukai ---------- */
-.stall{
-  position:relative;padding:16px 18px 20px;border-radius:4px;
-  background:linear-gradient(172deg,#c9ae82,#bda072);
-  border:1px solid rgba(60,44,20,.34);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.20), inset 0 -4px 12px rgba(60,44,20,.16),
-             0 14px 26px rgba(40,28,12,.20);
+/* ---------- hero ---------- */
+.hero{padding-bottom:8px}
+.board{display:grid;grid-template-columns:1.06fr .94fr;gap:40px;align-items:start;padding:34px 0 30px}
+@media(max-width:900px){.board{grid-template-columns:1fr;gap:28px}}
+#heroCopy{min-width:0}
+.sign{position:relative;margin:0 0 26px;padding:0}
+.sign-face{display:block}
+.sign-face b{
+  display:inline-flex;align-items:center;gap:9px;font-size:.98rem;font-weight:750;
+  color:var(--green);margin-bottom:14px
 }
-.batten{
-  position:relative;height:11px;border-radius:3px;
-  background:radial-gradient(9px 5px at 12% 40%, rgba(0,0,0,.24), transparent 70%),
-             radial-gradient(15px 4px at 52% 62%, rgba(0,0,0,.17), transparent 70%),
-             radial-gradient(7px 4px at 84% 34%, rgba(0,0,0,.20), transparent 70%),
-             linear-gradient(180deg,#93713f,#6b5030 60%,#57401f);
-  box-shadow:0 2px 4px rgba(40,28,12,.34), inset 0 1px 0 rgba(255,255,255,.20);
-}
-.batten.gap{margin-top:22px}
-.sign,.tag{
-  position:relative;margin:var(--drop,30px) 0 0;padding:18px 20px;
-  background:linear-gradient(172deg,#faf4e4,#f4ecd8);
-  border:1px solid rgba(60,44,20,.34);border-radius:2px;
-  box-shadow:0 12px 22px rgba(40,28,12,.22), inset 0 1px 0 rgba(255,255,255,.7);
-}
-.sign{padding:18px 26px 20px;box-shadow:0 16px 30px rgba(40,28,12,.26), inset 0 1px 0 rgba(255,255,255,.7)}
+.sign-face b::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--green);flex:none}
+.sign-face h1{font-size:clamp(2rem,4.9vw,3.35rem);margin:0;max-width:14em}
+.sign-face h1 em{font-style:normal;color:var(--green)}
+/* market-board likučiai šiame pasaulyje nerodomi */
+.sign .peg-top,.sign .eye,.sign .str-r,.sign::after,
+.tag .peg-top,.tag .eye,.tag::after,.batten{display:none}
+
+.tag{position:relative;margin:0 0 14px;padding:18px 20px;background:var(--board-2);
+  border:1px solid var(--line-2);border-left:3px solid var(--green);border-radius:3px}
+.tag p{margin:0;font-size:1.01rem;color:var(--ink-2)}
+.tag p.lead-text{font-size:1.06rem;color:var(--ink)}
 .tag.lead{padding:22px 22px}
-.tagrow{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
-@media(max-width:880px){.tagrow{grid-template-columns:1fr;gap:0}}
-/* virvė: nuo smeigės žemyn iki ąselės */
-.sign::after,.tag::after{
-  content:"";position:absolute;left:50%;bottom:100%;width:1.5px;height:var(--drop,30px);
-  background:linear-gradient(180deg,#8a7657,#a08a63);transform:translateX(-.75px);
-}
-.sign::after{left:26px;transform:none}
-.sign .str-r{position:absolute;right:26px;bottom:100%;width:1.5px;height:var(--drop,30px);
-  background:linear-gradient(180deg,#8a7657,#a08a63)}
-/* smeigė, įkalta į lentjuostę */
-.peg-top{
-  position:absolute;left:50%;bottom:calc(100% + var(--drop,30px));width:13px;height:13px;border-radius:50%;
-  transform:translate(-50%,50%);z-index:3;
-  background:radial-gradient(circle at 36% 30%,#ffe9a8,#9a7b3a 62%,#6b5220);
-  box-shadow:0 2px 3px rgba(40,28,12,.5), inset 0 -1px 1px rgba(0,0,0,.25);
-}
-.sign .peg-top{left:26px}
-.sign .peg-top.b{left:auto;right:26px}
-/* ąselė lentoje */
-.sign .eye,.tag .eye{
-  position:absolute;left:50%;top:-8px;width:15px;height:15px;border-radius:50%;transform:translateX(-50%);
-  background:radial-gradient(circle at 40% 34%,#fdfaf1,#cdc0a2 70%,#a99a78);
-  box-shadow:inset 0 0 0 3px rgba(60,44,20,.10), 0 1px 2px rgba(40,28,12,.3);z-index:2;
-}
-.sign .eye.l{left:26px}.sign .eye.r{right:26px;left:auto;transform:translateX(50%)}
-/* nukarimo ilgiai */
-.drop-1{--drop:34px}.drop-2{--drop:26px}.drop-3{--drop:50px}
-@media(max-width:880px){
-  .drop-1,.drop-2,.drop-3{--drop:24px}
-  .tag{margin-bottom:34px}
-}
-/* ranka surinktos raidės */
-.sign-face h1 .w{display:inline-block;white-space:nowrap;
-  transform:rotate(var(--wr,0deg)) translateY(var(--wy,0))}
-.sign-face h1 .c{display:inline-block;
-  transform:rotate(var(--r,0deg)) translateY(var(--y,0)) scale(var(--s,1))}
-.sign-face b{display:block;font-size:.75rem;letter-spacing:.18em;font-weight:900;color:var(--ink-3);text-transform:uppercase}
-.sign-face h1{font-size:clamp(1.85rem,4.4vw,2.95rem);margin:8px 0 0;max-width:15em}
-/* raudonas rankos įrašas ties „dabar" */
-.nowmark span{position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%) rotate(-3deg);
-  font-size:.7rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--mark-d);
-  background:var(--paper);padding:1px 6px;border-radius:2px;white-space:nowrap;
-  box-shadow:0 1px 2px rgba(40,28,12,.22)}
+.tagrow{display:grid;grid-template-columns:1fr;gap:14px}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 14px}
+.trust{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:8px}
+.trust li{display:inline-flex;align-items:center;gap:8px;font-size:.83rem;font-weight:750;color:var(--ink-2);
+  background:var(--board-3);border:1px solid var(--line-2);border-radius:2px;padding:6px 11px}
+.trust .ck{display:inline-block;width:6px;height:10px;border-right:2px solid var(--green);
+  border-bottom:2px solid var(--green);transform:rotate(45deg) translateY(-1px);flex:none}
 
-/* ---------- prisegtas miesto planas ---------- */
-.pin{position:relative;padding:12px 12px 0;background:linear-gradient(168deg,#e9dcc0,#dccdab);
-  border:1px solid var(--edge);border-radius:4px;box-shadow:0 16px 30px rgba(40,28,12,.26)}
-.pin .city{border-radius:2px;overflow:hidden;background:#dbeafe;box-shadow:inset 0 0 0 1px rgba(60,44,20,.18)}
+/* ---------- miesto švieslentė ---------- */
+.pin{position:relative;border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--board-2)}
+.pin::before{content:"";display:block;height:34px;background:var(--board-3);border-bottom:1px solid var(--line)}
+.pin .city{background:#0d1411}
 .pin .city svg{width:100%;height:auto;display:block}
-.peg{position:absolute;top:6px;width:13px;height:13px;border-radius:50%;
-  background:radial-gradient(circle at 36% 30%,#ffe9a8,var(--brass) 62%,#6b5220);
-  box-shadow:0 2px 3px rgba(40,28,12,.45)}
-.peg.a{left:16px}.peg.b{right:16px}
-.pin-cap{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 2px 12px;
-  font-size:.75rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.pin-cap{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 14px;
+  font-size:.76rem;font-weight:900;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);
+  border-top:1px solid var(--line-2)}
+.pin-cap span:first-child{color:var(--green)}
+.pin .peg{display:none}
 
-/* ---------- šešių savaičių kainų juosta ---------- */
-.strip{position:relative;display:flex;gap:0;overflow-x:auto;margin:6px 0 0;
-  border-top:2px solid rgba(60,44,20,.22);border-bottom:2px solid rgba(60,44,20,.22);
-  background:rgba(244,236,216,.34)}
-.strip .wk{flex:1 0 112px;padding:12px 14px;border-right:1px dashed rgba(60,44,20,.24);position:relative}
+/* ---------- savaičių juosta (ticker) ---------- */
+.strip{position:relative;display:flex;overflow-x:auto;margin:0;
+  background:var(--board-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.strip .wk{flex:1 0 116px;padding:13px 15px;border-right:1px solid var(--line-2)}
 .strip .wk:last-child{border-right:0}
-.strip .wk b{display:block;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
-.strip .wk span{display:block;font-size:.9rem;font-weight:800;margin-top:4px;color:var(--ink)}
-.strip .wk.now{background:rgba(192,57,43,.09)}
-.strip .wk.done span{text-decoration:line-through;text-decoration-color:var(--mark);
-  text-decoration-thickness:2px;color:var(--ink-3)}
-.nowmark{position:absolute;top:-2px;width:2px;height:calc(100% + 4px);background:var(--mark-b);
-  box-shadow:0 0 0 1px rgba(255,255,255,.35);transition:left .6s var(--ease);z-index:2}
-.nowmark span{position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%) rotate(-3deg);
-  font-size:.7rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--mark);
-  white-space:nowrap}
+.strip .wk b{display:block;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3)}
+.strip .wk span{display:block;font-size:.92rem;font-weight:800;margin-top:5px;color:var(--ink)}
+.strip .wk.done span{color:var(--ink-3);text-decoration:line-through;text-decoration-thickness:1px}
+.strip .wk.now{background:var(--green)}
+.strip .wk.now b{color:rgba(4,24,13,.72)}
+.strip .wk.now span{color:var(--green-ink)}
+.nowmark{position:absolute;top:0;width:3px;height:100%;background:var(--green);transition:left .5s var(--ease);z-index:2}
+.nowmark span{position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);
+  font-size:.72rem;font-weight:900;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--green-ink);background:var(--green);padding:2px 7px;border-radius:2px;white-space:nowrap}
 
-/* ---------- sekcijos: viena juosta, padalinta brėžtomis linijomis ---------- */
-section{padding:64px 0;border-top:2px solid rgba(60,44,20,.20)}
+/* ---------- sekcijos ---------- */
+section{padding:70px 0;border-top:1px solid var(--line-2)}
 section:first-child{border-top:0}
-@media(max-width:760px){section{padding:44px 0}}
-.sec-h{max-width:44em;margin:0 0 30px}
-.sec-h h2{font-size:clamp(1.5rem,3.2vw,2.15rem)}
+@media(max-width:760px){section{padding:48px 0}}
+.sec-h{max-width:46em;margin:0 0 32px}
+.sec-h h2{font-size:clamp(1.55rem,3.3vw,2.25rem)}
 .sec-h p{color:var(--ink-2);margin:0}
 
 /* ---------- naudos lentynos ---------- */
-.stalls{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:0;border:1px solid var(--edge);background:var(--paper)}
-@media(max-width:900px){.stalls{grid-template-columns:1fr}}
-.stall{padding:26px 24px;border-right:1px solid var(--edge)}
-.stall:last-child{border-right:0}
-@media(max-width:900px){.stall{border-right:0;border-bottom:1px solid var(--edge)}.stall:last-child{border-bottom:0}}
-.stall h3{font-size:1.06rem;display:flex;gap:10px;align-items:baseline;margin-bottom:12px}
-.stall h3 em{font-style:normal;font-size:.75rem;font-weight:900;letter-spacing:.16em;color:var(--mark-d);flex:none}
+.stalls{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:1px;background:var(--line-2);
+  border:1px solid var(--line-2);border-radius:3px;overflow:hidden}
+@media(max-width:920px){.stalls{grid-template-columns:1fr}}
+.stall{padding:26px 24px;background:var(--board-2)}
+.stall.big{background:var(--board-3)}
+.stall h3{font-size:1.05rem;display:flex;gap:10px;align-items:baseline;margin-bottom:13px}
+.stall h3 em{font-style:normal;font-size:.76rem;font-weight:900;letter-spacing:.1em;color:var(--green);flex:none}
 .stall ul{list-style:none;padding:0;margin:0}
-.stall li{position:relative;padding-left:22px;margin:.6em 0;font-size:.94rem;color:var(--ink-2)}
-.stall li::before{content:"";position:absolute;left:2px;top:.34em;width:5px;height:9px;
-  border-right:2px solid var(--good);border-bottom:2px solid var(--good);transform:rotate(45deg)}
-.stall.big{background:linear-gradient(172deg,#fdf8ec,var(--paper))}
+.stall li{position:relative;padding-left:22px;margin:.62em 0;font-size:.94rem;color:var(--ink-2)}
+.stall li::before{content:"";position:absolute;left:2px;top:.36em;width:6px;height:10px;
+  border-right:2px solid var(--green);border-bottom:2px solid var(--green);transform:rotate(45deg)}
 
 /* ---------- planai ---------- */
-.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(266px,1fr));gap:20px;align-items:stretch}
-.plan{
-  display:flex;flex-direction:column;position:relative;padding:24px 22px 22px;border-radius:3px;
-  background:linear-gradient(172deg,#fbf5e5,var(--paper-2));border:1px solid var(--edge);
-  box-shadow:0 12px 24px rgba(40,28,12,.22), inset 0 1px 0 rgba(255,255,255,.6);
-}
-.plan::before{content:"";position:absolute;left:50%;top:-11px;width:14px;height:14px;border-radius:50%;
-  background:radial-gradient(circle at 40% 34%,#fdfaf1,#cdc0a2 70%,#a99a78);
-  box-shadow:inset 0 0 0 3px rgba(60,44,20,.10), 0 1px 2px rgba(40,28,12,.3)}
-.plan.best{border:2px solid var(--good);box-shadow:0 18px 32px rgba(40,28,12,.26)}
-.plan .tag{position:absolute;top:-13px;left:22px;background:var(--good);color:#f6f1e2;
-  font-size:.7rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;padding:5px 11px;border-radius:2px;
-  transform:none;border:0;box-shadow:none;margin:0}
-.plan .tag::before,.plan .tag::after{display:none}
-.plan h3{margin:0;font-size:1.14rem}
-.plan .for{font-size:.84rem;color:var(--ink-3);margin:5px 0 0}
-.plan .price{font-size:2.1rem;font-weight:900;letter-spacing:-.04em;margin:14px 0 0;line-height:1;color:var(--ink)}
-.plan .price small{display:block;font-size:.8rem;font-weight:750;color:var(--ink-3);letter-spacing:0;margin-top:7px}
-.plan ul{list-style:none;padding:0;margin:18px 0 22px;flex:1}
-.plan li{position:relative;padding-left:22px;margin:.55em 0;font-size:.93rem;color:var(--ink-2)}
-.plan li::before{content:"";position:absolute;left:2px;top:.34em;width:5px;height:9px;
-  border-right:2px solid var(--good);border-bottom:2px solid var(--good);transform:rotate(45deg)}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:18px;align-items:stretch}
+.plan{display:flex;flex-direction:column;position:relative;padding:26px 22px 22px;border-radius:3px;
+  background:var(--board-2);border:1px solid var(--line-2)}
+.plan.best{border:2px solid var(--green);background:var(--board-3)}
+.plan .tag{position:absolute;top:-11px;left:20px;margin:0;padding:4px 10px;border:0;border-radius:2px;
+  background:var(--green);color:var(--green-ink);font-size:.72rem;font-weight:900;letter-spacing:.13em;
+  text-transform:uppercase;line-height:1.5}
+.plan h3{margin:0;font-size:1.16rem}
+.plan .for{font-size:.85rem;color:var(--ink-3);margin:6px 0 0}
+.plan .price{font-size:2.3rem;font-weight:900;letter-spacing:-.045em;margin:16px 0 0;line-height:1;
+  color:var(--green);font-variant-numeric:tabular-nums}
+.plan .price small{display:block;font-size:.8rem;font-weight:750;color:var(--ink-3);letter-spacing:0;margin-top:8px}
+.plan ul{list-style:none;padding:0;margin:20px 0 24px;flex:1}
+.plan li{position:relative;padding-left:22px;margin:.58em 0;font-size:.93rem;color:var(--ink-2)}
+.plan li::before{content:"";position:absolute;left:2px;top:.36em;width:6px;height:10px;
+  border-right:2px solid var(--green);border-bottom:2px solid var(--green);transform:rotate(45deg)}
 .plan .btn{width:100%}
-.plan-note{font-size:.86rem;color:var(--ink-3);margin:20px 0 0;max-width:52em}
+.plan-note{font-size:.87rem;color:var(--ink-3);margin:22px 0 0;max-width:54em}
 
-/* ---------- demo blokas ---------- */
-.demo{background:linear-gradient(172deg,#fbf5e5,var(--paper));border:1px solid var(--edge);border-radius:3px;
-  box-shadow:0 14px 28px rgba(40,28,12,.22);padding:24px;max-width:1040px}
-#demoBox h3{font-size:1.24rem}
-.demo-intro{display:grid;grid-template-columns:minmax(140px,.5fr) 1fr;gap:24px;align-items:center}
+/* ---------- demo ---------- */
+.demo{background:var(--board-2);border:1px solid var(--line-2);border-left:3px solid var(--green);
+  border-radius:3px;padding:24px;max-width:1060px}
+#demoBox h3{font-size:1.26rem}
+.demo-intro{display:grid;grid-template-columns:minmax(150px,.46fr) 1fr;gap:26px;align-items:center}
 @media(max-width:640px){.demo-intro{grid-template-columns:1fr}}
-.demo-intro-art{display:grid;place-items:center;min-height:170px;border:1px solid var(--edge);border-radius:3px;
-  background:radial-gradient(120px 90px at 30% 30%,rgba(110,82,42,.07),transparent 70%),var(--paper)}
+.demo-intro-art{display:grid;place-items:center;min-height:180px;border:1px solid var(--line-2);
+  border-radius:3px;background:var(--board-3)}
 .demo-intro ul{margin:14px 0 18px;padding-left:20px}
 .demo-intro li{margin:7px 0;color:var(--ink-2)}
-.money-art{position:relative;width:180px;height:142px}
-.bill{position:absolute;display:grid;place-items:center;width:88px;height:50px;border:2px solid var(--good-d);
-  border-radius:4px;background:linear-gradient(150deg,#cfe9d8,#8ec7ac);color:#08422f;font-size:1.8rem;font-weight:900;
-  box-shadow:0 4px 0 rgba(10,83,64,.22)}
-.bill::before,.bill::after{content:"·";position:absolute;font-size:1.2rem}
-.bill::before{left:7px}.bill::after{right:7px}
-.bill-back{left:16px;top:40px;transform:rotate(-13deg);opacity:.82}
-.bill-front{left:60px;top:54px;transform:rotate(10deg)}
+.money-art{position:relative;width:184px;height:146px}
+.bill{position:absolute;display:grid;place-items:center;width:92px;height:52px;border:2px solid var(--green-d);
+  border-radius:3px;background:rgba(26,232,127,.14);color:var(--green);font-size:1.9rem;font-weight:900;
+  font-variant-numeric:tabular-nums}
+.bill::before,.bill::after{content:"·";position:absolute;font-size:1.2rem;color:var(--green-d)}
+.bill::before{left:8px}.bill::after{right:8px}
+.bill-back{left:16px;top:40px;transform:rotate(-12deg);opacity:.75}
+.bill-front{left:62px;top:56px;transform:rotate(9deg)}
 .coin{position:absolute;display:grid;place-items:center;border-radius:50%;font-weight:900;
-  background:radial-gradient(circle at 36% 30%,#ffe9a8,var(--brass) 68%,#7c6128);color:#3d2e0c;border:1px solid #6b5220}
-.coin-one{width:40px;height:40px;left:14px;top:100px}
-.coin-two{width:29px;height:29px;left:122px;top:98px;font-size:.78rem}
-.money-arrow{position:absolute;right:2px;top:0;color:var(--good);font-size:2.6rem;font-weight:900;transform:rotate(-8deg)}
-.lock-icon{line-height:0;color:var(--good-d)}
+  background:var(--green);color:var(--green-ink);font-variant-numeric:tabular-nums}
+.coin-one{width:42px;height:42px;left:14px;top:102px}
+.coin-two{width:30px;height:30px;left:124px;top:100px;font-size:.78rem}
+.money-arrow{position:absolute;right:2px;top:0;color:var(--green);font-size:2.7rem;font-weight:900;transform:rotate(-8deg)}
+.lock-icon{line-height:0;color:var(--green)}
 .lock-icon svg{width:46px;height:46px;display:block}
-.lesson-icon{flex:none;width:42px;height:42px;border-radius:50%;background:var(--paper);display:grid;place-items:center;
-  color:var(--good-d);border:1px solid var(--edge)}
+.lesson-icon{flex:none;width:42px;height:42px;border-radius:3px;background:var(--green-soft);
+  display:grid;place-items:center;color:var(--green)}
 .lesson-icon svg{width:22px;height:22px;display:block}
 .choice-icon{line-height:0;display:block;color:var(--ink)}
 .choice-icon svg{width:24px;height:24px;display:block}
 
 /* ---------- forma ---------- */
-.pilot-card{max-width:640px;margin:0;padding:26px;background:linear-gradient(172deg,#fbf5e5,var(--paper));
-  border:1px solid var(--edge);border-radius:3px;box-shadow:0 12px 24px rgba(40,28,12,.20)}
-label{display:block;font-weight:800;font-size:.86rem;margin:14px 0 5px;color:var(--ink-2)}
-input,select,textarea{
-  font:inherit;width:100%;padding:11px 12px;border:1px solid var(--edge);border-radius:2px;
-  background:#fffdf6;color:var(--ink);transition:border-color .16s var(--ease),box-shadow .16s var(--ease);
-}
-input:focus,select:focus,textarea:focus{border-color:var(--good);box-shadow:0 0 0 3px rgba(15,107,79,.18);outline:none}
-input[type=checkbox]{width:auto;accent-color:var(--good)}
-.err{color:var(--mark);font-weight:750;margin:10px 0 0;min-height:1.2em}
+.pilot-card{max-width:660px;margin:0;padding:26px;background:var(--board-2);
+  border:1px solid var(--line-2);border-radius:3px}
+label{display:block;font-weight:800;font-size:.87rem;margin:15px 0 6px;color:var(--ink-2)}
+input,select,textarea{font:inherit;width:100%;padding:12px 13px;border:1px solid var(--line);
+  border-radius:2px;background:var(--board-3);color:var(--ink);
+  transition:border-color .15s var(--ease)}
+input:focus,select:focus,textarea:focus{border-color:var(--green);outline:none;box-shadow:0 0 0 2px var(--green-soft)}
+input[type=checkbox]{width:auto;accent-color:var(--green)}
+.err{color:var(--red);font-weight:750;margin:10px 0 0;min-height:1.2em}
 
 /* ---------- DUK ---------- */
-.faq details{background:var(--paper);border:1px solid var(--edge);border-radius:3px;margin:10px 0;overflow:hidden}
-.faq summary{font-weight:800;cursor:pointer;padding:15px 18px;list-style:none;display:flex;justify-content:space-between;
-  gap:12px;align-items:center;color:var(--ink)}
+.faq details{background:var(--board-2);border:1px solid var(--line-2);border-radius:3px;margin:10px 0}
+.faq summary{font-weight:800;cursor:pointer;padding:16px 18px;list-style:none;display:flex;
+  justify-content:space-between;gap:12px;align-items:center;color:var(--ink)}
 .faq summary::-webkit-details-marker{display:none}
-.faq summary::after{content:"+";font-size:1.25rem;color:var(--mark);font-weight:900;line-height:1}
+.faq summary::after{content:"+";font-size:1.3rem;color:var(--green);font-weight:900;line-height:1}
 .faq details[open] summary::after{content:"–"}
 .faq details p{padding:0 18px 16px;margin:0;color:var(--ink-2)}
 
 /* ---------- savaitės ritmas ---------- */
-.week{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0;
-  border:1px solid var(--edge);background:var(--paper)}
-.week div{padding:20px 18px;border-right:1px dashed rgba(60,44,20,.26);font-size:.93rem;color:var(--ink-2)}
-.week div:last-child{border-right:0}
-.week b{display:block;color:var(--ink);margin-bottom:6px;font-weight:900}
+.week{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;
+  background:var(--line-2);border:1px solid var(--line-2);border-radius:3px;overflow:hidden}
+.week div{padding:22px 18px;background:var(--board-2);font-size:.93rem;color:var(--ink-2)}
+.week b{display:block;color:var(--green);margin-bottom:7px;font-weight:900;font-size:.78rem;
+  letter-spacing:.13em;text-transform:uppercase}
 
 /* ---------- kodėl veikia ---------- */
-.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:0;
-  border:1px solid var(--edge);background:var(--paper)}
-.feat .card{padding:22px;border-right:1px solid var(--edge)}
-.feat .card:last-child{border-right:0}
-@media(max-width:820px){
-  .feat{grid-template-columns:1fr}
-  .feat .card{border-right:0;border-bottom:1px solid var(--edge)}
-  .feat .card:last-child{border-bottom:0}
-}
-.feat-head{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:1px;
+  background:var(--line-2);border:1px solid var(--line-2);border-radius:3px;overflow:hidden}
+.feat .card{padding:24px 22px;background:var(--board-2)}
+.feat-head{display:flex;align-items:center;gap:11px;margin-bottom:12px}
 .feat-head h3{margin:0;font-size:1rem}
-.feat .ic{flex:none;display:grid;place-items:center;width:28px;height:28px;color:var(--good-d)}
-.feat .ic svg{width:22px;height:22px;display:block}
+.feat .ic{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:2px;
+  background:var(--green-soft);color:var(--green)}
+.feat .ic svg{width:19px;height:19px;display:block}
 .feat p{margin:0;font-size:.93rem;color:var(--ink-2)}
 
 /* ---------- poraštė ---------- */
-footer{border-top:2px solid rgba(60,44,20,.24);
-  background:linear-gradient(180deg,rgba(60,44,20,.06),rgba(60,44,20,.12));padding:34px 0}
+footer{border-top:1px solid var(--line);background:var(--board-2);padding:36px 0}
 .foot-row{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:center}
+footer b{color:var(--ink)}
 footer a{color:var(--ink-2);font-weight:750}
-footer .note{color:var(--ink-3);font-size:.85rem;margin:14px 0 0}
+footer a:hover{color:var(--green)}
+footer .note{color:var(--ink-3);font-size:.86rem;margin:14px 0 0}
 
 /* ---------- auditorijos perjungiklis ---------- */
-.aud-switch{display:inline-flex;gap:0;border:1px solid var(--edge);border-radius:3px;overflow:hidden;
-  margin-bottom:18px;background:rgba(244,236,216,.5)}
-.aud-btn{border:0;background:transparent;color:var(--ink-2);font:inherit;font-weight:800;font-size:.85rem;
-  padding:9px 16px;cursor:pointer;border-right:1px solid var(--edge);
-  transition:background .16s var(--ease),color .16s var(--ease)}
+.aud-switch{display:inline-flex;gap:0;border:1px solid var(--line);border-radius:3px;overflow:hidden;
+  margin-bottom:22px;background:var(--board-2)}
+.aud-btn{border:0;background:transparent;color:var(--ink-2);font:inherit;font-weight:800;font-size:.86rem;
+  padding:10px 18px;cursor:pointer;border-right:1px solid var(--line);
+  transition:background .15s var(--ease),color .15s var(--ease)}
 .aud-btn:last-child{border-right:0}
-.aud-btn[aria-selected=true]{background:var(--good);color:#f6f1e2}
-.aud-btn[aria-selected=false]:hover{background:rgba(255,255,255,.55);color:var(--ink)}
+.aud-btn[aria-selected=true]{background:var(--green);color:var(--green-ink)}
+.aud-btn[aria-selected=false]:hover{background:var(--green-soft);color:var(--green)}
 
-@media(prefers-reduced-motion:reduce){
-  .nowmark,.btn,.aud-btn{transition:none}
-}
+@media(prefers-reduced-motion:reduce){.nowmark,.btn,.aud-btn{transition:none}}
 </style>
 </head>
 <body>
@@ -364,19 +289,15 @@ footer .note{color:var(--ink-3);font-size:.85rem;margin:14px 0 0}
         </div>
         <div id="heroCopy">
 
-        <div class="sign" style="--drop:34px">
-          <span class="peg-top"></span><span class="peg-top b"></span>
-          <span class="eye l"></span><span class="eye r"></span><span class="str-r"></span>
-          <span class="sign-face"><b>6 savaičių sezonas · vienai klasei</b><h1 data-hand>Finansinis raštingumas, kurį mokiniai nori žaisti.</h1></span>
+        <div class="sign">
+          <span class="sign-face"><b>6 savaičių sezonas · vienai klasei</b><h1>Finansinis raštingumas, kurį mokiniai <em>nori žaisti</em>.</h1></span>
         </div>
 
-        <div class="tag" style="--drop:30px">
-          <span class="peg-top"></span><span class="eye"></span>
+        <div class="tag"><span class="eye"></span>
           <p class="lead-text">Išbandyk šešių savaičių finansinį scenarijų: sek rinkos prognozes, keisk investicijų paskirstymą ir mokykis iš kainų kilimo bei kritimo. Mokytojams – pamokų planai ir ataskaitos.</p>
         </div>
 
-        <div class="tag lead" style="--drop:46px">
-          <span class="peg-top"></span><span class="eye"></span>
+        <div class="tag lead"><span class="eye"></span>
           <div class="row"><a class="btn alt" href="/play">Mokiniams prisijungimas</a><a class="btn" href="/teacher?register=1">Registruoti paskyrą</a></div>
           <p class="muted" style="font-size:.86rem;margin:0 0 12px">Mokiniai prisijungia su klasės kodu ir slapyvardžiu — be el. pašto.</p>
           <ul class="trust">
@@ -395,10 +316,10 @@ footer .note{color:var(--ink-3);font-size:.85rem;margin:14px 0 0}
           <div class="wk"><b>5 sav.</b><span>Biudžetas</span></div>
           <div class="wk"><b>6 sav.</b><span>Sezono pabaiga</span></div>
         </div>
+        </div>
       </div>
 
       <div class="pin">
-        <span class="peg a"></span><span class="peg b"></span>
         <div class="city" id="heroCity"></div>
         <div class="pin-cap"><span>Tavo miestas auga</span><span>6 savaitės</span></div>
       </div>
