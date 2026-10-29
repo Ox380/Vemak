@@ -258,6 +258,8 @@ input[type=checkbox],input[type=radio]{accent-color:var(--teal-d)}
   position:sticky;bottom:0;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);
   padding:14px 0;margin-top:14px;border-top:1px solid var(--line)
 }
+.strategy-lock-btn{width:50%;min-width:220px}
+@media(max-width:560px){.strategy-lock-btn{width:100%;min-width:0}}
 
 /* ----------------------------------------------------------------------- naujienos */
 .news{

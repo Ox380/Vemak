@@ -192,7 +192,7 @@ function viewWeek() {
     ${draft.inv > 0 ? `<h3>Kur investuoti?</h3><div class="mix">${ASSET_KEYS.map((a) => `<div class="mixitem"><div><span>${ASSET_META[a].icon} ${ASSET_META[a].name}</span><span id="m_${a}">${draft.mix[a]} %</span></div><input type="range" data-m="${a}" min="0" max="100" step="5" value="${draft.mix[a]}" aria-label="${ASSET_META[a].name}" ${dis}></div>`).join('')}</div>
       <p id="mixtot" class="${mixTot === 100 ? 'pos' : 'neg'}">Investicijų mišinys: ${mixTot} % ${mixTot === 100 ? '✓' : '(turi būti 100 %)'}</p>` : ''}
     <label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="up" style="width:auto" ${draft.upgrade ? 'checked' : ''} ${dis}> Plėsti Kavos barą (−${CONFIG.BIZ_UPGRADE_COST} €, kai verslas pilnas)</label>
-    <div class="lockbar">${lockedView ? '<span class="pill">🔒 Užrakinta. Rezultatai bus penktadienį.</span>' : `<button class="btn" id="lock" ${canLock ? '' : 'disabled'} style="width:100%">🔒 Užrakinti strategiją</button><p class="muted" style="font-size:.8rem;margin:.5em 0 0">Užrakinus keisti nebegalėsi.</p>`}</div>
+    <div class="lockbar">${lockedView ? '<span class="pill">🔒 Užrakinta. Rezultatai bus penktadienį.</span>' : `<button class="btn strategy-lock-btn" id="lock" ${canLock ? '' : 'disabled'}>🔒 Užrakinti strategiją</button><p class="muted" style="font-size:.8rem;margin:.5em 0 0">Užrakinus keisti nebegalėsi.</p>`}</div>
   </div></div>`;
 }
 
