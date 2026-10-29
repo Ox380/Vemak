@@ -382,7 +382,13 @@ tr.me:hover td{background:#d9f5ec}
 .market-reveal{display:flex;gap:12px;margin:14px 0;padding:14px;border-radius:10px;background:var(--panel);border:1px solid var(--line)}
 .market-reveal.hit{background:#ecfaf4;border-color:#9bd9bd}.market-reveal.miss{background:#fff7ed;border-color:#f3c28e}.market-reveal p{margin:6px 0}.market-reveal small{color:var(--muted);line-height:1.5}
 .game-loop{margin:16px 0;padding:16px;border:1px solid var(--line);border-radius:var(--r);background:var(--card);box-shadow:var(--sh-1)}
-.game-loop-top,.game-loop-meta,.model-collection{display:flex;justify-content:space-between;gap:12px;align-items:center}.game-loop h4{margin:7px 0 0}.game-loop-meta{font-size:.84rem;color:var(--muted);flex-wrap:wrap;margin-top:9px}.xp-track{height:10px;margin-top:12px;border-radius:99px;background:var(--panel);overflow:hidden}.xp-track span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#f0a72f,#20e0aa);transition:width .5s ease}.model-collection{margin-top:14px;padding-top:12px;border-top:1px solid var(--line-soft)}.model-collection div{display:grid;gap:4px}.model-collection small{color:var(--muted);font-size:.78rem}.tiny-model{width:92px;height:92px;background:radial-gradient(circle,#e7f1ec,#cfded2);border-radius:12px;--poster-color:transparent}
+.game-loop-top,.game-loop-meta,.model-collection{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.game-loop h4{margin:7px 0 0;display:flex;align-items:center;gap:8px}
+.collection-gem{position:relative;display:inline-block;width:17px;height:21px;transform:rotate(45deg);filter:drop-shadow(0 3px 4px rgba(42,223,177,.28));animation:gem-float 3.2s ease-in-out infinite}
+.collection-gem::before{content:'';position:absolute;inset:2px 1px 1px;background:linear-gradient(135deg,#d9fff5 0 20%,#39dfb2 42%,#087f72 72%,#b8fff0);clip-path:polygon(50% 0,100% 32%,76% 100%,24% 100%,0 32%);border:1px solid rgba(255,255,255,.8)}
+.collection-gem i,.collection-gem em{position:absolute;display:block;z-index:1;background:rgba(255,255,255,.9);border-radius:50%;font-style:normal}
+.collection-gem i{width:3px;height:3px;top:4px;left:5px}.collection-gem em{width:2px;height:2px;right:-8px;top:2px;opacity:.8}
+@keyframes gem-float{0%,100%{transform:rotate(45deg) translateY(0)}50%{transform:rotate(45deg) translateY(-3px)}}
 @media(max-width:600px){.game-loop-top,.model-collection{align-items:flex-start}.tiny-model{width:76px;height:76px}}
 
 .demo-panel{min-width:0}
