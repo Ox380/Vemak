@@ -9,9 +9,9 @@
 <link rel="icon" href="/icon.svg">
 <link rel="manifest" href="/manifest.webmanifest">
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
-<link rel="stylesheet" href="/app.css">
-<link rel="stylesheet" href="/theme.css">
-<script src="/theme-init.js"></script>
+<link rel="stylesheet" href="/app.css?v=20261029c">
+<link rel="stylesheet" href="/theme.css?v=20261029c">
+<script src="/theme-init.js?v=20261029c"></script>
 <style>
 /* ==========================================================================
    VEMAK · žalia su juoda proporcingai
@@ -297,6 +297,26 @@ footer .note{color:var(--text-3);font-size:.88rem;margin:16px 0 0}
 .nav .theme-toggle{flex:none;margin-left:6px}
 @media(max-width:860px){.nav .theme-toggle{margin-left:0}}
 
+
+/* ---------- KONKREČIOS SPALVOS: fonas niekada nesusilieja su tekstu ---------- */
+/* visi tekstai gauna pilną, nepermatomą spalvą */
+h1,h2,h3,h4,b,strong{color:var(--text)}
+p,li,dd,dt{color:var(--text-2)}
+.muted,small,.note{color:var(--text-3)}
+/* demo kortelė ir jos tekstas – visada kontrastingi */
+.demo,.demo .card,.demo-panel,.demo-intro{color:var(--text)}
+.demo h1,.demo h2,.demo h3,.demo h4,.demo b,.demo strong{color:var(--text)}
+.demo p,.demo li{color:var(--text-2)}
+.demo .muted,.demo small{color:var(--text-3)}
+/* žymos ir etiketės – konkretūs fonai, ne permatomi */
+.pill{background:var(--accent-soft);color:var(--accent-text);border:1px solid var(--accent);font-weight:600}
+.pill.blue,.pill.teal,.pill.green{background:var(--accent-soft);color:var(--accent-text);border-color:var(--accent)}
+/* kortelių kraštinės ryškesnės, kad fonas neštų formą */
+.demo,.pilot-card,.plan,.pin,.strip,.aud-switch{border-color:var(--line)}
+/* mygtukų tekstas – visada konkretus */
+.btn{color:var(--accent-ink)}
+.btn.alt,.btn.ghost{color:var(--accent-text);border-color:var(--accent)}
+
 @media(prefers-reduced-motion:reduce){.btn,.aud-btn{transition:none}}
 </style>
 </head>
@@ -477,6 +497,6 @@ footer .note{color:var(--text-3);font-size:.88rem;margin:16px 0 0}
     <div><a href="/play">Mokiniams: prisijungti su kodu</a> · <a href="/teacher">Mokytojams</a></div></div>
   <p class="note">Žaidimas yra mokomoji priemonė. Jis nesiūlo finansinių ar investavimo patarimų.</p>
 </div></footer>
-<script type="module" src="/landing.js"></script>
+<script type="module" src="/landing.js?v=20261029c"></script>
 </body>
 </html>

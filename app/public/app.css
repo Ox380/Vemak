@@ -536,3 +536,10 @@ tr.me:hover td{background:#d9f5ec}
 .ask-answer.pending{border-top-color:var(--amber)}
 .ask-answer .neg{color:var(--mark)}
 @media(max-width:520px){.ask-row .btn{width:100%}}
+
+/* ---------- KONKREČIOS SPALVOS ---------- */
+h1,h2,h3,h4,b,strong{color:var(--text)}
+p,li,dd,dt{color:var(--text-2)}
+.muted,small{color:var(--text-3)}
+.card,.demo-panel{background:var(--surface);color:var(--text);border:1px solid var(--line-soft)}
+.pill{background:var(--accent-soft);color:var(--accent-text);border:1px solid var(--accent);font-weight:600}

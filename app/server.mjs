@@ -451,7 +451,16 @@ export const server = http.createServer(async (req, res) => {
     const file = path.normalize(path.join(PUBLIC, rel));
     if (!file.startsWith(PUBLIC + path.sep)) throw new HttpError(403, 'Draudžiama.');
     if (!fs.existsSync(file) || !fs.statSync(file).isFile()) throw new HttpError(404, 'Puslapis nerastas.');
-    res.writeHead(200, { ...SEC, 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
+    // Talpykla: HTML niekada nesaugomas, kiti failai tikrinami iš naujo.
+    const isHtml = path.extname(file) === '.html';
+    const st = fs.statSync(file);
+    res.writeHead(200, {
+      ...SEC,
+      'Content-Type': MIME[path.extname(file)] || 'application/octet-stream',
+      'Cache-Control': isHtml ? 'no-store, must-revalidate' : 'no-cache, must-revalidate',
+      'ETag': '"' + st.size.toString(16) + '-' + st.mtimeMs.toString(16) + '"',
+      'Last-Modified': new Date(st.mtimeMs).toUTCString(),
+    });
     fs.createReadStream(file).pipe(res);
   } catch (e) {
     const status = e.status || 500;
