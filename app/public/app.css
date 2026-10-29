@@ -6,36 +6,28 @@
    ========================================================================== */
 
 :root{
-  /* --- VEMAK švieslentė: juoda + žalia --- */
-  --navy:#0a0d0b; --navy-2:#111815; --ink:#f2faf5; --muted:#a9bdb2;
-  --bg:#0a0d0b; --card:#111815;
-  --line:rgba(255,255,255,.15); --line-soft:rgba(255,255,255,.08);
-  --teal:#1ae87f; --teal-d:#0aa85c; --teal-l:rgba(26,232,127,.14);
-  --blue:#1ae87f; --blue-d:#0aa85c; --blue-l:rgba(26,232,127,.14);
-  --purple:#1ae87f; --purple-l:rgba(26,232,127,.14);
-  --amber:#ffd24a; --amber-l:rgba(255,210,74,.16);
-  --red:#ff6b5e; --red-d:#e04a3c; --red-l:rgba(255,107,94,.16);
-  --r-xs:2px; --r-sm:2px; --r:3px; --r-lg:3px; --r-xl:4px; --r-pill:3px;
-  --sh-1:none; --sh-2:none; --sh-3:none;
-  --sh-brand:none; --shadow:none;
-  --grad-brand:linear-gradient(170deg,#1ae87f,#0aa85c);
-  --green-ink:#04180d; --board:#0a0d0b; --board-3:#18211c;
-  --grad-hero:linear-gradient(170deg,#0a0d0b,#111815);
-  --ease:cubic-bezier(.2,.7,.3,1);
+  /* --- VEMAK: paprasta, profesionalu, juoda + žalia --- */
+  --navy:#0a0c0b; --navy-2:#111413; --ink:#f4f7f5; --muted:#9aa5a0;
+  --bg:#0a0c0b; --card:#111413;
+  --line:rgba(255,255,255,.10); --line-soft:rgba(255,255,255,.055);
+  --teal:#1fc16b; --teal-d:#28d47a; --teal-l:rgba(31,193,107,.12);
+  --blue:#1fc16b; --blue-d:#28d47a; --blue-l:rgba(31,193,107,.12);
+  --purple:#1fc16b; --purple-l:rgba(31,193,107,.12);
+  --amber:#e0b352; --amber-l:rgba(224,179,82,.14);
+  --red:#e5685c; --red-d:#cf574b; --red-l:rgba(229,104,92,.14);
+  --r-xs:6px; --r-sm:8px; --r:10px; --r-lg:12px; --r-xl:14px; --r-pill:8px;
+  --sh-1:none; --sh-2:none; --sh-3:none; --sh-brand:none; --shadow:none;
+  --grad-brand:linear-gradient(170deg,#1fc16b,#18a459);
+  --grad-hero:linear-gradient(170deg,#0a0c0b,#111413);
+  --ease:cubic-bezier(.25,.6,.3,1);
   --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --green:#1fc16b; --green-ink:#06120b; --board:#0a0c0b; --board-3:#161a18;
 }
 
 /* ---------------------------------------------------------------- pagrindas */
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
-body{
-  background:#0a0d0b;
-  background-image:
-    radial-gradient(760px 380px at 82% -8%, rgba(26,232,127,.10), transparent 70%),
-    radial-gradient(520px 300px at 6% 30%, rgba(26,232,127,.05), transparent 70%);
-  background-repeat:no-repeat;
-  color:#f2faf5;
-}
+body{background:#0a0c0b;color:#f4f7f5;-webkit-font-smoothing:antialiased}
 h1,h2,h3{line-height:1.2;margin:0 0 .5em;color:var(--ink);letter-spacing:-.02em;font-weight:800}
 h1{font-size:clamp(1.75rem,4vw,2.6rem)}
 h2{font-size:clamp(1.3rem,2.6vw,1.75rem)}
@@ -89,7 +81,7 @@ button{font:inherit;cursor:pointer}
 
 /* -------------------------------------------------------------- formos */
 input,select,textarea{
-  font:inherit;width:100%;padding:12px 13px;border:1.5px solid var(--line);border-radius:var(--r-sm);
+  font:inherit;width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:var(--r-sm);
   background:var(--board-3);color:var(--ink);transition:border-color .18s var(--ease)
 }
 input::placeholder,textarea::placeholder{color:#9aabc4}
@@ -162,7 +154,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--teal-d)}
 }
 .building-card:hover,.building-card:focus-visible{transform:translateY(-3px);border-color:rgba(26,232,127,.5);box-shadow:var(--sh-2)}
 .building-icon{
-  display:grid;place-items:center;width:42px;height:42px;border-radius:13px;
+  display:grid;place-items:center;width:42px;height:42px;border-radius:8px;
   background:linear-gradient(140deg,#eef4fd,#e6f7f2);font-size:1.4rem;border:1px solid var(--line-soft)
 }
 .building-card b,.building-card small{display:block}
@@ -178,7 +170,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--teal-d)}
 }
 .progress-top{display:flex;align-items:center;gap:14px}
 .avatar-badge{
-  display:grid;place-items:center;width:52px;height:52px;border-radius:16px;
+  display:grid;place-items:center;width:52px;height:52px;border-radius:10px;
   background:linear-gradient(135deg,#dcf9f0,#e9e4ff);font-size:1.75rem;
   border:1px solid rgba(10,13,11,.06);box-shadow:var(--sh-1)
 }
@@ -333,10 +325,10 @@ tr.me:hover td{background:#d9f5ec}
 .market-news h3{margin:12px 0 8px}.market-news p{line-height:1.65}.market-news>small,.market-guess small{display:block;color:var(--muted);line-height:1.5}
 .market-prediction{margin-top:18px}.market-prediction h4{margin:0 0 8px}.market-prediction>p{color:var(--muted);font-size:.92rem;line-height:1.55}
 .market-guess-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}
-.market-guess{display:grid;gap:5px;text-align:left;padding:13px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);cursor:pointer}
+.market-guess{display:grid;gap:5px;text-align:left;padding:13px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);cursor:pointer}
 .market-guess:hover,.market-guess.selected{border-color:var(--blue);box-shadow:0 0 0 2px #3b82f622;background:#f6faff}
 .market-guess:focus-visible{outline:3px solid #3b82f666;outline-offset:2px}
-.market-reveal{display:flex;gap:12px;margin:14px 0;padding:14px;border-radius:12px;background:#f3f6fa;border:1px solid var(--line)}
+.market-reveal{display:flex;gap:12px;margin:14px 0;padding:14px;border-radius:10px;background:#f3f6fa;border:1px solid var(--line)}
 .market-reveal.hit{background:#ecfaf4;border-color:#9bd9bd}.market-reveal.miss{background:#fff7ed;border-color:#f3c28e}.market-reveal p{margin:6px 0}.market-reveal small{color:var(--muted);line-height:1.5}
 
 /* ------------------------------------------------------------------ žaidimo progresas */
@@ -380,7 +372,7 @@ tr.me:hover td{background:#d9f5ec}
 .demo-awards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:13px;margin:16px 0}
 .avatars{display:flex;gap:9px;flex-wrap:wrap}
 .avbtn{
-  width:54px;height:54px;border-radius:var(--r);border:1.5px solid var(--line);background:var(--board-3);font-size:1.6rem;
+  width:54px;height:54px;border-radius:var(--r);border:1px solid var(--line);background:var(--board-3);font-size:1.6rem;
   transition:transform .16s var(--ease),border-color .16s var(--ease),box-shadow .16s var(--ease)
 }
 .avbtn:hover{transform:translateY(-2px);border-color:#b9cadd;box-shadow:var(--sh-1)}
@@ -465,7 +457,7 @@ tr.me:hover td{background:#d9f5ec}
 }
 
 /* ------------------------------------------------------------------------- reveal + reward */
-.reveal-step{max-width:760px;margin:5vh auto;text-align:center;padding:30px}.reveal-step .row{justify-content:center;margin-top:22px}.countdown{font-size:clamp(2.5rem,10vw,5rem);font-weight:900;color:var(--teal);letter-spacing:.18em;margin:22px 0;animation:reveal-pulse 1s ease-in-out infinite}.reveal-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:22px 0}.reveal-metrics>div{padding:14px;border-radius:12px;background:var(--board-3)}.reveal-metrics small,.reveal-metrics b{display:block}.reveal-metrics b{font-size:1.2rem;color:var(--ink);margin-top:5px}.podium{display:flex;align-items:end;justify-content:center;gap:10px;min-height:180px;margin:18px auto}.podium-place{display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:end;width:30%;padding:12px 6px;border-radius:12px 12px 0 0;background:var(--board-3)}.podium-place.p1{height:160px;background:#ffd24a}.podium-place.p2{height:125px;background:#2a342e}.podium-place.p3{height:100px;background:#7a5c30}.trophy-ceremony{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:20px 0}.ceremony-trophy{padding:18px;border-radius:14px;background:#2a2416;box-shadow:var(--shadow);font-size:2rem}.ceremony-trophy b,.ceremony-trophy small{display:block;font-size:1rem}.ceremony-trophy small{font-size:.78rem;color:var(--muted);margin-top:5px}.xp-reward{display:grid;gap:12px;justify-items:center;margin:22px 0}.xp-reward strong{font-size:2.5rem;color:var(--teal-d)}.xp-reward span{font-weight:800;color:var(--ink)}.xp-reward .xp-track{width:min(500px,100%)}.next-week-teaser{padding:24px;border-radius:16px;background:linear-gradient(135deg,#101c15,#0f1f18);font-size:1.1rem}.next-week-teaser:first-letter{font-size:3rem}@keyframes reveal-pulse{50%{transform:scale(1.08);opacity:.7}}.rewards-cabinet h4{margin:8px 0 4px;color:var(--ink)}.reward-pass{display:flex;gap:8px;margin:8px 0}.reward-week{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--board-3);color:var(--muted);font-weight:800}.reward-week.unlocked{background:var(--teal);color:#fff;animation:reward-pop .45s ease-out}.reveal-progress{padding:12px 14px;margin:12px 0;border-radius:12px;background:var(--board-3);color:var(--ink);font-weight:800}.reveal-progress small{display:block;color:var(--muted);font-weight:500;margin-top:4px}.reveal-rewards{padding:14px;margin-top:14px;border-radius:14px;background:linear-gradient(135deg,#2a2416,#0f1f18);border:1px solid #5a4a1e}.reveal-rewards h3{margin:0;color:var(--ink)}.reveal-rewards p{margin:.35em 0}@keyframes reward-pop{0%{transform:scale(.8);opacity:.4}100%{transform:scale(1);opacity:1}}
+.reveal-step{max-width:760px;margin:5vh auto;text-align:center;padding:30px}.reveal-step .row{justify-content:center;margin-top:22px}.countdown{font-size:clamp(2.5rem,10vw,5rem);font-weight:900;color:var(--teal);letter-spacing:.18em;margin:22px 0;animation:reveal-pulse 1s ease-in-out infinite}.reveal-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:22px 0}.reveal-metrics>div{padding:14px;border-radius:10px;background:var(--board-3)}.reveal-metrics small,.reveal-metrics b{display:block}.reveal-metrics b{font-size:1.2rem;color:var(--ink);margin-top:5px}.podium{display:flex;align-items:end;justify-content:center;gap:10px;min-height:180px;margin:18px auto}.podium-place{display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:end;width:30%;padding:12px 6px;border-radius:10px 12px 0 0;background:var(--board-3)}.podium-place.p1{height:160px;background:#ffd24a}.podium-place.p2{height:125px;background:#2a342e}.podium-place.p3{height:100px;background:#7a5c30}.trophy-ceremony{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:20px 0}.ceremony-trophy{padding:18px;border-radius:10px;background:#2a2416;box-shadow:var(--shadow);font-size:2rem}.ceremony-trophy b,.ceremony-trophy small{display:block;font-size:1rem}.ceremony-trophy small{font-size:.78rem;color:var(--muted);margin-top:5px}.xp-reward{display:grid;gap:12px;justify-items:center;margin:22px 0}.xp-reward strong{font-size:2.5rem;color:var(--teal-d)}.xp-reward span{font-weight:800;color:var(--ink)}.xp-reward .xp-track{width:min(500px,100%)}.next-week-teaser{padding:24px;border-radius:10px;background:linear-gradient(135deg,#101c15,#0f1f18);font-size:1.1rem}.next-week-teaser:first-letter{font-size:3rem}@keyframes reveal-pulse{50%{transform:scale(1.08);opacity:.7}}.rewards-cabinet h4{margin:8px 0 4px;color:var(--ink)}.reward-pass{display:flex;gap:8px;margin:8px 0}.reward-week{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--board-3);color:var(--muted);font-weight:800}.reward-week.unlocked{background:var(--teal);color:#fff;animation:reward-pop .45s ease-out}.reveal-progress{padding:12px 14px;margin:12px 0;border-radius:10px;background:var(--board-3);color:var(--ink);font-weight:800}.reveal-progress small{display:block;color:var(--muted);font-weight:500;margin-top:4px}.reveal-rewards{padding:14px;margin-top:14px;border-radius:10px;background:linear-gradient(135deg,#2a2416,#0f1f18);border:1px solid #5a4a1e}.reveal-rewards h3{margin:0;color:var(--ink)}.reveal-rewards p{margin:.35em 0}@keyframes reward-pop{0%{transform:scale(.8);opacity:.4}100%{transform:scale(1);opacity:1}}
 @media(max-width:650px){.reveal-metrics{grid-template-columns:repeat(2,1fr)}.reveal-step{padding:22px 16px}.podium-place{width:32%}}@media(prefers-reduced-motion:reduce){.countdown,.reward-week.unlocked{animation:none}}
 
 /* ------------------------------------------------------------------------- spauda */

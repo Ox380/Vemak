@@ -160,7 +160,7 @@ const AUD_MARKUP = {
         </div>
 
         <div class="tag lead">
-          <div class="row"><a class="btn" href="#pilotas">Rezervuoti asmeninį sezoną</a></div>
+          <div class="row"><a class="btn xl" href="#pilotas">Rezervuoti asmeninį sezoną</a></div>
           <ul class="trust">
             <li><i class="ck"></i>Veikia naršyklėje, be diegimo</li>
             <li><i class="ck"></i>Jokie tikri pinigai</li>
@@ -221,7 +221,7 @@ const AUD_MARKUP = {
     <label for="pr">Kaip žaisi?</label><select id="pr"><option>Sau asmeniškai</option><option>Šeimai</option><option>Dovanai</option><option>Kita</option></select>
     <label for="pm">Žinutė (nebūtina)</label><textarea id="pm" rows="3" maxlength="500"></textarea>
     <label style="display:flex;gap:9px;align-items:flex-start;font-weight:500;margin-top:16px"><input type="checkbox" id="pc" style="width:auto;margin-top:5px" required> Sutinku, kad su manimi susisieuktų dėl asmeninio sezono. Duomenys naudojami tik šiam tikslui.</label>
-    <p class="err" id="perr" role="alert"></p><button class="btn" style="width:100%">Registracija</button>
+    <p class="err" id="perr" role="alert"></p><button class="btn xl" style="width:100%">Registracija</button>
   </form>`,
     duk: `
   <div class="sec-h"><h2>Dažni klausimai</h2></div>
