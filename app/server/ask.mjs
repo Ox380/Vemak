@@ -7,11 +7,12 @@
 const eur = (n) => (n < 0 ? '−' : '') + Math.abs(Math.round(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' €';
 const num = (n) => Math.round(Number(n) || 0);
 
+// [galininkas, vardininkas, paaiškinimas]
 export const BUCKETS = {
-  sav: ['santaupos', 'Saugiausia dalis. Santaupos nejuda su rinka, todėl jos gelbsti, kai ateina netikėta išlaida.'],
-  inv: ['investicijos', 'Dalis, kuri seka rinkos prognozes. Ji gali augti greičiausiai, bet ir kristi greičiausiai.'],
-  bus: ['verslas', 'Tavo kavos baras. Pelnas priklauso nuo to, kaip pasirinkai plėtrą, o ne nuo rinkos.'],
-  res: ['rezervas', 'Apsauginis sluoksnis. Jis pirmas padengia netikėtas išlaidas, todėl nereikia skolintis.'],
+  sav: ['santaupas', 'Santaupos', 'Saugiausia dalis. Santaupos nejuda su rinka, todėl jos gelbsti, kai ateina netikėta išlaida.'],
+  inv: ['investicijas', 'Investicijos', 'Dalis, kuri seka rinkos prognozes. Ji gali augti greičiausiai, bet ir kristi greičiausiai.'],
+  bus: ['verslą', 'Verslas', 'Tavo kavos baras. Pelnas priklauso nuo to, kaip pasirinkai plėtrą, o ne nuo rinkos.'],
+  res: ['rezervą', 'Rezervas', 'Apsauginis sluoksnis. Jis pirmas padengia netikėtas išlaidas, todėl nereikia skolintis.'],
 };
 
 const TOPIC_HINTS = [
@@ -85,10 +86,10 @@ export function askAnswer(input = {}) {
     }
   } else if (topic === 'rezervas' || topic === 'santaupos' || topic === 'investicijos' || topic === 'verslas') {
     const key = { rezervas: 'res', santaupos: 'sav', investicijos: 'inv', verslas: 'bus' }[topic];
-    const [name, what] = BUCKETS[key];
+    const [acc, nom, what] = BUCKETS[key];
     const share = num(alloc[key]);
-    const shareTxt = share ? ` Šią savaitę į ${name} paskyrei ${share} % kapitalo.` : ` Šią savaitę į ${name} nieko nepaskyrei.`;
-    answer = `${name[0].toUpperCase() + name.slice(1)}: ${what}${shareTxt}`;
+    const shareTxt = share ? ` Šią savaitę į ${acc} paskyrei ${share} % kapitalo.` : ` Šią savaitę į ${acc} nieko nepaskyreisi.`;
+    answer = `${nom}: ${what}${shareTxt}`;
     if (topic === 'investicijos' && c.market && typeof c.market === 'object') {
       const parts = Object.entries(c.market)
         .filter(([, v]) => Number.isFinite(Number(v)))
