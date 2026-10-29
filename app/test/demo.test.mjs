@@ -38,7 +38,25 @@ t('alternative decision comparison is deterministic', () => {
   assert.equal(comparison.difference, comparison.alternative.netWorth - comparison.before.netWorth);
   assert.notEqual(comparison.before.netWorth, comparison.alternative.netWorth);
 });
-t('all demo choices are present', () => assert.equal(DEMO_CHOICES.length, 3));
+t('all demo choices are present', () => {
+  assert.equal(DEMO_CHOICES.length, 7);
+  for (const key of ['business', 'invest', 'protect', 'scholarship', 'freelance', 'course', 'marketplace']) {
+    assert.ok(DEMO_CHOICES.some((choice) => choice.key === key), key);
+  }
+});
+t('earning choices change the demo and explain income', () => {
+  const scholarship = simulateDemo('scholarship', balanced);
+  const freelance = simulateDemo('freelance', balanced);
+  assert.ok(scholarship.earned > 0);
+  assert.ok(freelance.earned > scholarship.earned);
+  assert.ok(scholarship.steps.some((step) => /pajam/.test(step.text)));
+});
+t('marketplace sale is shown separately from earned income', () => {
+  const result = simulateDemo('marketplace', balanced);
+  assert.equal(result.assetSale, 90);
+  assert.equal(result.earned, 0);
+  assert.ok(result.steps.some((step) => /Turto pavert/.test(step.text)));
+});
 
 // ---- „Pamoka": žingsnis po žingsnio paaiškinama, kas įvyko ----
 t('demo lesson explains the result step by step', () => {

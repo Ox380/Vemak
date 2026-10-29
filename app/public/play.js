@@ -223,6 +223,7 @@ function viewResults() {
         <div class="resrow"><span>Norai</span><b>${eur(-r.wants)}</b></div>
         <div class="resrow"><span>Laisvi pinigai paskirstymui</span><b>${eur(r.free)}</b></div>
         ${r.earned ? `<div class="resrow"><span>Papildomos pajamos</span><b class="pos">${eur(r.earned, true)}</b></div>` : ''}
+        ${r.assetSale ? `<div class="resrow"><span>Turto pardavimas (ne pajamos)</span><b class="pos">${eur(r.assetSale, true)}</b></div>` : ''}
         ${r.businessRevenue ? `<div class="resrow"><span>Verslo pajamos</span><b class="pos">${eur(r.businessRevenue, true)}</b></div><div class="resrow"><span>Verslo išlaidos</span><b class="neg">${eur(-r.businessExpenses)}</b></div><div class="resrow"><span>Verslo pelnas</span><b class="${r.businessProfit >= 0 ? 'pos' : 'neg'}">${eur(r.businessProfit, true)}</b></div>` : ''}
         ${r.expense ? `<div class="resrow"><span>Netikėta išlaida</span><b class="neg">${eur(-r.expense)}</b></div>` : ''}
         ${r.forced ? `<div class="resrow"><span>Priverstinis turto pardavimas (−15 %)</span><b class="neg">${eur(-r.penaltyLost)}</b></div>` : ''}
