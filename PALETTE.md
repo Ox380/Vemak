@@ -42,19 +42,35 @@ Baltas pagrindas, indigo pirminė, kelių spalvų akcentai.
 | Klaida | `--danger` | `--rose-700` |
 | Įspėjimas | `--warn` | `--amber-700` |
 
-### Tamsusis (`data-theme="dark"`)
-Tamsus pagrindas, ryškūs kelių spalvų akcentai.
+### Tamsusis (`data-theme="dark"`) — žalia ir juoda
+Juodas pagrindas su žaliu posvyriu, balta ir šviesiai žali tonai, ryški žalia akcentui.
 
 | Paskirtis | Kintamasis | Reikšmė |
 |---|---|---|
-| Fonas | `--bg` | `#0b0a14` |
-| Paviršius | `--surface` | `#151322` |
-| Tekstas | `--text` | `#f4f3fb` |
-| Antrinis tekstas | `--text-2` | `#c3c0d6` |
-| Akcentas | `--accent` | `--indigo-500` |
-| Akcento tekstas | `--accent-text` | `--indigo-300` |
-| Klaida | `--danger` | `--rose-300` |
-| Įspėjimas | `--warn` | `--amber-300` |
+| Fonas | `--bg` | `#060907` |
+| Paviršius | `--surface` | `#0d1410` |
+| Antrasis paviršius | `--surface-2` | `#131c16` |
+| Juosta (nav, footer) | `--band` | `#040705` |
+| Tekstas | `--text` | `#eef7f1` |
+| Antrinis tekstas | `--text-2` | `#b3c7ba` |
+| Trečiasis tekstas | `--text-3` | `#8ba396` |
+| Akcentas | `--accent` | `--green-500` `#10b981` |
+| Tekstas ant akcento | `--accent-ink` | `#04140a` |
+| Akcento tekstas | `--accent-text` | `--green-300` `#6ee7b7` |
+| Klaida | `--danger` | `#fca5a5` |
+| Įspėjimas | `--warn` | `#fcd34d` |
+
+**Sekcijų spalvos tamsiame režime** — tik žalios šeimos atspalviai:
+
+| Sekcija | Reikšmė |
+|---|---|
+| Demo | `--green-400` `#34d399` |
+| Nauda | `--emerald-400` `#34d399` |
+| Kodėl veikia | `--emerald-300` `#6ee7b7` |
+| Planai | `#a3e635` |
+| Prašymas | `--green-300` `#86efac` |
+
+**Krepšeliai tamsiame režime:** Santaupos `#2dd4bf`, Investicijos `#34d399`, Verslas `#a3e635`, Rezervas `#6ee7b7`.
 
 ---
 
@@ -92,6 +108,12 @@ Miesto SVG generuojamas vienu žaliu rinkiniu, o po to **perdažomas pagal temą
 - sodrumas pakoreguojamas pagal režimą.
 
 ## 6. Taisyklės
+
+- **Fonas ir tekstas niekada nesutampa.** Kiekvienas tekstas privalo turėti
+  skirtingą spalvą nei jo fonas. Tikrinama automatiškai: nuskaitomi apskaičiuoti
+  `color` ir `background-color` porai ir apskaičiuojamas kontrasto santykis.
+  Mažas tekstas ≥ 4,5:1, didelis ≥ 3:1. Auditas paleidžiamas abiem režimais ir
+  visuose puslapiuose.
 
 - **Kontrastas:** tekstas ≥ 4,5:1, didelis tekstas ≥ 3:1. Jei spalva naudojama
   kaip tekstas, imamas 700–800 atspalvis, ne 500–600.

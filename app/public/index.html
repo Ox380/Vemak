@@ -195,7 +195,7 @@ section:first-child{border-top:0}
 label{display:block;font-weight:500;font-size:.9rem;margin:16px 0 7px;color:var(--text-2)}
 input,select,textarea{font:inherit;width:100%;padding:12px 13px;border:1px solid var(--line);
   border-radius:8px;background:var(--surface-2);color:var(--ink);transition:border-color .15s var(--ease)}
-input:focus,select:focus,textarea:focus{border-color:var(--accent-text);outline:none;background:#fff}
+input:focus,select:focus,textarea:focus{border-color:var(--accent-text);outline:none;background:var(--surface)}
 input[type=checkbox]{width:auto;accent-color:var(--accent-text)}
 .err{color:var(--red);font-weight:500;margin:12px 0 0;min-height:1.2em}
 
@@ -232,11 +232,11 @@ footer a:hover{color:var(--accent-text);text-decoration:none}
 footer .note{color:var(--text-3);font-size:.88rem;margin:16px 0 0}
 
 /* ---------- auditorijos perjungiklis ---------- */
-.aud-switch{display:inline-flex;gap:2px;padding:3px;border-radius:9px;background:#fff;
+.aud-switch{display:inline-flex;gap:2px;padding:3px;border-radius:9px;background:var(--surface);
   border:1px solid var(--line);margin-bottom:26px}
 .aud-btn{border:0;background:transparent;color:var(--ink-2);font:inherit;font-weight:500;font-size:.88rem;
   padding:8px 16px;border-radius:7px;cursor:pointer;transition:background .15s var(--ease),color .15s var(--ease)}
-.aud-btn[aria-selected=true]{background:var(--accent);color:#fff}
+.aud-btn[aria-selected=true]{background:var(--accent);color:var(--accent-ink)}
 .aud-btn[aria-selected=false]{color:var(--ink-2)}
 .aud-btn[aria-selected=false]:hover{color:var(--accent-text);background:var(--accent-soft)}
 
@@ -286,7 +286,7 @@ footer .note{color:var(--text-3);font-size:.88rem;margin:16px 0 0}
 .plans .plan:nth-child(3){--accent:var(--c-plans); --accent-soft:var(--c-plans-soft); --accent-text:var(--c-plans)}
 .plan .price{color:var(--accent-text)}
 .plan.best{border-color:var(--accent)}
-.plan .tag{background:var(--accent);color:#fff}
+.plan .tag{background:var(--accent);color:var(--accent-ink)}
 .plan .btn{background:var(--accent);border-color:var(--accent)}
 .plan .btn:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
 .plan .btn.alt{background:transparent;color:var(--accent-text);border-color:var(--accent)}

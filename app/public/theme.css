@@ -111,57 +111,63 @@
   --grad-hero:linear-gradient(160deg,var(--violet-600),var(--cyan-600) 55%,var(--green-500));
 }
 
-/* ---------- TAMSUSIS REŽIMAS ---------- */
+/* ---------- TAMSUSIS REŽIMAS: ŽALIA + JUODA ---------- */
 [data-theme="dark"]{
-  --bg:#0b0a14;
-  --surface:#151322;
-  --surface-2:#1d1a2e;
-  --band:#080711;
+  /* juodas pagrindas su žaliu atspalviu */
+  --bg:#060907;
+  --surface:#0d1410;
+  --surface-2:#131c16;
+  --band:#040705;
 
-  --text:#f4f3fb;
-  --text-2:#c3c0d6;
-  --text-3:#9a96b4;
+  /* tekstas – balta ir šviesiai žali pilki tonai */
+  --text:#eef7f1;
+  --text-2:#b3c7ba;
+  --text-3:#8ba396;
 
-  --line:rgba(255,255,255,.16);
-  --line-2:rgba(255,255,255,.08);
+  --line:rgba(255,255,255,.14);
+  --line-2:rgba(255,255,255,.07);
 
-  --accent:var(--indigo-500);
-  --accent-hover:var(--indigo-400);
-  --accent-ink:#120c24;
-  --accent-text:var(--indigo-300);
-  --accent-soft:rgba(99,102,241,.20);
+  /* akcentas – ryški žalia */
+  --accent:var(--green-500);
+  --accent-hover:var(--green-400);
+  --accent-ink:#04140a;
+  --accent-text:var(--green-300);
+  --accent-soft:rgba(16,185,129,.16);
 
-  --danger:var(--rose-300);
-  --warn:var(--amber-300);
+  --danger:#fca5a5;
+  --warn:#fcd34d;
   --ok:var(--green-300);
 
-  --c-hero:var(--indigo-300);    --c-hero-soft:rgba(99,102,241,.18);
-  --c-benefit:var(--teal-300);   --c-benefit-soft:rgba(45,212,191,.16);
-  --c-why:var(--emerald-300);    --c-why-soft:rgba(52,211,153,.16);
-  --c-plans:var(--orange-300);   --c-plans-soft:rgba(251,146,60,.16);
-  --c-pilot:var(--rose-300);     --c-pilot-soft:rgba(251,113,133,.14);
+  /* sekcijos – skirtingi ŽALIOS atspalviai */
+  --c-hero:var(--green-400);     --c-hero-soft:rgba(52,211,153,.16);
+  --c-benefit:var(--emerald-400); --c-benefit-soft:rgba(52,211,153,.14);
+  --c-why:var(--emerald-300);    --c-why-soft:rgba(110,231,183,.14);
+  --c-plans:#a3e635;             --c-plans-soft:rgba(163,230,53,.14);
+  --c-pilot:var(--green-300);    --c-pilot-soft:rgba(134,239,172,.14);
 
-  --b-sav:var(--teal-300); --b-inv:var(--indigo-300); --b-bus:var(--orange-300); --b-res:var(--emerald-300);
+  /* krepšeliai – žalios šeimos atspalviai */
+  --b-sav:#2dd4bf; --b-inv:var(--green-400); --b-bus:#a3e635; --b-res:var(--emerald-300);
 
-  --n0:#ffffff; --n50:#f4f3fb; --n100:#e4e1f2; --n200:#c3c0d6;
-  --n300:#9a96b4; --n400:#6f6b8a; --n500:#4b4763; --n600:#332f47;
-  --n700:#1d1a2e; --n800:#151322; --n900:#0b0a14;
-  --g50:#0b0a14; --g100:rgba(139,92,246,.18); --g300:var(--violet-300);
-  --g500:var(--violet-500); --g600:var(--violet-400); --g700:var(--violet-300);
-  --g800:var(--violet-200); --g900:var(--violet-800); --g950:#2e1065;
-  --ink:#f4f3fb; --ink-2:#c3c0d6; --ink-3:#9a96b4;
-  --on-dark:#f4f3fb; --on-dark-2:var(--violet-200);
-  --navy:#f4f3fb; --navy-2:#1d1a2e; --muted:#c3c0d6;
-  --card:#151322; --card-2:#1d1a2e; --card-3:#1d1a2e;
-  --board:#0b0a14; --board-2:#151322; --board-3:#1d1a2e;
-  --teal:var(--cyan-400); --teal-d:var(--cyan-300); --teal-l:rgba(34,211,238,.14);
-  --blue:var(--blue-400); --blue-d:var(--blue-300); --blue-l:rgba(96,165,250,.14);
-  --purple:var(--violet-400); --purple-l:rgba(139,92,246,.16);
-  --amber:var(--amber-300); --amber-l:rgba(251,191,36,.14);
-  --red:var(--rose-300); --red-d:var(--rose-400); --red-l:rgba(251,113,133,.14);
-  --green:var(--green-400); --green-ink:#04160f;
-  --grad-brand:linear-gradient(135deg,var(--violet-400),var(--violet-600));
-  --grad-hero:linear-gradient(160deg,#2a1a5e,#0e3f4a 55%,#0d3b2c);
+  /* neutralūs tonai su žaliu posvyriu */
+  --n0:#ffffff; --n50:#eef7f1; --n100:#d6e5da; --n200:#b3c7ba;
+  --n300:#8ba396; --n400:#5f776a; --n500:#3d5247; --n600:#26362d;
+  --n700:#131c16; --n800:#0d1410; --n900:#060907;
+  --g50:#060907; --g100:rgba(16,185,129,.16); --g300:var(--green-300);
+  --g500:var(--green-500); --g600:var(--green-400); --g700:var(--green-300);
+  --g800:var(--green-200); --g900:var(--green-800); --g950:#032114;
+  --ink:#eef7f1; --ink-2:#b3c7ba; --ink-3:#8ba396;
+  --on-dark:#eef7f1; --on-dark-2:var(--green-200);
+  --navy:#eef7f1; --navy-2:#131c16; --muted:#b3c7ba;
+  --card:#0d1410; --card-2:#131c16; --card-3:#131c16;
+  --board:#060907; --board-2:#0d1410; --board-3:#131c16;
+  --teal:#2dd4bf; --teal-d:#5eead4; --teal-l:rgba(45,212,191,.14);
+  --blue:var(--green-400); --blue-d:var(--green-300); --blue-l:rgba(16,185,129,.14);
+  --purple:var(--emerald-300); --purple-l:rgba(110,231,183,.14);
+  --amber:#fcd34d; --amber-l:rgba(252,211,77,.14);
+  --red:#fca5a5; --red-d:#f87171; --red-l:rgba(252,165,165,.14);
+  --green:var(--green-500); --green-ink:#04140a;
+  --grad-brand:linear-gradient(135deg,var(--green-400),var(--green-600));
+  --grad-hero:linear-gradient(160deg,#04231a,#03140f 55%,#020a07);
 }
 
 /* ---------- PAGRINDAS ---------- */
