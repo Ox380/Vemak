@@ -6,6 +6,9 @@
   "description": "VEMAK - Lithuanian financial-literacy game for school classes",
   "scripts": {
     "start": "node server.mjs",
+    "check:nexos-env": "node scripts/check-nexos-env.mjs",
+    "test:nexos-live": "node scripts/test-nexos-live.mjs",
+    "diagnose:nexos-live": "node scripts/diagnose-nexos-live.mjs",
     "test": "node test/engine.test.mjs && node test/demo.test.mjs && node test/scenario-news.test.mjs && node server/ai-mentor.test.mjs && node test/api.test.mjs"
   }
 }
