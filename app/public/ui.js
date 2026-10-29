@@ -25,7 +25,7 @@ export async function api(method, url, body, token) {
 // „Pamoka" blokas: mokymo tekstas + žingsnis po žingsnio įvykių seka.
 // Naudoja ir žaidimo rezultatų ekranas (engine.js), ir anoniminis demo (demo.js).
 export function lessonBlock(lesson, steps = []) {
-  const rows = (steps || []).map((s) => `<li><span>${esc(s.text)}</span>`
+  const rows = (steps || []).map((s) => `<li><span class="lesson-step-copy"><span>${esc(s.text)}</span>${s.comment ? `<small class="lesson-comment">${esc(s.comment)}</small>` : ''}</span>`
     + (s.amount != null ? `<b class="${s.amount > 0 ? 'pos' : s.amount < 0 ? 'neg' : 'muted'}">${eur(s.amount, true)}</b>` : '')
     + '</li>').join('');
   return `<div class="lesson">`

@@ -280,6 +280,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--teal-d)}
 .lesson-steps li::before{content:counter(ls);position:absolute;left:12px;top:10px;width:22px;height:22px;border-radius:50%;
   background:var(--navy);color:#fff;font-size:.72rem;font-weight:800;display:grid;place-items:center}
 .lesson-steps li b{white-space:nowrap;font-variant-numeric:tabular-nums}
+.lesson-step-copy{display:grid;gap:3px;min-width:0}.lesson-comment{color:var(--muted);font-size:.78rem;line-height:1.35;font-weight:500}
 .lesson-steps li:last-child{background:linear-gradient(135deg,#eef8f4,#eaf3ff);border-color:rgba(18,180,140,.28);font-weight:650}
 
 /* -------------------------------------------------------------------- rezultatai */

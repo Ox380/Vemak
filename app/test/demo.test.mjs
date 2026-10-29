@@ -68,7 +68,10 @@ t('demo has ten connected economic steps with dynamic progress', () => {
     assert.equal(result.totalSteps, DEMO_STEPS.length);
     assert.match(result.progress, new RegExp(`^${i + 1}/10`));
     assert.ok(result.choices.length >= 4, `step ${i + 1} needs expanded choices`);
-    assert.ok(result.choices.every((item) => item.label && item.lesson));
+    const choices = result.choices;
+    assert.ok(choices.every((item) => item.label && item.lesson));
+    const selected = simulateDemoStep(i, choices[0].key, DEMO_CAPITAL);
+    assert.ok(selected.choices.find((item) => item.key === selected.choice).lesson);
     capital = result.nextCapital;
   }
   assert.equal(simulateDemoStep(9, 'balanced', capital).complete, true);
