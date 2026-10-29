@@ -101,13 +101,13 @@ a:hover{text-decoration:underline}
 .row{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 20px}
 .trust{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:8px 22px}
 .trust li{display:inline-flex;align-items:center;gap:9px;font-size:.88rem;color:var(--ink-2)}
-.trust .ck{display:inline-block;width:5px;height:9px;border-right:1.5px solid var(--accent-text);
-  border-bottom:1.5px solid var(--accent-text);transform:rotate(45deg) translateY(-1px);flex:none}
+.trust .ck{display:grid;place-items:center;width:13px;height:13px;flex:none;border:0;transform:none;line-height:0;color:var(--accent-text)}
+.trust .ck svg{width:13px;height:13px;display:block;margin:0}
 
 /* ---------- miesto skydas ---------- */
 .pin{position:relative;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r);
   overflow:hidden;box-shadow:0 1px 2px rgba(10,45,28,.06)}
-.pin .city{background:var(--accent-soft)}
+.pin .city{display:grid;place-items:center;background:var(--accent-soft)}
 .pin .city svg{width:100%;height:auto;display:block}
 .pin-cap{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 16px;
   border-top:1px solid var(--line-2);font-size:.85rem;color:var(--ink-3)}
@@ -219,8 +219,8 @@ input[type=checkbox]{width:auto;accent-color:var(--accent-text)}
 .feat .feat-item{display:block}
 .feat-head{display:flex;align-items:center;gap:11px;margin-bottom:12px}
 .feat-head h3{margin:0;font-size:1rem}
-.feat .ic{flex:none;display:grid;place-items:center;width:26px;height:26px;color:var(--accent-text)}
-.feat .ic svg{width:20px;height:20px;display:block}
+.feat .ic{flex:none;display:grid;place-items:center;width:28px;height:28px;box-sizing:border-box;color:var(--accent-text);line-height:0}
+.feat .ic svg{width:17px;height:17px;display:block;margin:0}
 .feat p{margin:0;font-size:.93rem;color:var(--ink-2)}
 
 /* ---------- poraštė ---------- */
@@ -278,7 +278,7 @@ footer .note{color:var(--text-3);font-size:.88rem;margin:16px 0 0}
 .feat .feat-item:nth-child(2) .ic{color:var(--c-benefit);background:var(--c-benefit-soft)}
 .feat .feat-item:nth-child(3) .ic{color:var(--c-why);background:var(--c-why-soft)}
 .feat .feat-item:nth-child(4) .ic{color:var(--c-plans);background:var(--c-plans-soft)}
-.feat .ic{border-radius:7px;padding:5px}
+.feat .ic{border-radius:8px;padding:0}
 
 /* planai – kiekvienas savo spalva */
 .plans .plan:nth-child(1){--accent:var(--c-benefit); --accent-soft:var(--c-benefit-soft); --accent-text:var(--c-benefit)}
@@ -317,6 +317,16 @@ p,li,dd,dt{color:var(--text-2)}
 .btn{color:var(--accent-ink)}
 .btn.alt,.btn.ghost{color:var(--accent-text);border-color:var(--accent)}
 
+/* ---------- IKONĖLIŲ CENTRAVIMAS ---------- */
+/* kiekvienas mažas ikonėlės konteineris centruoja glifą ir horizontaliai, ir vertikaliai */
+.ic,.ck,.tt-icon,.lesson-icon,.lock-icon,.choice-icon,.av,.coin,.medal,.badge,.step-num{
+  display:grid;place-items:center;line-height:0;flex:none}
+.ic svg,.ck svg,.tt-icon svg,.lesson-icon svg,.lock-icon svg,.choice-icon svg,.coin svg{
+  display:block;margin:0}
+/* ikonėlė ir antraštė – centruojami vienas kito atžvilgiu */
+.feat-head,.tt-head,.lesson-head,.choice-head{display:flex;align-items:center}
+.feat-head h3,.tt-head h3,.lesson-head h3,.choice-head h3{margin:0;line-height:1.25}
+
 @media(prefers-reduced-motion:reduce){.btn,.aud-btn{transition:none}}
 </style>
 </head>
@@ -350,9 +360,9 @@ p,li,dd,dt{color:var(--text-2)}
           <div class="row"><a class="btn alt" href="/play">Mokiniams prisijungimas</a><a class="btn xl" href="/teacher?register=1">Registruoti paskyrą</a></div>
           <p class="muted" style="font-size:.86rem;margin:0 0 12px">Mokiniai prisijungia su klasės kodu ir slapyvardžiu — be el. pašto.</p>
           <ul class="trust">
-            <li><i class="ck"></i>Veikia naršyklėje, be diegimo</li>
-            <li><i class="ck"></i>Mokiniams nereikia el. pašto</li>
-            <li><i class="ck"></i>Tik virtualūs pinigai</li>
+            <li><i class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.6 9.6 17.7 19.5 7.2"/></svg></i>Veikia naršyklėje, be diegimo</li>
+            <li><i class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.6 9.6 17.7 19.5 7.2"/></svg></i>Mokiniams nereikia el. pašto</li>
+            <li><i class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.6 9.6 17.7 19.5 7.2"/></svg></i>Tik virtualūs pinigai</li>
           </ul>
         </div>
 

@@ -5,7 +5,7 @@ Zero-dependency Node (>= 20) server plus a plain-JS front end.
     cd app
     npm start                 # http://localhost:3000 (PORT, VEMAK_DATA env vars)
 
-Optional AI mentor: set `OPENAI_API_KEY` in the server's hosting environment. Keep this secret off the browser/client. `OPENAI_MODEL` defaults to `gpt-4.1-mini`. Without a key or if the provider is unavailable, the existing rules-based mentor remains available. Authenticated `/api/ask/ai` calls use server-derived, revealed weekly results, never student identifiers; requests are limited per IP. Set a billing limit with the provider before sharing the game with students.
+Optional AI mentor: set `NEXOS_API_KEY` in the server's hosting environment, plus `NEXOS_MODEL` using the exact model ID from your nexos.ai Gateway → Models page. The Gateway Chat Completions URL `https://api.nexos.ai/v1/chat/completions` is the default; optionally override with `NEXOS_API_URL`. Keep the key off the browser/client. Without a key, model, or if the provider is unavailable, the existing rules-based mentor remains available. Authenticated `/api/ask/ai` calls use server-derived, revealed weekly results, never student identifiers; requests are limited per IP. Set a billing limit with the provider before sharing the game with students.
 
 Pages: `/` landing + demo · `/teacher` teacher dashboard · `/play` students (`/play?kodas=ABC123`)
 

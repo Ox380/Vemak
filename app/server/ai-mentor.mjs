@@ -19,38 +19,42 @@ function safeGameSummary(context = {}) {
 export async function answerWithAiMentor(input = {}, options = {}) {
   const question = String(input.question || '').trim().slice(0, MAX_QUESTION);
   const context = input.context && typeof input.context === 'object' ? input.context : {};
-  const apiKey = options.apiKey ?? process.env.OPENAI_API_KEY;
+  const usingNexos = options.provider === 'nexos' || (!options.apiKey && Boolean(process.env.NEXOS_API_KEY)) || /nexos\.ai/i.test(options.endpoint || process.env.NEXOS_API_URL || '');
+  const apiKey = options.apiKey ?? (usingNexos ? process.env.NEXOS_API_KEY : process.env.OPENAI_API_KEY);
   const fallback = () => {
     const reports = Array.isArray(context.reports) ? context.reports : [];
     return { ...askAnswer({ question, context: reports.at(-1) || context }), source: 'rules' };
   };
   if (!question || typeof apiKey !== 'string' || !apiKey.trim()) return fallback();
 
-  const endpoint = options.endpoint || process.env.OPENAI_API_URL || DEFAULT_ENDPOINT;
-  const model = options.model || process.env.OPENAI_MODEL || DEFAULT_MODEL;
+  const endpoint = options.endpoint || (usingNexos ? (process.env.NEXOS_API_URL || 'https://api.nexos.ai/v1/chat/completions') : (process.env.OPENAI_API_URL || DEFAULT_ENDPOINT));
+  const model = options.model || (usingNexos ? process.env.NEXOS_MODEL : process.env.OPENAI_MODEL) || (usingNexos ? '' : DEFAULT_MODEL);
+  if (usingNexos && !model) return fallback();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs || 12_000);
   try {
+    const isChatCompletion = /\/chat\/completions\/?$/i.test(endpoint);
+    const messages = [
+      { role: 'system', content: 'Tu esi VEMAK mokomasis mentorius lietuvių kalba, skirtas mokyklinio amžiaus žaidėjams. Paaiškink žaidimo taisykles ir tik pateiktus skaičius. Niekada nesugalvok trūkstamų faktų, neprognozuok garantuoto pelno, neprašyk asmens duomenų ir neteik investavimo ar finansinių rekomendacijų. Jei trūksta duomenų, aiškiai pasakyk, kad nežinai. Atsakyk šiltai, paprastai, 2–5 sakiniais. Visi skaičiai yra virtualūs žaidimo eurai.' },
+      { role: 'user', content: `Žaidėjo klausimas: ${question}\nŽaidimo rezultatų santrauka:\n${safeGameSummary(context)}` },
+    ];
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
       signal: controller.signal,
-      body: JSON.stringify({
-        model,
-        max_output_tokens: 260,
-        input: [
-          { role: 'system', content: [{ type: 'input_text', text: 'Tu esi VEMAK mokomasis mentorius lietuvių kalba, skirtas mokyklinio amžiaus žaidėjams. Paaiškink žaidimo taisykles ir tik pateiktus skaičius. Niekada nesugalvok trūkstamų faktų, neprognozuok garantuoto pelno, neprašyk asmens duomenų ir neteik investavimo ar finansinių rekomendacijų. Jei trūksta duomenų, aiškiai pasakyk, kad nežinai. Atsakyk šiltai, paprastai, 2–5 sakiniais. Visi skaičiai yra virtualūs žaidimo eurai.' }] },
-          { role: 'user', content: [{ type: 'input_text', text: `Žaidėjo klausimas: ${question}\nŽaidimo rezultatų santrauka:\n${safeGameSummary(context)}` }] },
-        ],
-      }),
+      body: JSON.stringify(isChatCompletion
+        ? { model, max_completion_tokens: 260, messages, n: 1, store: false }
+        : { model, max_output_tokens: 260, input: messages.map((message) => ({ role: message.role, content: [{ type: 'input_text', text: message.content }] })), store: false }),
     });
     if (!response.ok) return fallback();
     const data = await response.json();
-    const outputText = typeof data.output_text === 'string' ? data.output_text : (data.output || [])
-      .flatMap((item) => item.content || [])
-      .filter((part) => part.type === 'output_text' && typeof part.text === 'string')
-      .map((part) => part.text)
-      .join(' ');
+    const outputText = isChatCompletion
+      ? data.choices?.[0]?.message?.content
+      : (typeof data.output_text === 'string' ? data.output_text : (data.output || [])
+        .flatMap((item) => item.content || [])
+        .filter((part) => part.type === 'output_text' && typeof part.text === 'string')
+        .map((part) => part.text)
+        .join(' '));
     const answer = String(outputText || '').trim().slice(0, 1800);
     if (!answer) return fallback();
     return { answer, grounded: 'AI mentorius atsako pagal pateiktus žaidimo rezultatus. Tai mokomasis paaiškinimas, ne finansinė rekomendacija.', source: 'ai' };
