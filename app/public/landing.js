@@ -49,17 +49,7 @@ function drawLegacyEvent() {
   box.querySelectorAll('[data-market-guess]').forEach((button) => button.addEventListener('click', () => { prediction = button.dataset.marketGuess; drawLegacyEvent(); }));
   $('#continue-market').addEventListener('click', () => { if (!prediction) return; phase = 'legacy-event-choice'; draw(); });
 }
-function drawLegacyEvent() {
-  const story = getDemoMarketStory(demoSession.marketWeek);
-  const candidates = DEMO_MARKET_ASSETS.map((asset) => `<button class="market-guess${prediction === asset.key ? ' selected' : ''}" type="button" data-market-guess="${asset.key}" aria-pressed="${prediction === asset.key}"><b>${esc(asset.label)}</b><small>${asset.key === 'business' ? 'vietos mugės įmonės' : asset.key === 'technology' ? 'technologijų bendrovės' : asset.key === 'shares' ? 'įvairių įmonių akcijos' : 'saugiau laikomi pinigai'}</small></button>`).join('');
-  box.innerHTML = `${oldHeader(1, 'Rinkos naujiena')}<div class="demo-grid"><div class="city">${city()}</div><div class="card demo-panel"><div class="market-news"><span class="pill blue">Šios savaitės naujiena · ${demoSession.marketWeek}/5</span><h3>${esc(story.title)}</h3><p>${esc(story.body)}</p><small>Užuominos yra informacija, ne garantija — netikėti įvykiai gali pakeisti rinkos kryptį.</small></div><section class="market-prediction" aria-labelledby="market-prompt"><h4 id="market-prompt">Kuri sritis, tavo manymu, pasirodys geriausiai?</h4><p>Pasirink spėjimą prieš žiūrėdamas į savo strategiją. Teisingas spėjimas vertas 25 strategijos taškų, ne eurų.</p><div class="market-guess-grid">${candidates}</div><button class="btn" id="continue-market" ${prediction ? '' : 'disabled'}>Tęsti ekonominius sprendimus →</button></section></div></div>`;
-  box.querySelectorAll('[data-market-guess]').forEach((button) => button.addEventListener('click', () => { prediction = button.dataset.marketGuess; drawLegacyEvent(); }));
-  $('#continue-market').addEventListener('click', () => { if (!prediction) return; phase = 'legacy-event-choice'; draw(); });
-}
 function drawLegacyEventChoice() {
-  box.innerHTML = `${oldHeader(1, 'Ekonominis įvykis')}<div class="demo-grid"><div class="city">${city()}</div><div class="card demo-panel"><h3>${esc(DEMO_EVENT.title)}</h3><p>${esc(DEMO_EVENT.body)}</p><div class="choice-grid">${demoSession.legacyChoices.map((item) => `<button class="choice-card" data-legacy-choice="${item.key}"><span class="choice-icon">${item.icon}</span><span><b>${esc(item.label)}</b><small>${esc(item.desc)}</small></span></button>`).join('')}</div></div></div>`;
-  box.querySelectorAll('[data-legacy-choice]').forEach((button) => button.addEventListener('click', () => { choice = button.dataset.legacyChoice; phase = 'legacy-strategy'; draw(); }));
-}
   box.innerHTML = `${oldHeader(1, 'Ekonominis įvykis')}<div class="demo-grid"><div class="city">${city()}</div><div class="card demo-panel"><h3>${esc(DEMO_EVENT.title)}</h3><p>${esc(DEMO_EVENT.body)}</p><div class="choice-grid">${demoSession.legacyChoices.map((item) => `<button class="choice-card" data-legacy-choice="${item.key}"><span class="choice-icon">${item.icon}</span><span><b>${esc(item.label)}</b><small>${esc(item.desc)}</small></span></button>`).join('')}</div></div></div>`;
   box.querySelectorAll('[data-legacy-choice]').forEach((button) => button.addEventListener('click', () => { choice = button.dataset.legacyChoice; phase = 'legacy-strategy'; draw(); }));
 }
