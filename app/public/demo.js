@@ -1,10 +1,23 @@
 // demo.js — deterministic, one-week anonymous VEMAK demonstration.
 export const DEMO_CAPITAL = 1000;
-export const DEMO_EVENT = {
-  title: 'Kainos kyla: kaip paskirstysi 1 000 €?',
-  body: 'Ekonomikoje kyla kainos. Turi 1 000 €. Pasirink kryptį, o tada paskirstyk visus pinigus tarp santaupų, investicijų, verslo ir avarinio rezervo.',
-  emergency: 120,
-};
+export const DEMO_SCENARIOS = Object.freeze([
+  { id: 'ai-model-launch', title: 'Naujo DI modelio pristatymas', body: 'Vietos DI laboratorija kitą savaitę pristatys naują modelį. Serverių tiekėjai praneša apie augančius užsakymus.', signals: { shares: 'positive', technology: 'strong-positive', business: 'positive', savings: 'steady' } },
+  { id: 'inflation-report', title: 'Aukštesnės maisto ir energijos kainos', body: 'Infliacijos ataskaita vėl viršijo lūkesčius. Šeimos mažina nebūtinus pirkinius, o taupomųjų sąskaitų pasiūlymai šiek tiek pagerėjo.', signals: { shares: 'negative', technology: 'negative', business: 'strong-negative', savings: 'positive' } },
+  { id: 'school-tech-contract', title: 'Technologijų bendrovė laimėjo mokyklų sutartį', body: 'Viena technologijų bendrovė pasirašė sutartį su mokyklų tinklu. IT tiekėjai tikisi naujų užsakymų.', signals: { shares: 'steady', technology: 'positive', business: 'steady', savings: 'steady' } },
+  { id: 'interest-rate-hike', title: 'Centrinis bankas pakėlė palūkanas', body: 'Kova su infliacija pabrangino paskolas. Taupytojai gali gauti daugiau palūkanų.', signals: { shares: 'negative', technology: 'strong-negative', business: 'negative', savings: 'strong-positive' } },
+  { id: 'export-deal', title: 'Atveriamas eksporto kelias', body: 'Prekybos partneriai sumažino muitus vietos gaminiams. Eksporto užsakymai auga.', signals: { shares: 'positive', technology: 'steady', business: 'strong-positive', savings: 'steady' } },
+]);
+export const DEMO_SCENARIO_EVENTS = Object.freeze([
+  { title: 'Pasirink savaitės rinkos scenarijų', body: 'Perskaityk naujieną ir įvertink, kurioms rinkoms ji gali padėti ar pakenkti.' },
+  ...DEMO_SCENARIOS.map(({ title, body }) => ({ title, body })),
+]);
+export const DEMO_EVENTS = Object.freeze(DEMO_SCENARIO_EVENTS);
+export const DEMO_EVENT = { title: 'Kainos kyla: kaip paskirstysi 1 000 €?', body: 'Ekonomikoje kyla kainos. Turi 1 000 €. Pasirink kryptį, o tada paskirstyk visus pinigus tarp santaupų, investicijų, verslo ir avarinio rezervo.', emergency: 120 };
+export function getDemoEvent(weekNo = 1) {
+  const index = Math.max(1, Math.min(DEMO_SCENARIOS.length, Number(weekNo) || 1)) - 1;
+  const scenario = DEMO_SCENARIOS[index];
+  return { title: scenario.title, body: scenario.body, emergency: [120, 140, 100, 80, 90][index], scenario, outlook: { signals: scenario.signals, body: scenario.body } };
+}
 
 export const DEMO_CHOICES = [
   { key: 'business', label: 'Paleidžiu mugės verslą', desc: 'Verslo dalis gauna didesnį postūmį, bet avarija lieka tavo rizika.', icon: '☕' },
@@ -153,7 +166,7 @@ export function simulateDemo(choiceKey, alloc, startingCapital = DEMO_CAPITAL, w
   if (assetSale) step(`Turto pavertimas pinigais: ${money(assetSale)} gauta pardavus daiktą; tai nėra naujos pajamos.`, assetSale);
   if (courseCost) step(`Įgūdžių kursas: −${money(courseCost)} dabar, įgūdžiai gali padėti uždirbti ateityje.`, -courseCost);
   step(`Paskirstymas: santaupos ${alloc.sav} % = ${money(savBase)}, investicijos ${alloc.inv} % = ${money(invBase)}, verslas ${alloc.bus} % = ${money(busBase)}, rezervas ${alloc.res} % = ${money(reserve)}.`, null);
-  step(`Savaitei pasibaigus: santaupos ${signed(savings - savBase)} → ${money(savings)}; investicijos ${signed(investing - invBase)} → ${money(investing)}; verslas ${signed(business - busBase)} → ${money(business)}.`, round(savings - savBase + (investing - invBase) + (business - busBase)));
+  step(`Savaitės rinkos įvykio krypties ženklai, ne procentinė prognozė: santaupos ${signed(savings - savBase)} → ${money(savings)}; investicijos ${signed(investing - invBase)} → ${money(investing)}; verslas ${signed(business - busBase)} → ${money(business)}.`, round(savings - savBase + (investing - invBase) + (business - busBase)));
   step(`Netikėta išlaida: ${money(repairCost)}.`, -round(repairCost));
   if (reserveUsed >= repairCost - 0.005) step(`Rezervas padengė visą išlaidą (${money(reserveUsed)}) be jokių nuostolių.`, -round(reserveUsed));
   else step(`Rezervo užteko tik ${money(reserveUsed)}, todėl trūkstamą ${money(shortfall)} teko parduoti su 15 % nuostoliu: −${money(forcedSalePenalty)}.`, -round(shortfall + forcedSalePenalty));
