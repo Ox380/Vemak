@@ -96,7 +96,7 @@ function drawLocked() {
 }
 function resultRow(row) {
   const isPlayer = row.name === 'Tu';
-  return `<tr class="${isPlayer ? 'me' : ''}"><td><span class="rank">${row.rank}</span></td><td>${isPlayer ? '⭐ ' : ''}${esc(row.name)}</td><td class="${row.delta >= 0 ? 'pos' : 'neg'}">${eur(row.delta, true)}</td><td><b>${eur(row.score)}</b></td></tr>`;
+  return `<tr class="${isPlayer ? 'me' : ''}"><td><span class="rank">${row.rank}</span></td><td>${isPlayer ? ' ' : ''}${esc(row.name)}</td><td class="${row.delta >= 0 ? 'pos' : 'neg'}">${eur(row.delta, true)}</td><td><b>${eur(row.score)}</b></td></tr>`;
 }
 function drawReveal() {
   const marketWeek = demoSession.marketWeek;
@@ -151,19 +151,15 @@ const AUD_MARKUP = {
   individual: {
     nav: '<a class="logo" href="/"><i>V</i>VEMAK</a><span class="sp"></span><a href="#demo">Demo</a><a href="#nauda">Nauda</a><a href="#planai">Planai</a><a href="#duk">D.U.K.</a><a class="btn" href="#pilotas">Registracija</a>',
     heroCopy: `
-        <div class="sign" style="--drop:34px">
-          <span class="peg-top"></span><span class="peg-top b"></span>
-          <span class="eye l"></span><span class="eye r"></span><span class="str-r"></span>
-          <span class="sign-face"><b>6 savaičių sezonas · sau pačiam</b><h1 data-hand>Išmok investuoti, kol tai dar nekainuoja tikrų pinigų.</h1></span>
+        <div class="sign">
+          <span class="sign-face"><b>6 savaičių sezonas · sau pačiam</b><h1>Išmok investuoti, kol tai dar <em>nekainuoja tikrų pinigų</em>.</h1></span>
         </div>
 
-        <div class="tag" style="--drop:30px">
-          <span class="peg-top"></span><span class="eye"></span>
+        <div class="tag">
           <p class="lead-text">Šešių savaičių rinkos scenarijus: sek prognozes, paskirstyk virtualų biudžetą ir pamatyk, ką tavo sprendimai duotų augimo ir nuosmukio savaitėmis. Be brokerio, be rizikos, be realių pinigų.</p>
         </div>
 
-        <div class="tag lead" style="--drop:46px">
-          <span class="peg-top"></span><span class="eye"></span>
+        <div class="tag lead">
           <div class="row"><a class="btn" href="#pilotas">Rezervuoti asmeninį sezoną</a></div>
           <ul class="trust">
             <li><i class="ck"></i>Veikia naršyklėje, be diegimo</li>
@@ -313,7 +309,6 @@ function setAudience(kind, opts = {}) {
     : 'VEMAK · Finansinis raštingumas, kurį mokiniai nori žaisti';
   try { localStorage.setItem('vemak.audience', audience); } catch { /* privatus režimas */ }
   placeNowMark();
-  handSetAll();
   if (phase === 'intro') drawIntro();
   if (opts.scroll) { const target = document.getElementById('pilotas'); if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 }

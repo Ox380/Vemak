@@ -1,5 +1,5 @@
 // teacher.js — teacher dashboard: login, classes, season control, live stats, lesson plans, CSV + PDF (print) export.
-import { esc, $, $$, eur, api, toast, AVATARS } from './ui.js';
+import { esc, $, $$, eur, api, toast, AVATARS, ICO } from './ui.js';
 import { WEEKS, TOPICS } from './content.js';
 
 const app = $('#app');
@@ -83,7 +83,7 @@ function renderClass(c, redraw) {
         <small class="muted">Pilka: prieš · žalia: po</small></div>
       <div class="card"><h3>Lyderiai</h3>${c.rankings ? `<table><tbody>${c.rankings.byStrategy.slice(0, 5).map((r) => `<tr><td><span class="medal m${r.rank}">${r.rank}</span></td><td>${AVATARS[r.avatar] || ''} ${esc(r.nickname)}</td><td>${eur(r.score)}</td></tr>`).join('')}</tbody></table><p class="muted" style="font-size:.8rem">Strategijos taškai (rizika įskaičiuota)</p>` : '<p class="muted">Atsiras po pirmos atskleistos savaitės.</p>'}</div></div>`,
     students: () => `<div class="card" style="overflow:auto"><table><thead><tr><th>Slapyvardis</th><th>Užrakinta</th><th>Savaitės</th><th>Gr. vertė</th><th>Strat. taškai</th><th>Prival. pardavimai</th><th>Skola</th><th>Testas prieš/po</th></tr></thead><tbody>
-      ${c.students.map((x) => `<tr><td>${esc(x.nickname)}</td><td>${x.locked ? '🔒' : '–'}</td><td>${x.weeksPlayed}</td><td>${x.netWorth == null ? '–' : eur(x.netWorth)}</td><td>${x.score == null ? '–' : eur(x.score)}</td><td>${x.forcedSales}</td><td>${x.debt > 0 ? eur(x.debt) : '–'}</td><td>${x.pre ?? '–'} / ${x.post ?? '–'}</td></tr>`).join('') || '<tr><td colspan="8" class="muted">Dar nėra mokinių. Pasidalink kodu.</td></tr>'}</tbody></table></div>`,
+      ${c.students.map((x) => `<tr><td>${esc(x.nickname)}</td><td>${x.locked ? '${ICO.lock}' : '–'}</td><td>${x.weeksPlayed}</td><td>${x.netWorth == null ? '–' : eur(x.netWorth)}</td><td>${x.score == null ? '–' : eur(x.score)}</td><td>${x.forcedSales}</td><td>${x.debt > 0 ? eur(x.debt) : '–'}</td><td>${x.pre ?? '–'} / ${x.post ?? '–'}</td></tr>`).join('') || '<tr><td colspan="8" class="muted">Dar nėra mokinių. Pasidalink kodu.</td></tr>'}</tbody></table></div>`,
     lessons: () => `<div class="grid">${c.lessons.map((l) => `<div class="card"><span class="pill ${l.week === c.week ? '' : 'blue'}">${l.week} savaitė · ${l.minutes} min.</span><h3 style="margin-top:8px">${esc(l.title)}</h3>
       <p><b>Tikslas:</b> ${esc(l.goal)}</p><p><b>Veikla:</b> ${esc(l.activity)}</p><p><b>Diskusijos klausimai:</b></p><ul>${l.questions.map((q) => `<li>${esc(q)}</li>`).join('')}</ul>
       <p class="muted" style="font-size:.85rem">Žaidimo įvykis: ${esc((c.situations || []).find((x) => x.week === l.week)?.title || WEEKS[l.week - 1].title)}</p></div>`).join('')}
