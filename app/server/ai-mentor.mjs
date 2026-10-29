@@ -46,7 +46,12 @@ export async function answerWithAiMentor(input = {}, options = {}) {
     });
     if (!response.ok) return fallback();
     const data = await response.json();
-    const answer = String(data.output_text || '').trim().slice(0, 1800);
+    const outputText = typeof data.output_text === 'string' ? data.output_text : (data.output || [])
+      .flatMap((item) => item.content || [])
+      .filter((part) => part.type === 'output_text' && typeof part.text === 'string')
+      .map((part) => part.text)
+      .join(' ');
+    const answer = String(outputText || '').trim().slice(0, 1800);
     if (!answer) return fallback();
     return { answer, grounded: 'AI mentorius atsako pagal pateiktus žaidimo rezultatus. Tai mokomasis paaiškinimas, ne finansinė rekomendacija.', source: 'ai' };
   } catch {

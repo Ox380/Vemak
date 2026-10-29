@@ -16,7 +16,7 @@ let captured;
 const stub = await listen(async (req, res) => {
   captured = { method: req.method, authorization: req.headers.authorization, body: JSON.parse(await new Promise((resolve) => { let data = ''; req.on('data', (chunk) => data += chunk); req.on('end', () => resolve(data)); })) };
   res.writeHead(200, { 'content-type': 'application/json' });
-  res.end(JSON.stringify({ output_text: 'Tavo rezultatas sumažėjo dėl netikėtos išlaidos.' }));
+  res.end(JSON.stringify({ output: [{ type: 'message', content: [{ type: 'output_text', text: 'Tavo rezultatas sumažėjo dėl netikėtos išlaidos.' }] }] }));
 });
 try {
   const result = await answerWithAiMentor({ question: 'Kodėl sumažėjo rezultatas?', context: { nickname: 'PRIVATUS-VARDAS', reports: [{ week: 1, delta: -40, netWorth: 960, steps: [{ text: 'Netikėta išlaida', amount: -40 }] }] } }, { apiKey: 'test-key', endpoint: stub.endpoint });
