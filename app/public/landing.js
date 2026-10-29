@@ -126,7 +126,11 @@ function drawComparison() {
   $('#restart-demo').addEventListener('click', reset);
 }
 function drawTransition() { box.innerHTML = `${header(3, 'Savaitė vyksta')}<div class="transition-card"><div class="spinner">↻</div><h3>Ekonominiai įvykiai vyksta…</h3><p>Kainos, rinkos ir tavo pasirinkimai keičia miesto finansus.</p></div>`; }
-function draw() { if (phase === 'intro') drawIntro(); else if (phase === 'legacy-event') drawLegacyEvent(); else if (phase === 'legacy-event-choice') drawLegacyEventChoice(); else if (phase === 'legacy-strategy') drawStrategy(); else if (phase === 'event') drawEvent(); else if (phase === 'analytics') drawAnalytics(); else if (phase === 'step-finish') drawStepFinish(); else if (phase === 'strategy') drawStrategy(); else if (phase === 'locked') drawLocked(); else if (phase === 'transition') drawTransition(); else if (phase === 'reveal') drawReveal(); }
+function keepDemoVisible() {
+  if (!box || typeof box.scrollIntoView !== 'function') return;
+  requestAnimationFrame(() => box.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }));
+}
+function draw() { if (phase === 'intro') drawIntro(); else if (phase === 'legacy-event') drawLegacyEvent(); else if (phase === 'legacy-event-choice') drawLegacyEventChoice(); else if (phase === 'legacy-strategy') drawStrategy(); else if (phase === 'event') drawEvent(); else if (phase === 'analytics') drawAnalytics(); else if (phase === 'step-finish') drawStepFinish(); else if (phase === 'strategy') drawStrategy(); else if (phase === 'locked') drawLocked(); else if (phase === 'transition') drawTransition(); else if (phase === 'reveal') drawReveal(); if (phase !== 'intro') keepDemoVisible(); }
 function reset() {  phase = 'intro'; choice = null; prediction = null; alloc = { sav: 25, inv: 25, bus: 25, res: 25 }; reveal = null; comparison = null; startingCapital = DEMO_CAPITAL; weekNo = 1; stepIndex = 0; stepCapital = DEMO_CAPITAL; stepHistory = []; demoSession = null; draw(); }
 reset();
 

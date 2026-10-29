@@ -325,9 +325,12 @@ tr.me:hover td{background:#d9f5ec}
 .market-news h3{margin:12px 0 8px}.market-news p{line-height:1.65}.market-news>small,.market-guess small{display:block;color:var(--muted);line-height:1.5}
 .market-prediction{margin-top:18px}.market-prediction h4{margin:0 0 8px}.market-prediction>p{color:var(--muted);font-size:.92rem;line-height:1.55}
 .market-guess-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}
-.market-guess{display:grid;gap:5px;text-align:left;padding:13px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);cursor:pointer}
-.market-guess:hover,.market-guess.selected{border-color:var(--blue);box-shadow:0 0 0 2px #3b82f622;background:#f6faff}
-.market-guess:focus-visible{outline:3px solid #3b82f666;outline-offset:2px}
+.market-guess{position:relative;display:grid;gap:5px;text-align:left;padding:13px;border:2px solid rgba(255,255,255,.24);border-radius:10px;background:#fff;color:var(--ink);cursor:pointer;transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease,background .16s ease}
+.market-guess:hover{border-color:#22d3a0;box-shadow:0 0 0 3px rgba(34,211,160,.16),0 8px 18px rgba(0,0,0,.18);transform:translateY(-1px)}
+.market-guess.selected{border-color:#20e0aa;background:#e6fff7;box-shadow:0 0 0 3px rgba(32,224,170,.48),0 0 22px rgba(32,224,170,.3),inset 0 0 0 2px rgba(32,224,170,.18);transform:translateY(-1px)}
+.market-guess.selected::after{content:'✓ PASIRINKTA';position:absolute;top:8px;right:10px;padding:3px 7px;border-radius:999px;background:#087f62;color:#fff;font-size:.66rem;font-weight:850;letter-spacing:.04em}
+.market-guess.selected b{color:#075d4c}.market-guess.selected small{color:#236f60}
+.market-guess:focus-visible{outline:3px solid #fff;outline-offset:3px;box-shadow:0 0 0 6px #20e0aa,0 0 24px rgba(32,224,170,.38)}
 .market-reveal{display:flex;gap:12px;margin:14px 0;padding:14px;border-radius:10px;background:#f3f6fa;border:1px solid var(--line)}
 .market-reveal.hit{background:#ecfaf4;border-color:#9bd9bd}.market-reveal.miss{background:#fff7ed;border-color:#f3c28e}.market-reveal p{margin:6px 0}.market-reveal small{color:var(--muted);line-height:1.5}
 
