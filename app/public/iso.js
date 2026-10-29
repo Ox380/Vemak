@@ -229,14 +229,14 @@ function label(x, y, z, name, price, anchorZ = 0) {
   const w = nw + pw + 28;
   const h = 29;
   return `<g class="city-label" transform="translate(${px.toFixed(1)},${py.toFixed(1)})">`
-    + `<line x1="0" y1="${(h / 2 + 1).toFixed(1)}" x2="${(ax - px).toFixed(1)}" y2="${(ay - py).toFixed(1)}" stroke="#7c8a80" stroke-width="1.3" stroke-dasharray="2 2" opacity=".6"/>`
-    + `<rect x="${(-w / 2).toFixed(1)}" y="${(-h / 2 + 5).toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="9" fill="#0a1a11" opacity=".12"/>`
-    + `<rect x="${(-w / 2).toFixed(1)}" y="${(-h / 2).toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="9" fill="#ffffff" stroke="#c9d2dd"/>`
-    + `<circle cx="${(-w / 2 + 11).toFixed(1)}" cy="0" r="3.9" fill="#4f46e5"/>`
-    + `<text x="${(-w / 2 + 23).toFixed(1)}" y="4.4" font-size="13.5" font-weight="600" fill="#0f172a" font-family="system-ui,sans-serif">${name}</text>`
+    + `<line x1="0" y1="${(h / 2 + 1).toFixed(1)}" x2="${(ax - px).toFixed(1)}" y2="${(ay - py).toFixed(1)}" stroke="rgb(124,138,128)" stroke-width="1.3" stroke-dasharray="2 2" opacity=".6"/>`
+    + `<rect x="${(-w / 2).toFixed(1)}" y="${(-h / 2 + 5).toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="9" fill="rgb(15,23,42)" opacity=".12"/>`
+    + `<rect x="${(-w / 2).toFixed(1)}" y="${(-h / 2).toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="9" fill="rgb(255,255,255)" stroke="rgb(201,210,221)"/>`
+    + `<circle cx="${(-w / 2 + 11).toFixed(1)}" cy="0" r="3.9" fill="rgb(79,70,229)"/>`
+    + `<text x="${(-w / 2 + 23).toFixed(1)}" y="4.4" font-size="13.5" font-weight="600" fill="rgb(15,23,42)" font-family="system-ui,sans-serif">${name}</text>`
     + (hasPrice
-      ? `<rect x="${(w / 2 - pw - 5).toFixed(1)}" y="-11" width="${pw.toFixed(1)}" height="22" rx="7" fill="#e0e7ff"/>`
-        + `<text x="${(w / 2 - pw / 2 - 5).toFixed(1)}" y="4.4" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3" font-family="system-ui,sans-serif">${price}</text>`
+      ? `<rect x="${(w / 2 - pw - 5).toFixed(1)}" y="-11" width="${pw.toFixed(1)}" height="22" rx="7" fill="rgb(224,231,255)"/>`
+        + `<text x="${(w / 2 - pw / 2 - 5).toFixed(1)}" y="4.4" text-anchor="middle" font-size="13" font-weight="700" fill="rgb(55,48,163)" font-family="system-ui,sans-serif">${price}</text>`
       : '')
     + '</g>';
 }
@@ -318,8 +318,7 @@ function retint(svg, theme) {
   const hi = dark ? 0.44 : 0.98;
   // Kiekvienas atspalvis nukreipiamas į savo vietą spalvų rate, todėl miestas
   // tampa daugiaspalvis: pastatai violetiniai, stogai žydri, akcentai gintariniai.
-  const spread = dark ? 1.55 : 1.35;
-  const shift = dark ? 210 : 250;
+  const PAL = dark ? [268, 222, 196, 168, 300, 340] : [258, 214, 188, 164, 292, 336];
   return svg.replace(/#[0-9a-fA-F]{6}/g, (hex) => {
     const r = parseInt(hex.slice(1, 3), 16) / 255;
     const g = parseInt(hex.slice(3, 5), 16) / 255;
@@ -333,7 +332,11 @@ function retint(svg, theme) {
     }
     const l = lo + h.l * (hi - lo);
     const sat = dark ? Math.min(h.s * 1.1 + 0.08, 0.85) : Math.min(h.s * 0.9 + 0.08, 0.8);
-    const hue = ((h.h * 360 * spread + shift) % 360) / 360;
+    // Atspalvis parenkamas pagal šviesumą: skirtingi pastatai gauna skirtingas spalvas,
+    // todėl miestas tampa daugiaspalvis, o ne vienos spalvos.
+    const k = Math.min(PAL.length - 1, Math.max(0, Math.floor(h.l * PAL.length)));
+    const jitter = ((h.h * 360) % 24) - 12;
+    const hue = (((PAL[k] + jitter) % 360) + 360) % 360 / 360;
     const [nr, ng, nb] = hsl2rgb(hue, l, sat);
     return '#' + [nr, ng, nb].map((v) => Math.max(0, Math.min(255, Math.round(v * 255))).toString(16).padStart(2, '0')).join('');
   });
