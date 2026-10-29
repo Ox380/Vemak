@@ -219,24 +219,32 @@ function stall(x, y) {
     + `<circle cx="-3" cy="-11" r="1.6" fill="#53af80"/><circle cx="3" cy="-11.5" r="1.6" fill="#a0be9e"/></g>`;
 }
 
-// Šiuolaikinė etiketė: balta plokštelė, pavadinimas ir kaina atskirai.
-function label(x, y, z, name, price) {
+// Etiketė piešiama atskirame viršutiniame sluoksnyje, kad jos neužstotų pastatai.
+function label(x, y, z, name, price, anchorZ = 0) {
   const [px, py] = P(x, y, z);
+  const [ax, ay] = P(x, y, anchorZ);
   const hasPrice = price != null && price !== '';
   const nw = String(name).length * 6.5;
   const pw = hasPrice ? String(price).length * 6.2 + 16 : 0;
   const w = nw + pw + 24;
   const h = 24;
-  return `<g transform="translate(${px.toFixed(1)},${py.toFixed(1)})">`
+  return `<g class="city-label" transform="translate(${px.toFixed(1)},${py.toFixed(1)})">`
+    + `<line x1="0" y1="${(h / 2 + 1).toFixed(1)}" x2="${(ax - px).toFixed(1)}" y2="${(ay - py).toFixed(1)}" stroke="#0f7a45" stroke-width="1.4" stroke-dasharray="2 2" opacity=".72"/>`
     + `<rect x="${(-w / 2).toFixed(1)}" y="${(-h / 2 + 4).toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="8" fill="#0a1a11" opacity=".12"/>`
-    + `<rect x="${(-w / 2).toFixed(1)}" y="${(-h / 2).toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="8" fill="#ffffff" stroke="rgba(10,45,28,.10)"/>`
-    + `<circle cx="${(-w / 2 + 11).toFixed(1)}" cy="-0.5" r="3.4" fill="#1fbf63"/>`
-    + `<text x="${(-w / 2 + 20).toFixed(1)}" y="3.6" font-size="11.5" font-weight="600" fill="#0a1a11" font-family="system-ui,sans-serif">${name}</text>`
+    + `<rect x="${(-w / 2).toFixed(1)}" y="${(-h / 2).toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="8" fill="#ffffff" stroke="#b8d8c4"/>`
+    + `<text x="${(-w / 2 + 10).toFixed(1)}" y="3.6" font-size="11.5" font-weight="700" fill="#0a1a11" font-family="system-ui,sans-serif">${name}</text>`
     + (hasPrice
       ? `<rect x="${(w / 2 - pw - 5).toFixed(1)}" y="-9" width="${pw.toFixed(1)}" height="18" rx="6" fill="#d9f0e2"/>`
-        + `<text x="${(w / 2 - pw / 2 - 5).toFixed(1)}" y="3.4" text-anchor="middle" font-size="11" font-weight="700" fill="#0b5c34" font-family="system-ui,sans-serif">${price}</text>`
+        + `<text x="${(w / 2 - pw / 2 - 5).toFixed(1)}" y="3.4" text-anchor="middle" font-size="11" font-weight="800" fill="#0b5c34" font-family="system-ui,sans-serif">${price}</text>`
       : '')
     + '</g>';
+}
+
+// Mažas žalias indikatorius tiksliai priskirto pastato centre.
+function buildingIcon(x, y, z, kind = 'dot') {
+  const [px, py] = P(x, y, z);
+  const glyph = kind === 'arena' ? '<path d="M-4 0 L0 -4 L4 0 L0 4 Z" fill="#fff"/>' : '<circle r="2.4" fill="#fff"/>';
+  return `<g class="building-icon" transform="translate(${px.toFixed(1)},${py.toFixed(1)})"><circle r="7" fill="#0f7a45" stroke="#fff" stroke-width="2"/><circle r="10" fill="none" stroke="#53c98a" stroke-width="1" opacity=".7"/>${glyph}</g>`;
 }
 
 function sky(mood) {
@@ -393,20 +401,25 @@ export function citySVG(st) {
     solid(b.gx, b.gy, b.w, b.d, () => box(b.gx, b.gy, b.w, b.d, b.h, b.c, { ...b.o, lit }));
   });
 
-  // pavadinimų etiketės (kiekviena iškart po savo pastato)
+  // Pavadinimai ir indikatoriai piešiami atskirame sluoksnyje po visais miesto elementais.
+  const labels = [];
   const eur = (v) => Math.round(v || 0) + ' \u20ac';
-  put(8.4, () => label(1.4, 1.4, 62, 'Namai', eur(st.reserve)));
-  put(8.8, () => label(5.2, 1.4, 112, 'Biuras', ''));
-  put(14.4, () => label(10.2, 1.65, 108 + 26, 'Bankas', eur(st.savings)));
-  put(14.4, () => label(1.6, 10.2, 56 + 32, 'Bir\u017ea', eur(st.invest)));
-  put(16.8, () => label(4.9, 9.9, 26 + lvl * 13 + 34, 'Kavos baras', eur(st.business)));
-  put(27.2, () => label(11.5, 11.5, 26 + 36, 'Arena', ''));
+  const addLabel = (x, y, labelZ, anchorX, anchorY, anchorZ, name, price, kind = 'dot') => {
+    labels.push(() => buildingIcon(anchorX, anchorY, anchorZ, kind));
+    labels.push(() => label(x, y, labelZ, name, price, anchorZ));
+  };
+  addLabel(1.4, 1.4, 62, 1.4, 1.4, 30, 'Namai', eur(st.reserve));
+  addLabel(5.2, 1.4, 112, 5.45, 1.65, 74, 'Biuras', '');
+  addLabel(10.2, 1.65, 134, 10.2, 1.65, 108, 'Bankas', eur(st.savings));
+  addLabel(1.6, 10.2, 88, 1.6, 9.6, 56, 'Bir\u017ea', eur(st.invest));
+  addLabel(4.9, 9.9, 26 + lvl * 13 + 34, 4.9, 9.9, 26 + lvl * 13, 'Kavos baras', eur(st.business));
+  addLabel(11.5, 11.5, 62, 11.5, 11.5, 14, 'Arena', '', 'arena');
   // papildomi miesto objektai (kaip prototipe)
-  put(10.2, () => label(1.6, 3.2, 54, 'Ligonin\u0117', '640 \u20ac'));
-  put(11.2, () => label(11.7, 1.1, 70, 'Mokykla', '480 \u20ac'));
-  put(9.6, () => label(12.4, 5.2, 48, 'Gamykla', '520 \u20ac'));
-  put(12.2, () => label(8.6, 5.2, 48, 'Parduotuv\u0117', '380 \u20ac'));
-  put(18.0, () => label(2.4, 11.6, 48, 'Policija', '460 \u20ac'));
+  addLabel(1.6, 3.2, 54, 1.25, 3.0, 34, 'Ligonin\u0117', '640 \u20ac');
+  addLabel(11.7, 1.1, 70, 12.35, 1.95, 42, 'Mokykla', '480 \u20ac');
+  addLabel(12.4, 5.2, 48, 13.25, 5.9, 22, 'Gamykla', '520 \u20ac');
+  addLabel(8.6, 5.2, 48, 9.45, 5.9, 24, 'Parduotuv\u0117', '380 \u20ac');
+  addLabel(2.4, 11.6, 48, 3.2, 12.3, 24, 'Policija', '460 \u20ac');
 
   // gyvatvorės
   solid(0.3, 5.05, 5.4, 0.15, () => hedge(0.3, 5.05, 5.4, 0.15));
@@ -567,6 +580,8 @@ export function citySVG(st) {
 
   items.sort((a, b) => a[0] - b[0]);
   g += items.map((i) => i[1]()).join('');
+  // Visos etiketės ir pastatų indikatoriai sąmoningai piešiami paskutiniai.
+  g += labels.map((draw) => draw()).join('');
 
   if (mood === 'down') {
     g += disc(3.4, 9.4, 0.5, '#a2c1af', 'opacity=".35"') + disc(10.2, 2.4, 0.4, '#a2c1af', 'opacity=".3"')
