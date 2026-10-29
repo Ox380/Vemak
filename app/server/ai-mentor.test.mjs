@@ -26,11 +26,10 @@ try {
   assert.equal(captured.authorization, 'Bearer test-key');
   assert.equal(JSON.stringify(captured.body).includes('PRIVATUS-VARDAS'), false, 'personal identifiers are not sent to the AI provider');
   assert.match(captured.body.input[1].content[0].text, /netikėta išlaida/i);
+  const broken = await answerWithAiMentor({ question: 'Ką reiškia rezervas?', context: {} }, { apiKey: 'test-key', endpoint: 'http://127.0.0.1:1/v1/responses', timeoutMs: 100 });
+  assert.equal(broken.source, 'rules');
+  assert.match(broken.answer, /rezerv/i);
 } finally {
   await new Promise((resolve) => stub.server.close(resolve));
 }
-
-const broken = await answerWithAiMentor({ question: 'Ką reiškia rezervas?', context: {} }, { apiKey: 'test-key', endpoint: 'http://127.0.0.1:1/v1/responses', timeoutMs: 100 });
-assert.equal(broken.source, 'rules');
-assert.match(broken.answer, /rezerv/i);
 console.log('AI mentor: 3 checks passed');

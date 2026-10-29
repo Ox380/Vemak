@@ -310,6 +310,7 @@ function viewMentor() {
   <div class="card" style="margin-top:14px"><h3>Kaip veikia mentorius</h3><ul>
   <li>AI mato tik tavo anonimiškus žaidimo savaitės rezultatus – ne vardą, pavardę ar el. paštą.</li>
   <li>Jei AI neveikia, paaiškinimą pateiks taisyklėmis paremtas atsarginis mentorius.</li>
+  <li>Nerašyk čia savo vardo, el. pašto ar kitos asmeninės informacijos.</li>
   <li>Tai mokomasis paaiškinimas, ne investavimo rekomendacija.</li></ul></div>`;
 }
 
