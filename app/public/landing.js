@@ -118,7 +118,7 @@ const IC = {
 // pasirinkus – taip pats puslapis nesidubliuoja ir išlieka viena tiesos vieta.
 const AUD_MARKUP = {
   individual: {
-    nav: '<a class="logo" href="/"><i>V</i>VEMAK</a><span class="sp"></span><a href="#demo">Demo</a><a href="#nauda">Nauda</a><a href="#planai">Planai</a><a href="#duk">D.U.K.</a><a class="btn" href="#pilotas">Rezervuoti sezoną</a>',
+    nav: '<a class="logo" href="/"><i>V</i>VEMAK</a><span class="sp"></span><a href="#demo">Demo</a><a href="#nauda">Nauda</a><a href="#planai">Planai</a><a href="#duk">D.U.K.</a><a class="btn" href="#pilotas">Registracija</a>',
     heroCopy: `
         <span class="hero-badge"><span></span>5 savaičių investavimo treniruoklis · sau pačiam</span>
         <h1>Išmok investuoti, kol tai dar nekainuoja tikrų pinigų.</h1>
@@ -173,7 +173,7 @@ const AUD_MARKUP = {
     <label for="pr">Kaip žaisi?</label><select id="pr"><option>Sau asmeniškai</option><option>Šeimai</option><option>Dovanai</option><option>Kita</option></select>
     <label for="pm">Žinutė (nebūtina)</label><textarea id="pm" rows="3" maxlength="500"></textarea>
     <label style="display:flex;gap:9px;align-items:flex-start;font-weight:500;margin-top:16px"><input type="checkbox" id="pc" style="width:auto;margin-top:5px" required> Sutinku, kad su manimi susisieuktų dėl asmeninio sezono. Duomenys naudojami tik šiam tikslui.</label>
-    <p class="err" id="perr" role="alert"></p><button class="btn" style="width:100%">Rezervuoti sezoną</button>
+    <p class="err" id="perr" role="alert"></p><button class="btn" style="width:100%">Registracija</button>
   </form>`,
     duk: `
   <div class="sec-h"><h2>Dažni klausimai</h2></div>

@@ -36,7 +36,7 @@ let n = 0; const ok = (m) => console.log('ok  ', m, ++n && '');
   assert.ok(!d.querySelector('#nauda').textContent.includes('Mokyklos vadovybei'), 'school benefit leaked'); ok('no school-governance benefit in the individual version');
   assert.match(d.querySelector('#nauda').textContent, /Klasės kodo nereikia/); ok('individual benefit explains there is no class code');
   assert.ok(!d.querySelector('#pf #ps'), 'individual form must not ask for a school'); ok('individual signup form drops the school field');
-  assert.match(d.querySelector('#pf button').textContent, /Rezervuoti sezoną/); ok('individual form CTA reserves a personal season');
+  assert.match(d.querySelector('#pf button').textContent, /Registracija/); ok('individual form CTA opens registration');
   assert.match(d.querySelector('#planai').textContent, /Asmeninis/); assert.match(d.querySelector('#planai').textContent, /9,99/); ok('plans section lists the individual offer with its price');
   assert.match(d.querySelector('#planai').textContent, /149/); ok('plans section still lists the school offer');
   assert.ok(![...d.querySelectorAll('#nav a')].some((a) => a.textContent.includes('Mokytojo prisijungimas'))); ok('individual navigation drops the teacher-only links');
