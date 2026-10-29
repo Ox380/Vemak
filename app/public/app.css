@@ -122,7 +122,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--teal-d)}
 .city-hub{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:20px;align-items:start}
 .city-hub>.city{grid-row:span 2}
 .city-actions{min-width:0}
-.city{background:var(--g100);border:1px solid var(--line-soft);box-shadow:var(--sh-1)}
+.city{display:grid;place-items:center;background:var(--g100);border:1px solid var(--line-soft);box-shadow:var(--sh-1)}
 
 /* ----------------------------------------------------------------- progreso kortelė */
 .progress-card{margin-bottom:16px;padding:18px 20px;border:1px solid var(--line-soft);
@@ -398,6 +398,7 @@ tr.me:hover td{background:#d9f5ec}
 .demo-awards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:13px;margin:16px 0}
 .avatars{display:flex;gap:9px;flex-wrap:wrap}
 .avbtn{
+  display:grid;place-items:center;line-height:0;
   width:54px;height:54px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);font-size:1.6rem;
   transition:transform .16s var(--ease),border-color .16s var(--ease),box-shadow .16s var(--ease)
 }
@@ -543,3 +544,15 @@ p,li,dd,dt{color:var(--text-2)}
 .muted,small{color:var(--text-3)}
 .card,.demo-panel{background:var(--surface);color:var(--text);border:1px solid var(--line-soft)}
 .pill{background:var(--accent-soft);color:var(--accent-text);border:1px solid var(--accent);font-weight:600}
+
+/* ---------- IKONĖLIŲ CENTRAVIMAS ---------- */
+.ic,.ck,.tt-icon,.lesson-icon,.lock-icon,.choice-icon,.av,.coin,.medal,.badge,.step-num{
+  display:grid;place-items:center;line-height:0;flex:none}
+.ic svg,.ck svg,.tt-icon svg,.lesson-icon svg,.lock-icon svg,.choice-icon svg,.coin svg{
+  display:block;margin:0}
+.feat-head,.tt-head,.lesson-head,.choice-head{display:flex;align-items:center}
+.feat-head h3,.tt-head h3,.lesson-head h3,.choice-head h3{margin:0;line-height:1.25}
+
+/* ikonėlių konteineriai – aiškus centravimas */
+.avbtn,.city,.medal,.badge,.step-num,.coin,.tt-icon,.ic,.ck,.av{display:grid;place-items:center;line-height:0}
+.avbtn svg,.city svg,.medal svg,.badge svg,.coin svg,.ic svg,.ck svg,.av svg{display:block;margin:0}
