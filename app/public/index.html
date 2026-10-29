@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>VEMAK · Finansinis raštingumas, kurį mokiniai nori žaisti</title>
-<meta name="description" content="VEMAK – penkių savaičių finansinio raštingumo demo: rinkos prognozės, investicijos, verslas ir santaupos.">
+<meta name="description" content="VEMAK – penkių savaičių finansinio raštingumo žaidimas: rinkos prognozės, investicijos, verslas ir santaupos. Klasėms ir asmeniniam naudojimui.">
 <meta name="theme-color" content="#0f1e3d">
 <link rel="icon" href="/icon.svg">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -82,6 +82,30 @@ section.alt{background:#fff}
 .faq details[open] summary::after{content:"–"}
 .faq details p{padding:0 20px 18px;margin:0;color:var(--muted)}
 .pilot-card{max-width:660px;margin:0 auto;padding:30px}
+/* ---------- auditorijos perjungiklis ---------- */
+.aud-switch{display:inline-flex;gap:4px;padding:4px;border-radius:var(--r-pill);background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.20);margin-bottom:18px}
+.aud-btn{border:0;background:transparent;color:#dbe6f6;font:inherit;font-weight:750;font-size:.87rem;
+  padding:9px 17px;border-radius:var(--r-pill);cursor:pointer;transition:background .18s var(--ease),color .18s var(--ease)}
+.aud-btn[aria-selected=true]{background:#fff;color:var(--navy)}
+.aud-btn[aria-selected=false]:hover{background:rgba(255,255,255,.15);color:#fff}
+/* ---------- planai ---------- */
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:20px;align-items:stretch}
+.plan{display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:var(--r-xl);
+  padding:28px;box-shadow:var(--sh-2);position:relative;transition:transform .2s var(--ease),box-shadow .2s var(--ease)}
+.plan:hover{transform:translateY(-3px);box-shadow:var(--sh-3)}
+.plan.best{border-color:rgba(18,180,140,.45);box-shadow:var(--sh-3)}
+.plan .tag{position:absolute;top:-13px;left:28px;background:var(--grad-brand);color:#fff;font-size:.71rem;
+  font-weight:900;letter-spacing:.07em;text-transform:uppercase;padding:5px 12px;border-radius:var(--r-pill)}
+.plan h3{margin:0}
+.plan .for{font-size:.86rem;color:var(--muted);margin:6px 0 0}
+.plan .price{font-size:2.05rem;font-weight:850;color:var(--navy);letter-spacing:-.03em;margin:14px 0 0;line-height:1}
+.plan .price small{display:block;font-size:.82rem;font-weight:650;color:var(--muted);letter-spacing:0;margin-top:6px}
+.plan ul{list-style:none;padding:0;margin:18px 0 22px;flex:1}
+.plan li{padding-left:25px;position:relative;margin:.55em 0;font-size:.94rem;color:var(--muted)}
+.plan li::before{content:"\2713";position:absolute;left:0;color:var(--teal-d);font-weight:900}
+.plan .btn{width:100%}
+.plan-note{text-align:center;font-size:.85rem;color:var(--muted);margin:20px auto 0;max-width:46em}
 footer{background:linear-gradient(160deg,var(--navy-2),var(--navy));color:#c8d3e6;padding:44px 0}
 footer a{color:#fff}
 footer .note{color:#9fb0cc}
@@ -91,9 +115,14 @@ footer .note{color:#9fb0cc}
 <body>
 <header class="hero">
   <div class="wrap">
-    <nav class="nav" aria-label="Pagrindinė navigacija"><a class="logo" href="/"><i>V</i>VEMAK</a><span class="sp"></span><a href="#demo">Demo</a><a href="#mokytojams">Mokytojams</a><a href="/teacher">Mokytojo prisijungimas</a><a href="/play">Mokiniams</a><a class="btn" href="/teacher?register=1">Registruoti paskyrą</a></nav>
+    <nav class="nav" id="nav" aria-label="Pagrindinė navigacija"><a class="logo" href="/"><i>V</i>VEMAK</a><span class="sp"></span><a href="#demo">Demo</a><a href="#nauda">Nauda</a><a href="#planai">Planai</a><a href="/teacher">Mokytojo prisijungimas</a><a href="/play">Mokiniams</a><a class="btn" href="/teacher?register=1">Registruoti paskyrą</a></nav>
     <div class="cols" style="margin-top:30px">
       <div>
+        <div class="aud-switch" role="tablist" aria-label="Kam skirta paslauga">
+          <button class="aud-btn" type="button" role="tab" data-aud="school" aria-selected="true">Mokyklai</button>
+          <button class="aud-btn" type="button" role="tab" data-aud="individual" aria-selected="false">Asmeniui</button>
+        </div>
+        <div id="heroCopy">
         <span class="hero-badge"><span></span>5 savaičių investavimo demo · vienai klasei</span>
         <h1>Finansinis raštingumas, kurį mokiniai nori žaisti.</h1>
         <p class="lead">Išbandyk penkių savaičių finansinį scenarijų: sek rinkos prognozes, keisk investicijų paskirstymą ir mokykis iš kainų kilimo bei kritimo. Mokytojams – pamokų planai ir ataskaitos.</p>
@@ -103,6 +132,7 @@ footer .note{color:#9fb0cc}
           <li><b>✓</b> Mokiniams nereikia el. pašto</li>
           <li><b>✓</b> Tik virtualūs pinigai</li>
         </ul>
+        </div>
       </div>
       <div class="city" id="heroCity"></div>
     </div>
@@ -115,7 +145,7 @@ footer .note{color:#9fb0cc}
   <div class="demo" id="demoBox" aria-live="polite"></div>
 </div></section>
 
-<section class="alt"><div class="wrap">
+<section class="alt" id="ritmas"><div class="wrap">
   <div class="sec-h"><span class="kicker">SAVAITĖS RITMAS</span><h2>Kaip atrodo viena savaitė</h2><p class="muted">Aiškus ritmas, kuris telpia į vieną pamoką ar namų darbą.</p></div>
   <div class="week">
     <div><b>Pirmadienis</b>Įvykis: kainos kyla, rinkos krenta arba kyla pigūs pagundų pasiūlymai.</div>
@@ -125,7 +155,7 @@ footer .note{color:#9fb0cc}
   </div>
 </div></section>
 
-<section id="mokytojams"><div class="wrap">
+<section id="nauda"><div class="wrap">
   <div class="sec-h"><span class="kicker">NAUDA</span><h2>Naudinga visiems klasės dalyviams</h2></div>
   <div class="aud">
     <article class="card"><h3>Mokytojams: pamoka paruošta už jus</h3><ul>
@@ -149,7 +179,7 @@ footer .note{color:#9fb0cc}
   </div>
 </div></section>
 
-<section class="alt"><div class="wrap">
+<section class="alt" id="kodel"><div class="wrap">
   <div class="sec-h"><span class="kicker">KODĖL TAI VEIKIA</span><h2>Mokymasis per pasekmes</h2></div>
   <div class="feat">
     <div class="card"><div class="ic">🎯</div><h3>Vienodos sąlygos</h3><p>Visa klasė patiria tuos pačius įvykius ir kainas, todėl rezultatus galima palyginti, o nusirašinėjimas naudos neduoda.</p></div>
@@ -157,6 +187,52 @@ footer .note{color:#9fb0cc}
     <div class="card"><div class="ic">🧭</div><h3>Mentorius be išgalvotų faktų</h3><p>Skaičius ir patarimus sudaro taisyklės, todėl jie nėra „haliucinacijos“. Tai mokomoji pagalba, ne finansinė rekomendacija.</p></div>
     <div class="card"><div class="ic">📱</div><h3>Veikia bet kur</h3><p>Telefone, planšetėje ar mokyklos kompiuteryje. Lengvas, be sunkios 3D grafikos.</p></div>
   </div>
+</div></section>
+
+<section id="planai"><div class="wrap">
+  <div class="sec-h"><span class="kicker">PLANAI</span><h2>Pasirink, kaip žaisi</h2><p class="muted">Tas pats penkių savaičių žaidimas – vienam žaidėjui arba visai klasei.</p></div>
+  <div class="plans">
+    <article class="plan">
+      <h3>Asmeninis</h3>
+      <p class="for">Vienam žaidėjui, be klasės kodo</p>
+      <p class="price">9,99 €<small>už 5 savaičių sezoną</small></p>
+      <ul>
+        <li>Savas miestas, kuris auga kartu su tavimi</li>
+        <li>Penkių savaičių rinkos scenarijus savo tempu</li>
+        <li>Savaitės rezultatai ir mentoriaus paaiškinimai</li>
+        <li>Pamoka po kiekvieno nuostolio ar prieaugio</li>
+        <li>Demo nemokamai, be registracijos</li>
+      </ul>
+      <button class="btn" type="button" data-plan="individual">Rezervuoti asmeninį sezoną</button>
+    </article>
+    <article class="plan best">
+      <span class="tag">Populiariausia</span>
+      <h3>Mokykla</h3>
+      <p class="for">Vienai klasei, iki 60 mokinių</p>
+      <p class="price">149 €<small>už klasę per sezoną</small></p>
+      <ul>
+        <li>Klasės kodas: mokiniams nereikia el. pašto</li>
+        <li>Mokytojo skydelis realiuoju laiku</li>
+        <li>Pamokų planai ir ataskaitos PDF / CSV</li>
+        <li>Testas prieš ir po sezono</li>
+        <li>Duomenų ištrynimas vienu paspaudimu</li>
+      </ul>
+      <button class="btn" type="button" data-plan="school">Prašyti piloto</button>
+    </article>
+    <article class="plan">
+      <h3>Mokyklos licencija</h3>
+      <p class="for">Visai mokyklai, neribotos klasės</p>
+      <p class="price">Kaina<small>pagal susitarimą</small></p>
+      <ul>
+        <li>Neribotas klasių ir mokytojų skaičius</li>
+        <li>Mokytojų paskyros visai mokyklai</li>
+        <li>Pagalba įvedant ir mokymai mokytojams</li>
+        <li>Sąskaita ir sutartis mokyklai</li>
+      </ul>
+      <button class="btn alt" type="button" data-plan="school">Susisiekti</button>
+    </article>
+  </div>
+  <p class="plan-note">Kainos nurodytos pilotiniam etapui ir gali keistis. Kol kas priimame rezervacijas: pasirinkę planą palieki kontaktus, o mes atidarome prieigą ir atsiunčiame mokėjimo nuorodą.</p>
 </div></section>
 
 <section id="pilotas"><div class="wrap">
@@ -172,7 +248,7 @@ footer .note{color:#9fb0cc}
   </form>
 </div></section>
 
-<section class="alt faq"><div class="wrap" style="max-width:780px">
+<section class="faq" id="duk"><div class="wrap" style="max-width:780px">
   <div class="sec-h"><span class="kicker">DUK</span><h2>Dažni klausimai</h2></div>
   <details><summary>Ar mokiniai naudoja tikrus pinigus?</summary><p>Ne. Visi pinigai yra virtualūs: nėra mokėjimų, brokerio ar prizų.</p></details>
   <details><summary>Kokius duomenis renkate apie mokinius?</summary><p>Tik slapyvardį ir žaidimo sprendimus. El. pašto ar tikro vardo nereikia.</p></details>

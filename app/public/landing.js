@@ -21,6 +21,7 @@ let weekNo = 1;
 let stepIndex = 0;
 let stepCapital = DEMO_CAPITAL;
 let stepHistory = [];
+let audience = 'school';   // 'school' | 'individual'
 
 function total() { return Object.values(alloc).reduce((sum, value) => sum + value, 0); }
 function allocationError() { return validateDemoAllocation(alloc); }
@@ -36,7 +37,7 @@ function oldHeader(step, label) {
 }
 
 function drawIntro() {
-  box.innerHTML = `<div class="demo-intro"><div class="demo-intro-art" aria-label="Pinigų ir turto augimo iliustracija" role="img"><div class="money-art"><span class="money-arrow">↗</span><span class="bill bill-back">€</span><span class="bill bill-front">€</span><span class="coin coin-one">€</span><span class="coin coin-two">€</span></div></div><div><span class="pill blue">VEMAK · finansinė strategija</span><h3>Sveikas atvykęs į VEMAK!</h3><p>Turi <b>1 000 virtualių eurų</b>. Pirmiausia pereisi senąją 3 žingsnių pradžią, tada priimsi 10 papildomų sprendimų, o pabaigoje gausi analitiką.</p><ul><li>1/3: pasirink ekonominę kryptį.</li><li>2/3: paskirstyk pinigus.</li><li>3/3: užrakink strategiją.</li></ul><button class="btn" id="start-demo">Pradėti</button></div></div>`;
+  box.innerHTML = `<div class="demo-intro"><div class="demo-intro-art" aria-label="Pinigų ir turto augimo iliustracija" role="img"><div class="money-art"><span class="money-arrow">↗</span><div class="bill bill-back">€</div><div class="bill bill-front">€</div><div class="coin coin-one">€</div><div class="coin coin-two">€</div></div></div><div><span class="pill blue">VEMAK · finansinė strategija</span><h3>Sveikas atvykęs į VEMAK!</h3><p>Turi <b>1 000 virtualių eurų</b>. Pirmiausia pereisi senąją 3 žingsnių pradžią, tada priimsi 10 papildomų sprendimų, o pabaigoje gausi analitiką.</p><ul><li>1/3: pasirink ekonominę kryptį.</li><li>2/3: paskirstyk pinigus.</li><li>3/3: užrakink strategiją.</li></ul><button class="btn" id="start-demo">Pradėti</button></div></div>`;
   $('#start-demo').addEventListener('click', () => { phase = 'legacy-event'; draw(); });
 }
 function drawLegacyEvent() {
@@ -68,7 +69,7 @@ function allocationMarkup() {
 }
 function drawStrategy() {
   const error = allocationError();
-  box.innerHTML = `${oldHeader(2, 'Strategija')}<div class="demo-grid"><div class="card demo-panel"><p class="eyebrow">SENAS 1/3 · STRATEGIJA</p><h3>Paskirstyk visus €1,000</h3><p>Naudok slankiklius. Strategija lieka privati iki penktadienio atskleidimo.</p>${allocationMarkup()}<div class="private-note">🔒 Klasė nemato tavo pasirinkimo, kol neįvyksta penktadienio atskleidimas.</div><button class="btn" id="lock-demo" style="width:100%" ${error ? 'disabled' : ''}>🔒 Užrakinti strategiją</button><p class="note">Užrakinus pamatysi tik patvirtinimą. Rezultato ir kitų mokinių strategijų dar nematysi.</p></div><div class="city">${city()}</div></div>`;
+  box.innerHTML = `${oldHeader(2, 'Strategija')}<div class="demo-grid"><div class="card demo-panel"><p class="eyebrow">SENAS 1/3 · STRATEGIJA</p><h3>Paskirstyk visus €1,000</h3><p>Naudok slankiklius. Strategija lieka privati iki penktadienio atskleidimo.</p>${allocationMarkup()}<div class="private-note">${audText('🔒 Klasė nemato tavo pasirinkimo, kol neįvyksta penktadienio atskleidimas.', '🔒 Tavo pasirinkimas lieka paslėptas iki penktadienio atskleidimo.')}</div><button class="btn" id="lock-demo" style="width:100%" ${error ? 'disabled' : ''}>🔒 Užrakinti strategiją</button><p class="note">Užrakinus pamatysi tik patvirtinimą. Rezultato ir kitų mokinių strategijų dar nematysi.</p></div><div class="city">${city()}</div></div>`;
   box.querySelectorAll('[data-bucket]').forEach((input) => input.addEventListener('input', () => { alloc[input.dataset.bucket] = Number(input.value); drawStrategy(); }));
   $('#lock-demo').addEventListener('click', () => { phase = 'locked'; draw(); });
 }
@@ -82,7 +83,7 @@ function resultRow(row) {
 }
 function drawReveal() {
   const result = reveal.player;
-  box.innerHTML = `${oldHeader(3, 'Analitika')}<div class="demo-grid"><div class="city">${city({ level: 1, savings: result.alloc.sav * 8, reserve: result.alloc.res * 8, business: result.alloc.bus * 8, invest: result.alloc.inv * 8, delta: result.delta })}</div><div class="card demo-panel"><p class="eyebrow">PENKTADIENIS · REZULTATAI</p><h3>Grynoji vertė: <span class="${result.delta >= 0 ? 'pos' : 'neg'}">${eur(result.netWorth)}</span></h3><div class="res"><div class="resrow"><span>Pradinis kapitalas</span><b>${eur(result.startingCapital)}</b></div><div class="resrow"><span>Galutinė grynoji vertė</span><b>${eur(result.netWorth)}</b></div><div class="resrow"><span>Pelnas arba nuostolis</span><b class="${result.delta >= 0 ? 'pos' : 'neg'}">${eur(result.delta, true)}</b></div>${result.earned ? `<div class="resrow"><span>Papildomos pajamos</span><b class="pos">${eur(result.earned, true)}</b></div>` : ''}${result.assetSale ? `<div class="resrow"><span>Turto pardavimas (ne pajamos)</span><b class="pos">${eur(result.assetSale, true)}</b></div>` : ''}${result.courseCost ? `<div class="resrow"><span>Investicija į įgūdžius</span><b class="neg">${eur(-result.courseCost)}</b></div>` : ''}<div class="resrow"><span>Netikėta išlaida</span><b>${eur(result.repairCost)}</b></div><div class="resrow"><span>Priverstinio pardavimo nuostolis</span><b class="${result.forcedSalePenalty ? 'neg' : 'pos'}">${eur(-result.forcedSalePenalty)}</b></div></div>${lessonBlock(result.lesson, result.steps)}</div></div><div class="reveal-section"><h3>Klasės lyderių lentelė <small class="muted">(demonstraciniai žaidėjai)</small></h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Žaidėjas</th><th>Pokytis</th><th>Strategijos taškai</th></tr></thead><tbody>${reveal.rows.map(resultRow).join('')}</tbody></table></div><div class="demo-awards">${reveal.awards.map((award) => `<div class="award"><small>${esc(award.title)}</small><b>${esc(award.name)}</b><span>${award.value}${award.unit === '€' ? ' €' : ' ' + esc(award.unit)}</span></div>`).join('')}</div><div class="row"><button class="btn" id="second-chance">🌱 Antra galimybė: palyginti sprendimą</button><button class="btn alt" id="replay-demo">Išbandyti kitą strategiją</button><button class="btn alt" id="next-week">Kita savaitė</button><a class="btn alt" href="#pilotas">Prašyti pilno klasės bandymo</a></div></div>`;
+  box.innerHTML = `${oldHeader(3, 'Analitika')}<div class="demo-grid"><div class="city">${city({ level: 1, savings: result.alloc.sav * 8, reserve: result.alloc.res * 8, business: result.alloc.bus * 8, invest: result.alloc.inv * 8, delta: result.delta })}</div><div class="card demo-panel"><p class="eyebrow">PENKTADIENIS · REZULTATAI</p><h3>Grynoji vertė: <span class="${result.delta >= 0 ? 'pos' : 'neg'}">${eur(result.netWorth)}</span></h3><div class="res"><div class="resrow"><span>Pradinis kapitalas</span><b>${eur(result.startingCapital)}</b></div><div class="resrow"><span>Galutinė grynoji vertė</span><b>${eur(result.netWorth)}</b></div><div class="resrow"><span>Pelnas arba nuostolis</span><b class="${result.delta >= 0 ? 'pos' : 'neg'}">${eur(result.delta, true)}</b></div>${result.earned ? `<div class="resrow"><span>Papildomos pajamos</span><b class="pos">${eur(result.earned, true)}</b></div>` : ''}${result.assetSale ? `<div class="resrow"><span>Turto pardavimas (ne pajamos)</span><b class="pos">${eur(result.assetSale, true)}</b></div>` : ''}${result.courseCost ? `<div class="resrow"><span>Investicija į įgūdžius</span><b class="neg">${eur(-result.courseCost)}</b></div>` : ''}<div class="resrow"><span>Netikėta išlaida</span><b>${eur(result.repairCost)}</b></div><div class="resrow"><span>Priverstinio pardavimo nuostolis</span><b class="${result.forcedSalePenalty ? 'neg' : 'pos'}">${eur(-result.forcedSalePenalty)}</b></div></div>${lessonBlock(result.lesson, result.steps)}</div></div><div class="reveal-section">${audText('<h3>Klasės lyderių lentelė <small class="muted">(demonstraciniai žaidėjai)</small></h3>', '<h3>Lyderių lentelė <small class="muted">(demonstraciniai žaidėjai)</small></h3>')}<div class="table-scroll"><table><thead><tr><th>#</th><th>Žaidėjas</th><th>Pokytis</th><th>Strategijos taškai</th></tr></thead><tbody>${reveal.rows.map(resultRow).join('')}</tbody></table></div><div class="demo-awards">${reveal.awards.map((award) => `<div class="award"><small>${esc(award.title)}</small><b>${esc(award.name)}</b><span>${award.value}${award.unit === '€' ? ' €' : ' ' + esc(award.unit)}</span></div>`).join('')}</div><div class="row"><button class="btn" id="second-chance">🌱 Antra galimybė: palyginti sprendimą</button><button class="btn alt" id="replay-demo">Išbandyti kitą strategiją</button><button class="btn alt" id="next-week">Kita savaitė</button><a class="btn alt" href="#pilotas">Prašyti pilno klasės bandymo</a></div></div>`;
   $('#second-chance').addEventListener('click', () => { comparison = compareDemoChoice(choice, DEMO_CHOICES.find((item) => item.key !== choice).key, alloc); drawComparison(); });
   $('#replay-demo').addEventListener('click', () => { choice = null; reveal = null; comparison = null; phase = 'event'; draw(); });
   $('#next-week').addEventListener('click', () => { startingCapital = result.netWorth; weekNo += 1; choice = null; reveal = null; comparison = null; phase = 'event'; draw(); });
@@ -97,10 +98,120 @@ function draw() { if (phase === 'intro') drawIntro(); else if (phase === 'legacy
 function reset() {  phase = 'intro'; choice = null; alloc = { sav: 25, inv: 25, bus: 25, res: 25 }; reveal = null; comparison = null; startingCapital = DEMO_CAPITAL; weekNo = 1; stepIndex = 0; stepCapital = DEMO_CAPITAL; stepHistory = []; draw(); }
 reset();
 
-$('#pf').addEventListener('submit', async (e) => {
+// ---------- auditorijos versijos: mokyklai / asmeniui ----------
+// Mokyklos turinys yra statiniame HTML (veikia ir be JS). Asmeninė versija įkeliama tik
+// pasirinkus – taip pats puslapis nesidubliuoja ir išlieka viena tiesos vieta.
+const AUD_MARKUP = {
+  individual: {
+    nav: '<a class="logo" href="/"><i>V</i>VEMAK</a><span class="sp"></span><a href="#demo">Demo</a><a href="#nauda">Nauda</a><a href="#planai">Planai</a><a href="#duk">D.U.K.</a><a class="btn" href="#pilotas">Rezervuoti sezoną</a>',
+    heroCopy: `
+        <span class="hero-badge"><span></span>5 savaičių investavimo treniruoklis · sau pačiam</span>
+        <h1>Išmok investuoti, kol tai dar nekainuoja tikrų pinigų.</h1>
+        <p class="lead">Penkių savaičių rinkos scenarijus: sek prognozes, paskirstyk virtualų biudžetą ir pamatyk, ką tavo sprendimai duotų augimo ir nuosmukio savaitėmis. Be brokerio, be rizikos, be realių pinigų.</p>
+        <div class="row" style="margin-top:24px"><a class="btn" href="#pilotas">Rezervuoti asmeninį sezoną</a></div>
+        <ul class="trust">
+          <li><b>✓</b> Veikia naršyklėje, be diegimo</li>
+          <li><b>✓</b> Jokie tikri pinigai</li>
+          <li><b>✓</b> 15–20 min. per savaitę</li>
+        </ul>`,
+    ritmas: `
+  <div class="sec-h"><span class="kicker">SAVAITĖS RITMAS</span><h2>Viena savaitė – vienas sprendimas</h2><p class="muted">Gali žaisti savo tempu: viena savaitė telpa į 15–20 minučių.</p></div>
+  <div class="week">
+    <div><b>Įvykis</b>Kainos kyla, rinkos krenta arba pasirodo viliojantys pigūs pasiūlymai. Perskaitai situaciją ir prognozių užuominas.</div>
+    <div><b>Sprendimas</b>Pasirenki kryptį ir paskirstai visą kapitalą į santaupas, investicijas, verslą ir rezervą.</div>
+    <div><b>Rezultatas</b>Pamatai savaitės pelną arba nuostolį ir kaip pasikeitė tavo miesto finansai.</div>
+    <div><b>Pamoka</b>Mentorius paaiškina pasekmes žingsnis po žingsnio, o tavo miestas auga toliau.</div>
+  </div>`,
+    nauda: `
+  <div class="sec-h"><span class="kicker">NAUDA</span><h2>Ką gausi tu, o ne klasė</h2></div>
+  <div class="aud">
+    <article class="card"><h3>Tau: savas miestas ir savi sprendimai</h3><ul>
+      <li>Penkių savaičių rinkos scenarijus: augimas, nuosmukis ir netikėtos išlaidos</li>
+      <li>Paskirstai virtualius 1 000 € į santaupas, investicijas, verslą ir rezervą</li>
+      <li>Kiekvieną savaitę naujas įvykis, tad sprendimą priimi iš naujo, o ne nusirašai</li>
+      <li>Po klaidos gauni antrą galimybę – klaida čia nieko nekainuoja</li>
+      <li>Klasės kodo nereikia: žaidi vienas, savo tempu</li></ul></article>
+    <article class="card"><h3>Mokaisi iš pasekmių, o ne iš pamokymų</h3><ul>
+      <li>Po kiekvieno nuostolio ar prieaugio matai įvykių seką žingsnis po žingsnio</li>
+      <li>Mentorius paaiškina, kas nutiko, remdamasis tavo skaičiais</li>
+      <li>Paskutinę savaitę palygini savo strategiją su geriausiu modelio rastu variantu</li>
+      <li>Skaičius ir patarimus sudaro taisyklės, tad jie nėra išgalvoti</li></ul></article>
+    <article class="card"><h3>Saugu, aišku ir be spaudimo</h3><ul>
+      <li>Jokie tikri pinigai, joks brokeris, jokia rizika</li>
+      <li>Demo išbandai iš karto, be registracijos ir be el. pašto</li>
+      <li>Žaidimas yra mokomoji priemonė, o ne finansinė rekomendacija</li>
+      <li>Gali pertraukti ir grįžti bet kada</li></ul></article>
+  </div>`,
+    kodel: `
+  <div class="sec-h"><span class="kicker">KODĖL TAI VEIKIA</span><h2>Mokymasis per pasekmes</h2></div>
+  <div class="feat">
+    <div class="card"><div class="ic">🎯</div><h3>Fiksuotas scenarijus</h3><p>Kiekvieną sezoną tie patys penki įvykiai, tad rezultatą lemia tavo sprendimai, o ne atsitiktinumas.</p></div>
+    <div class="card"><div class="ic">⚖️</div><h3>Rizika be rizikos</h3><p>Gali pabandyti agresyvią strategiją ir pamatyti, kiek ji kainuotų nuosmukio savaitę – neprarasdamas nė euro.</p></div>
+    <div class="card"><div class="ic">🧭</div><h3>Mentorius be išgalvotų faktų</h3><p>Skaičius ir patarimus sudaro taisyklės, todėl jie nėra „haliucinacijos“. Tai mokomoji pagalba, ne finansinė rekomendacija.</p></div>
+    <div class="card"><div class="ic">📱</div><h3>Veikia bet kur</h3><p>Telefone, planšetėje ar kompiuteryje. Lengvas, be sunkios 3D grafikos.</p></div>
+  </div>`,
+    pilotas: `
+  <div class="sec-h"><span class="kicker">ASMENINIS SEZONAS</span><h2>Rezervuoti asmeninį sezoną</h2><p class="muted">Vienas žaidėjas, vienas miestas. Palik kontaktus – atidarysime tavo sezoną ir atsiųsime mokėjimo nuorodą.</p></div>
+  <form class="card pilot-card" id="pf">
+    <label for="pn">Vardas</label><input id="pn" required maxlength="80">
+    <label for="pe">El. paštas</label><input id="pe" type="email" required maxlength="120">
+    <label for="pr">Kaip žaisi?</label><select id="pr"><option>Sau asmeniškai</option><option>Šeimai</option><option>Dovanai</option><option>Kita</option></select>
+    <label for="pm">Žinutė (nebūtina)</label><textarea id="pm" rows="3" maxlength="500"></textarea>
+    <label style="display:flex;gap:9px;align-items:flex-start;font-weight:500;margin-top:16px"><input type="checkbox" id="pc" style="width:auto;margin-top:5px" required> Sutinku, kad su manimi susisieuktų dėl asmeninio sezono. Duomenys naudojami tik šiam tikslui.</label>
+    <p class="err" id="perr" role="alert"></p><button class="btn" style="width:100%">Rezervuoti sezoną</button>
+  </form>`,
+    duk: `
+  <div class="sec-h"><span class="kicker">DUK</span><h2>Dažni klausimai</h2></div>
+  <details><summary>Ar man reikia tikrų pinigų?</summary><p>Ne. Viskas vyksta su virtualiais eurais: nėra mokėjimų, brokerio ar prizų.</p></details>
+  <details><summary>Ar gausiu investavimo patarimų?</summary><p>Ne. Žaidimas yra mokomoji priemonė ir nesiūlo finansinių ar investavimo rekomendacijų.</p></details>
+  <details><summary>Kiek laiko užtrunka?</summary><p>Vienas sezonas – 5 savaitės, po 15–20 minučių per savaitę. Gali žaisti savo tempu.</p></details>
+  <details><summary>Ar galiu žaisti be mokyklos ar klasės kodo?</summary><p>Taip. Asmeninis sezonas skirtas vienam žaidėjui, tad klasės kodo nereikia.</p></details>
+  <details><summary>Ką gausiu sezono pabaigoje?</summary><p>Kiekvienos savaitės rezultatą, mentoriaus paaiškinimą ir palyginimą su geriausiu modelio variantu.</p></details>`,
+  },
+};
+const AUD_IDS = ['nav', 'heroCopy', 'ritmas', 'nauda', 'kodel', 'pilotas', 'duk'];
+const AUD_SNAP = {};
+for (const id of AUD_IDS) { const el = document.getElementById(id); if (el) AUD_SNAP[id] = el.innerHTML; }
+function audText(school, individual) { return audience === 'individual' ? individual : school; }
+function setAudience(kind, opts = {}) {
+  audience = kind === 'individual' ? 'individual' : 'school';
+  const source = audience === 'individual' ? AUD_MARKUP.individual : AUD_SNAP;
+  for (const id of AUD_IDS) { const el = document.getElementById(id); if (el && source[id] !== undefined) el.innerHTML = source[id]; }
+  document.querySelectorAll('.aud-btn').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.aud === audience)));
+  document.title = audience === 'individual'
+    ? 'VEMAK · Investavimo treniruoklis sau pačiam'
+    : 'VEMAK · Finansinis raštingumas, kurį mokiniai nori žaisti';
+  try { localStorage.setItem('vemak.audience', audience); } catch { /* privatus režimas */ }
+  if (phase === 'intro') drawIntro();
+  if (opts.scroll) { const target = document.getElementById('pilotas'); if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+}
+document.querySelectorAll('.aud-btn').forEach((btn) => btn.addEventListener('click', () => setAudience(btn.dataset.aud)));
+document.querySelectorAll('[data-plan]').forEach((btn) => btn.addEventListener('click', () => setAudience(btn.dataset.plan, { scroll: true })));
+
+// Forma siunčiama per delegavimą: ji išlieka veikianti ir pakeitus auditoriją.
+document.addEventListener('submit', async (e) => {
+  const form = e.target;
+  if (!form || form.id !== 'pf') return;
   e.preventDefault();
+  const val = (sel) => form.querySelector(sel)?.value || '';
   try {
-    await api('POST', '/api/pilot', { name: $('#pn').value, email: $('#pe').value, school: $('#ps').value, role: $('#pr').value, message: $('#pm').value, consent: $('#pc').checked });
-    $('#pf').innerHTML = '<h3>Ačiū! Prašymas gautas ✓</h3><p>Susisieksime el. paštu dėl pilotinio bandymo.</p>';
-  } catch (er) { $('#perr').textContent = er.message; }
+    await api('POST', '/api/pilot', {
+      plan: audience,
+      name: val('#pn'), email: val('#pe'), school: val('#ps'),
+      role: val('#pr'), message: val('#pm'), consent: !!form.querySelector('#pc')?.checked,
+    });
+    form.innerHTML = audience === 'individual'
+      ? '<h3>Ačiū! Rezervacija gauta ✓</h3><p>Susisieksime el. paštu dėl asmeninio sezono ir mokėjimo nuorodos.</p>'
+      : '<h3>Ačiū! Prašymas gautas ✓</h3><p>Susisieksime el. paštu dėl pilotinio bandymo.</p>';
+  } catch (er) { const box = form.querySelector('#perr'); if (box) box.textContent = er.message; }
+});
+
+// Pradinė auditorija: nuoroda #asmeniui arba paskutinis pasirinkimas.
+let savedAudience = 'school';
+try { savedAudience = localStorage.getItem('vemak.audience') || 'school'; } catch { /* privatus režimas */ }
+setAudience(location.hash.replace('#', '') === 'asmeniui' || savedAudience === 'individual' ? 'individual' : 'school');
+// Nuoroda turi veikti ir tada, kai puslapis jau atidarytas (pvz., paspaudus #asmeniui nuorodą).
+window.addEventListener('hashchange', () => {
+  if (location.hash === '#asmeniui') setAudience('individual');
+  else if (location.hash === '#mokyklai') setAudience('school');
 });
