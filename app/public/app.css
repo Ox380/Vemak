@@ -517,7 +517,7 @@ tr.me:hover td{background:#d9f5ec}
   html{scroll-behavior:auto}
 }
 
-/* ---------- „Paklausk mentoriaus": popieriaus lapelis po pamoka ---------- */
+.demo-idea-box{margin-top:18px;padding-top:4px}.demo-idea-box>div:first-child{padding:14px 16px 0}.demo-idea-box>div:first-child b{font-size:1.05rem;color:var(--navy)}
 .ask{
   position:relative;margin:20px 0 0;padding:18px 18px 16px;
   background:linear-gradient(172deg,#faf4e4,#f1e7cf);

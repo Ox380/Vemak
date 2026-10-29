@@ -1,7 +1,7 @@
 // landing.js — anonymous one-week playable demo; no login, no server writes.
 import { DEMO_CAPITAL, DEMO_CHOICES, DEMO_EVENT, DEMO_FLOW, DEMO_MARKET_ASSETS, createDemoSession, getDemoMarketStory, getDemoMarketWinner, scoreDemoMarketGuess, getDemoStepChoices, buildDemoReveal, compareDemoChoice, simulateDemoStep, validateDemoAllocation, getDemoGamification } from './demo.js';
 import { citySVG } from './iso.js';
-import { esc, $, eur, api, lessonBlock } from './ui.js';
+import { esc, $, eur, api, lessonBlock, askBlock, wireAsk } from './ui.js';
 
 $('#heroCity').innerHTML = citySVG({ level: 2, savings: 420, reserve: 300, business: 640, invest: 520, mood: 'up' });
 const box = $('#demoBox');
@@ -27,6 +27,27 @@ let audience = 'school';   // 'school' | 'individual'
 let viewedExplanation = false;
 
 function total() { return Object.values(alloc).reduce((sum, value) => sum + value, 0); }
+function demoAskContext(result = null) {
+  const steps = (result?.steps || stepHistory).map((item) => ({
+    text: `${item.step}/10 · ${item.title}: ${item.choice}`,
+    amount: item.delta,
+  }));
+  return {
+    week: weekNo,
+    lesson: 'Anoniminio demo rezultatai: mentorius paaiškina, ką pakeitė tavo sprendimai.',
+    net: result?.netWorth ?? stepCapital,
+    delta: result?.delta ?? (stepCapital - startingCapital),
+    alloc: result?.alloc || alloc,
+    steps,
+  };
+}
+function demoAskMarkup(result = null) {
+  return `<div class="demo-idea-box"><div><b>Tavo sumanymas</b><p class="muted">Parašyk, ką norėtum išbandyti arba ko nesupratai. Mentorius paaiškins, ką tai keistų žaidime.</p></div>${askBlock(['Kaip galėčiau padidinti rezervą?', 'Ką keistų taupesnis sprendimas?', 'Kodėl pasikeitė mano balansas?'])}</div>`;
+}
+function wireDemoAsk(result = null) {
+  wireAsk(() => demoAskContext(result));
+}
+
 function gamificationMarkup(g) {
   const next = g.level * 200;
   const progress = Math.min(100, Math.round((g.xp % 200) / 2));
@@ -71,8 +92,9 @@ function drawEvent() {
 function drawAnalytics() {
   viewedExplanation = true;
   const gamification = getDemoGamification({ week: weekNo, predictionCorrect: false, decisions: stepHistory.length, explanationViewed: viewedExplanation, netWorth: stepCapital, startingCapital });
-  box.innerHTML = `${oldHeader(3, 'Analitika')}<div class="card demo-panel"><h3>Visų sprendimų rezultatai</h3>${gamificationMarkup(gamification)}<div class="res"><div class="resrow"><span>Pradinis kapitalas</span><b>${eur(DEMO_CAPITAL)}</b></div><div class="resrow"><span>Po 10 ekonominių sprendimų</span><b>${eur(stepCapital)}</b></div><div class="resrow"><span>Ekonominių sprendimų pokytis</span><b class="${stepCapital >= DEMO_CAPITAL ? 'pos' : 'neg'}">${eur(stepCapital - DEMO_CAPITAL, true)}</b></div><div class="resrow"><span>Priimti sprendimai</span><b>${stepHistory.length}</b></div></div>${lessonBlock('Analitika paaiškina, kaip senoji strategija ir papildomi sprendimai kartu pakeitė tavo finansinę situaciją.', stepHistory.map((item) => ({ text: `${item.step}/10 · ${item.title}: ${item.choice}`, amount: item.delta, comment: item.choices?.find((choice) => choice.key === item.choice)?.lesson || 'Šis pasirinkimas pakeitė tavo balansą pagal nurodytą sumą.' })))}<div class="row"><button class="btn" id="restart-steps">Žaisti dar kartą</button><a class="btn alt" href="#pilotas">Prašyti pilno bandymo</a></div></div>`;
+  box.innerHTML = `${oldHeader(3, 'Analitika')}<div class="card demo-panel"><h3>Visų sprendimų rezultatai</h3>${gamificationMarkup(gamification)}<div class="res"><div class="resrow"><span>Pradinis kapitalas</span><b>${eur(DEMO_CAPITAL)}</b></div><div class="resrow"><span>Po 10 ekonominių sprendimų</span><b>${eur(stepCapital)}</b></div><div class="resrow"><span>Ekonominių sprendimų pokytis</span><b class="${stepCapital >= DEMO_CAPITAL ? 'pos' : 'neg'}">${eur(stepCapital - DEMO_CAPITAL, true)}</b></div><div class="resrow"><span>Priimti sprendimai</span><b>${stepHistory.length}</b></div></div>${lessonBlock('Analitika paaiškina, kaip senoji strategija ir papildomi sprendimai kartu pakeitė tavo finansinę situaciją.', stepHistory.map((item) => ({ text: `${item.step}/10 · ${item.title}: ${item.choice}`, amount: item.delta, comment: item.choices?.find((choice) => choice.key === item.choice)?.lesson || 'Šis pasirinkimas pakeitė tavo balansą pagal nurodytą sumą.' })))}${demoAskMarkup()}<div class="row"><button class="btn" id="restart-steps">Žaisti dar kartą</button><a class="btn alt" href="#pilotas">Prašyti pilno bandymo</a></div></div>`;
   $('#restart-steps').addEventListener('click', reset);
+  wireDemoAsk();
 }
 function drawStepFinish() {
   const gained = stepCapital - DEMO_CAPITAL;
