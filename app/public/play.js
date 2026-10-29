@@ -3,7 +3,7 @@ import { WEEKS, ASSET_META, TOPICS } from './content.js';
 import { CONFIG, ASSET_KEYS, DEFAULT_MIX, GOAL_TYPES } from './engine.js';
 import { citySVG } from './iso.js';
 import { wireThemeToggle } from './theme.js';
-import { esc, $, $$, eur, pct, api, toast, lessonBlock, wireAsk, wireTheme, AVATARS, TONE, TROPHY, ICO } from './ui.js';
+import { esc, $, $$, eur, pct, api, toast, lessonBlock, askBlock, wireAsk, wireTheme, AVATARS, TONE, TROPHY, ICO } from './ui.js';
 
 const app = $('#app');
 
@@ -250,7 +250,7 @@ function viewResults() {
       <h3 style="margin-top:14px">Kas nutiko su turtu</h3>
       <div class="cmp">${ASSET_KEYS.filter((a) => r.alloc.inv > 0 && (r.alloc.mix[a] || 0) > 0).map((a) => `<div>${ASSET_META[a].icon}<b class="${r.market[a] >= 0 ? 'pos' : 'neg'}">${pct(r.market[a])}</b><small>${ASSET_META[a].name}</small></div>`).join('') || '<small class="muted">Šią savaitę neinvestavai.</small>'}
         <div>${ICO.cafe}<b class="${r.bizReturn >= 0 ? 'pos' : 'neg'}">${pct(r.bizReturn)}</b><small>Kavos baras</small></div></div>
-      ${lessonBlock(r.lesson, r.steps, ASK_SUGGESTIONS)}
+      ${lessonBlock(r.lesson, r.steps, ASK_SUGGESTIONS, '/api/ask/ai')}
       <div class="reveal-rewards"><h3>Penktadienio apdovanojimai</h3><p>+${reward.xp} XP · ${reward.level} lygis</p><p class="muted">Tavo strategijos ir mokymosi pasiekimai saugomi visam sezonui.</p></div>
       ${r.bankrupt ? '<div class="news down">${ICO.warn} Skola per didelė. Kitą savaitę pradėsi iš naujo su antra galimybe.</div>' : ''}
     </div>
@@ -305,11 +305,12 @@ function viewBudget() {
 
 function viewMentor() {
   const all = Object.keys(me.mentor ? { 1: 1 } : {}).length;
-  return `<h2>AI mentorius</h2>${mentorCard()}
+  return `<h2>VEMAK mentorius</h2>${mentorCard()}
+  ${askBlock(ASK_SUGGESTIONS, '/api/ask/ai')}
   <div class="card" style="margin-top:14px"><h3>Kaip veikia mentorius</h3><ul>
-  <li>Jis mato tik tavo sprendimus ir skaičius, <b>ne tavo vardo ar asmens duomenų</b>.</li>
-  <li>Faktai skaičiuojami pagal taisykles, todėl jie niekada neišgalvoti.</li>
-  <li>Tai mokomieji patarimai žaidime, ne investavimo rekomendacijos.</li></ul></div>`;
+  <li>AI mato tik tavo anonimiškus žaidimo savaitės rezultatus – ne vardą, pavardę ar el. paštą.</li>
+  <li>Jei AI neveikia, paaiškinimą pateiks taisyklėmis paremtas atsarginis mentorius.</li>
+  <li>Tai mokomasis paaiškinimas, ne investavimo rekomendacija.</li></ul></div>`;
 }
 
 function viewFinish() {
@@ -318,7 +319,8 @@ function viewFinish() {
   const mine = rk?.byStrategy.find((r) => r.nickname === me.me.nickname);
   return `<div class="card hero-end"><div class="big">Sezonas baigtas</div><p>Tavo galutinė grynoji vertė: <b>${eur(last?.netWorth || 0)}</b>${mine ? ` · strategijos vieta: <b>${mine.rank}</b>` : ''}</p>
   ${q ? `<h3>Ką išmokai</h3><div class="cmp"><div><small>Prieš</small><b>${q.pre} %</b></div><div><small>Po</small><b>${q.post} %</b></div><div><small>Pokytis</small><b class="${q.post - q.pre >= 0 ? 'pos' : 'neg'}">${q.post - q.pre > 0 ? '+' : ''}${q.post - q.pre} %</b></div></div>` : ''}</div>
-  ${viewResults()}`;
+  ${viewResults()}
+  ${askBlock(ASK_SUGGESTIONS, '/api/ask/ai')}`;
 }
 
 // ---------- render + events ----------
@@ -332,7 +334,16 @@ function render() {
   wireTheme();
   window.addEventListener('vemak:theme', () => render(), { once: true });
   if (tab === 'week') bindWeek();
-  if (tab === 'results') bindAsk();
+  if (tab === 'finish' || tab === 'mentor') {
+    const endpoint = tab === 'finish' ? '/api/ask/ai' : $('#ask-q')?.closest('.ask')?.dataset.askEndpoint || '/api/ask';
+    wireAsk(() => ({ reports: me.reports.map((report) => ({
+      week: report.week,
+      delta: report.delta,
+      netWorth: report.netWorth,
+      steps: (report.steps || []).map((step) => ({ text: step.text, amount: step.amount })),
+    })) }), ASK_SUGGESTIONS, endpoint === '/api/ask/ai' ? () => token : null);
+  }
+  if (tab === 'results') bindAsk(false);
   if (tab === 'reveal') bindReveal();
   $('#save-goal')?.addEventListener('click', async () => {
     try {
@@ -342,20 +353,20 @@ function render() {
   });
   window.scrollTo(0, 0);
 }
-function bindAsk() {
-  const r = me.reports.at(-1);
-  wireAsk(() => (r ? {
-    week: r.week, lesson: r.lesson, net: r.netWorth, delta: r.delta,
-    alloc: r.alloc, market: r.market, bizReturn: r.bizReturn,
-    expense: r.expense, forced: r.forced, newDebt: r.newDebt, bankrupt: r.bankrupt,
-    steps: (r.steps || []).map((s) => ({ text: s.text, amount: s.amount })),
-  } : {}), ASK_SUGGESTIONS);
+function bindAsk(useAi = true) {
+  wireAsk(() => ({ reports: me.reports.map((report) => ({
+    week: report.week,
+    delta: report.delta,
+    netWorth: report.netWorth,
+    steps: (report.steps || []).map((step) => ({ text: step.text, amount: step.amount })),
+  })) }), ASK_SUGGESTIONS, useAi ? () => token : null);
 }
 function bindReveal() {
   const advance = () => { if (revealStage < 6) revealStage += 1; else tab = 'results'; render(); };
   $('#reveal-next')?.addEventListener('click', advance);
   $('#reveal-skip')?.addEventListener('click', () => { revealStage = 6; render(); });
 }
+
 function refreshTotals() {
   const tot = draft.sav + draft.inv + draft.bus + draft.res;
   $('#tot').className = tot === 100 ? 'pos' : 'neg';

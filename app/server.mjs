@@ -9,6 +9,7 @@ import { createRewards, awardOnce, weeklyXp, trophyEligibility, levelForXp } fro
 import { WEEKS as CONTENT } from './public/content.js';
 import { LESSONS, QUIZ } from './server/teaching.mjs';
 import { askAnswer, SUGGESTED as ASK_SUGGESTED } from './server/ask.mjs';
+import { answerWithAiMentor } from './server/ai-mentor.mjs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(ROOT, 'public');
@@ -310,14 +311,33 @@ route('POST', '/api/pilot', (req, body) => {
 
 // ----- „Paklausk mentoriaus" – atsakymai tik iš mokinio skaičių -----
 route('POST', '/api/ask', (req, body) => {
-  limit('ask:' + req.ip, 60, 600e3);
-  const question = String(body.question || '').replace(/[\u0000-\u001f]/g, ' ').trim();
+  limit('ask:' + req.ip, 20, 600e3);
+  const question = String(body.question || '').replace(/[\\u0000-\\u001f]/g, ' ').trim();
   if (question.length > 240) throw bad('Klausimas per ilgas (iki 240 simbolių).');
   const ctx = body.context && typeof body.context === 'object' ? body.context : {};
   return askAnswer({ question, context: ctx });
 });
 
 route('GET', '/api/ask/suggestions', () => ({ suggestions: ASK_SUGGESTED }));
+
+route('POST', '/api/ask/ai', (req, body) => {
+  limit('ask-ai:' + req.ip, 12, 600e3);
+  const bearer = String(req.headers.authorization || '').replace(/^Bearer /, '');
+  if (!bearer) throw deny('AI mentoriui reikia mokinio prisijungimo.');
+  const student = authStudent(req);
+  const cls = classOf(student);
+  const revealed = Math.min(cls.revealed, CONFIG.WEEKS);
+  if (!revealed) throw bad('AI mentorius atsakys, kai bus atskleistos pirmos savaitės rezultatai.');
+  const question = String(body.question || '').replace(/[\\u0000-\\u001f]/g, ' ').trim();
+  if (!question) throw bad('Įrašyk klausimą.');
+  if (question.length > 240) throw bad('Klausimas per ilgas (iki 240 simbolių).');
+  const reports = ensureState(student).history.slice(0, revealed).map((report) => ({
+    week: report.week, delta: report.delta, netWorth: report.netWorth,
+    steps: (report.steps || []).map((step) => ({ text: step.text, amount: step.amount })),
+  }));
+  return answerWithAiMentor({ question, context: { reports } });
+});
+
 
 // ----- student -----
 route('POST', '/api/join', (req, body) => {
@@ -436,7 +456,7 @@ export const server = http.createServer(async (req, res) => {
         if (r.method !== req.method) continue;
         const m = r.re.exec(url.pathname);
         if (!m) continue;
-        const out = r.fn(req, body, m.groups || {});
+        const out = await r.fn(req, body, m.groups || {});
         if (out && out.__raw !== undefined) {
           res.writeHead(200, { ...SEC, 'Content-Type': out.type, 'Content-Disposition': `attachment; filename="${encodeURIComponent(out.filename)}"`, 'Cache-Control': 'no-store' });
           return res.end(out.__raw);
