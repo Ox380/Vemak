@@ -161,8 +161,10 @@ a{color:var(--ink)}
   .tag{margin-bottom:34px}
 }
 /* ranka surinktos raidės */
-.sign-face h1 .w{display:inline-block;white-space:nowrap}
-.sign-face h1 .c{display:inline-block;transform:rotate(var(--r,0deg)) translateY(var(--y,0))}
+.sign-face h1 .w{display:inline-block;white-space:nowrap;
+  transform:rotate(var(--wr,0deg)) translateY(var(--wy,0))}
+.sign-face h1 .c{display:inline-block;
+  transform:rotate(var(--r,0deg)) translateY(var(--y,0)) scale(var(--s,1))}
 .sign-face b{display:block;font-size:.75rem;letter-spacing:.18em;font-weight:900;color:var(--ink-3);text-transform:uppercase}
 .sign-face h1{font-size:clamp(1.85rem,4.4vw,2.95rem);margin:8px 0 0;max-width:15em}
 /* raudonas rankos įrašas ties „dabar" */
@@ -375,7 +377,7 @@ footer .note{color:var(--ink-3);font-size:.85rem;margin:14px 0 0}
 
         <div class="tag lead" style="--drop:46px">
           <span class="peg-top"></span><span class="eye"></span>
-          <div class="row"><a class="btn alt" href="/play">Mokinems</a><a class="btn" href="/teacher?register=1">Registruoti paskyrą</a></div>
+          <div class="row"><a class="btn alt" href="/play">Mokiniams prisijungimas</a><a class="btn" href="/teacher?register=1">Registruoti paskyrą</a></div>
           <p class="muted" style="font-size:.86rem;margin:0 0 12px">Mokiniai prisijungia su klasės kodu ir slapyvardžiu — be el. pašto.</p>
           <ul class="trust">
             <li><i class="ck"></i>Veikia naršyklėje, be diegimo</li>

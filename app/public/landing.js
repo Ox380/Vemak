@@ -223,12 +223,20 @@ function handSet(el) {
   const frag = document.createDocumentFragment();
   for (const word of text.split(' ')) {
     if (!word) { frag.appendChild(document.createTextNode(' ')); continue; }
-    const w = document.createElement('span'); w.className = 'w';
+    const w = document.createElement('span');
+    w.className = 'w';
+    // kiekvienas žodis šiek tiek pasuktas ir paslinktas
+    w.style.setProperty('--wr', (rnd() * 2.6 - 1.3).toFixed(2) + 'deg');
+    w.style.setProperty('--wy', (rnd() * 3.0 - 1.5).toFixed(2) + 'px');
+    w.style.marginRight = (rnd() * 2.2 - 0.6).toFixed(2) + 'px';
     for (const ch of word) {
-      const c = document.createElement('span'); c.className = 'c';
+      const c = document.createElement('span');
+      c.className = 'c';
       c.textContent = ch;
-      c.style.setProperty('--r', (rnd() * 2.4 - 1.2).toFixed(2) + 'deg');
-      c.style.setProperty('--y', (rnd() * 1.8 - 0.9).toFixed(2) + 'px');
+      // raidės posūkis, aukštis ir dydis – kaip rašant ranka
+      c.style.setProperty('--r', (rnd() * 9.0 - 4.5).toFixed(2) + 'deg');
+      c.style.setProperty('--y', (rnd() * 6.0 - 3.0).toFixed(2) + 'px');
+      c.style.setProperty('--s', (0.95 + rnd() * 0.11).toFixed(3));
       w.appendChild(c);
     }
     frag.appendChild(w); frag.appendChild(document.createTextNode(' '));
