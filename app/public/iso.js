@@ -224,18 +224,19 @@ function label(x, y, z, name, price, anchorZ = 0) {
   const [px, py] = P(x, y, z);
   const [ax, ay] = P(x, y, anchorZ);
   const hasPrice = price != null && price !== '';
-  const nw = String(name).length * 6.5;
-  const pw = hasPrice ? String(price).length * 6.2 + 16 : 0;
-  const w = nw + pw + 24;
-  const h = 24;
+  const nw = String(name).length * 7.6;
+  const pw = hasPrice ? String(price).length * 7.4 + 18 : 0;
+  const w = nw + pw + 28;
+  const h = 29;
   return `<g class="city-label" transform="translate(${px.toFixed(1)},${py.toFixed(1)})">`
-    + `<line x1="0" y1="${(h / 2 + 1).toFixed(1)}" x2="${(ax - px).toFixed(1)}" y2="${(ay - py).toFixed(1)}" stroke="#0f7a45" stroke-width="1.4" stroke-dasharray="2 2" opacity=".72"/>`
-    + `<rect x="${(-w / 2).toFixed(1)}" y="${(-h / 2 + 4).toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="8" fill="#0a1a11" opacity=".12"/>`
-    + `<rect x="${(-w / 2).toFixed(1)}" y="${(-h / 2).toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="8" fill="#ffffff" stroke="#b8d8c4"/>`
-    + `<text x="${(-w / 2 + 10).toFixed(1)}" y="3.6" font-size="11.5" font-weight="700" fill="#0a1a11" font-family="system-ui,sans-serif">${name}</text>`
+    + `<line x1="0" y1="${(h / 2 + 1).toFixed(1)}" x2="${(ax - px).toFixed(1)}" y2="${(ay - py).toFixed(1)}" stroke="#7c8a80" stroke-width="1.3" stroke-dasharray="2 2" opacity=".6"/>`
+    + `<rect x="${(-w / 2).toFixed(1)}" y="${(-h / 2 + 5).toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="9" fill="#0a1a11" opacity=".12"/>`
+    + `<rect x="${(-w / 2).toFixed(1)}" y="${(-h / 2).toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="9" fill="#ffffff" stroke="#c9d2dd"/>`
+    + `<circle cx="${(-w / 2 + 11).toFixed(1)}" cy="0" r="3.9" fill="#4f46e5"/>`
+    + `<text x="${(-w / 2 + 23).toFixed(1)}" y="4.4" font-size="13.5" font-weight="600" fill="#0f172a" font-family="system-ui,sans-serif">${name}</text>`
     + (hasPrice
-      ? `<rect x="${(w / 2 - pw - 5).toFixed(1)}" y="-9" width="${pw.toFixed(1)}" height="18" rx="6" fill="#d9f0e2"/>`
-        + `<text x="${(w / 2 - pw / 2 - 5).toFixed(1)}" y="3.4" text-anchor="middle" font-size="11" font-weight="800" fill="#0b5c34" font-family="system-ui,sans-serif">${price}</text>`
+      ? `<rect x="${(w / 2 - pw - 5).toFixed(1)}" y="-11" width="${pw.toFixed(1)}" height="22" rx="7" fill="#e0e7ff"/>`
+        + `<text x="${(w / 2 - pw / 2 - 5).toFixed(1)}" y="4.4" text-anchor="middle" font-size="13" font-weight="700" fill="#3730a3" font-family="system-ui,sans-serif">${price}</text>`
       : '')
     + '</g>';
 }
@@ -306,6 +307,61 @@ const BUILDINGS = [
   { gx: 13.2, gy: 12.9, w: 1.4, d: 1.3, h: 28, c: '#6f9f83', o: { windows: true, parapet: true, floors: 3 } },
   { gx: 8.5, gy: 8.5, w: 1.5, d: 1.5, h: 32, c: '#6f9f83', o: { windows: true, parapet: true, floors: 4 } },
 ];
+
+// ================= TEMOS PERDAŽYMAS =================
+// Miesto scena perdažoma pagal aktyvią temą:
+//   dark  – žali atspalviai, balta, juoda
+//   light – balta ir mėlyna
+function retint(svg, theme) {
+  const dark = theme === 'dark';
+  const lo = dark ? 0.06 : 0.56;
+  const hi = dark ? 0.44 : 0.98;
+  // Kiekvienas atspalvis nukreipiamas į savo vietą spalvų rate, todėl miestas
+  // tampa daugiaspalvis: pastatai violetiniai, stogai žydri, akcentai gintariniai.
+  const spread = dark ? 1.55 : 1.35;
+  const shift = dark ? 210 : 250;
+  return svg.replace(/#[0-9a-fA-F]{6}/g, (hex) => {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const h = rgb2hsl(r, g, b);
+    // neutralios spalvos (etikečių baltas fonas, juodas tekstas) neperdažomos
+    if (h.s < 0.14) {
+      const gray = dark ? 1 - h.l * 0.85 : h.l;
+      const v = Math.round(gray * 255);
+      return '#' + [v, v, v].map((x) => x.toString(16).padStart(2, '0')).join('');
+    }
+    const l = lo + h.l * (hi - lo);
+    const sat = dark ? Math.min(h.s * 1.1 + 0.08, 0.85) : Math.min(h.s * 0.9 + 0.08, 0.8);
+    const hue = ((h.h * 360 * spread + shift) % 360) / 360;
+    const [nr, ng, nb] = hsl2rgb(hue, l, sat);
+    return '#' + [nr, ng, nb].map((v) => Math.max(0, Math.min(255, Math.round(v * 255))).toString(16).padStart(2, '0')).join('');
+  });
+}
+function rgb2hsl(r, g, b) {
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  let h = 0;
+  if (d) {
+    if (mx === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+    else if (mx === g) h = ((b - r) / d + 2) / 6;
+    else h = ((r - g) / d + 4) / 6;
+  }
+  const l = (mx + mn) / 2;
+  const s = d ? d / (1 - Math.abs(2 * l - 1)) : 0;
+  return { h, s, l };
+}
+function hsl2rgb(h, l, s) {
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h * 6) % 2) - 1));
+  const m = l - c / 2;
+  const seg = Math.floor(h * 6) % 6;
+  const t = [[c, x, 0], [x, c, 0], [0, c, x], [0, x, c], [x, 0, c], [c, 0, x]][seg];
+  return [t[0] + m, t[1] + m, t[2] + m];
+}
+
+export function activeTheme() {
+  try { return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; } catch { return 'light'; }
+}
 
 export function citySVG(st) {
   const lvl = st.level || 1, mood = st.mood || 'neutral';
@@ -595,5 +651,5 @@ export function citySVG(st) {
   }
   g += `<rect width="${W}" height="${H}" fill="url(#vig)" pointer-events="none"/>`;
 
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Izometrinis miesto žemėlapis: gyvenamieji namai, biurų pastatas, banko bokštas, birža su kupolu, kavos baras, arena, parkas su tvenkiniu, aikštė su fontanu, prekyvietė, sporto aikštė, bulvarai su perėjomis ir transportu" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Izometrinis miesto žemėlapis: gyvenamieji namai, biurų pastatas, banko bokštas, birža su kupolu, kavos baras, arena, parkas su tvenkiniu, aikštė su fontanu, prekyvietė, sporto aikštė, bulvarai su perėjomis ir transportu" xmlns="http://www.w3.org/2000/svg">${retint(g, st.theme || activeTheme())}</svg>`;
 }

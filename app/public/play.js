@@ -2,7 +2,8 @@
 import { WEEKS, ASSET_META, TOPICS } from './content.js';
 import { CONFIG, ASSET_KEYS, DEFAULT_MIX, GOAL_TYPES } from './engine.js';
 import { citySVG } from './iso.js';
-import { esc, $, $$, eur, pct, api, toast, lessonBlock, wireAsk, AVATARS, TONE, TROPHY, ICO } from './ui.js';
+import { wireThemeToggle } from './theme.js';
+import { esc, $, $$, eur, pct, api, toast, lessonBlock, wireAsk, wireTheme, AVATARS, TONE, TROPHY, ICO } from './ui.js';
 
 const app = $('#app');
 
@@ -34,6 +35,7 @@ function shell(inner, active) {
     <a class="logo" href="/play"><i>V</i>VEMAK</a>
     <nav class="tabs" role="tablist" aria-label="Skyriai">${tabs.map(([k, n]) => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${k === active}">${n}</button>`).join('')}</nav>
     <span class="pill blue">${AVATARS[me.me.avatar]} ${esc(me.me.nickname)}</span>
+    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Perjungti šviesią ir tamsią temą"><span class="tt-icon" aria-hidden="true"><svg class="tt-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4 17 7M7 17l-1.6 1.6"/></svg><svg class="tt-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.4A8.4 8.4 0 0 1 9.6 4 8.4 8.4 0 1 0 20 14.4Z"/></svg></span><span class="tt-label">Tema</span></button>
     <button class="btn alt" id="out" style="min-height:38px;padding:6px 12px">Atsijungti</button>
   </div></header>
   <main class="main"><div class="wrap" id="view">${inner}</div></main>`;
@@ -327,6 +329,8 @@ function render() {
   shell(views[tab](), tab === 'finish' ? 'results' : tab);
   $$('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; if (tab === 'results' && me.reports.length) { revealStage = 0; tab = 'reveal'; } render(); }));
   $$('[data-go]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.go; render(); }));
+  wireTheme();
+  window.addEventListener('vemak:theme', () => render(), { once: true });
   if (tab === 'week') bindWeek();
   if (tab === 'results') bindAsk();
   if (tab === 'reveal') bindReveal();
